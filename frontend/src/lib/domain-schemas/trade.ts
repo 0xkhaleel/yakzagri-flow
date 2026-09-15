@@ -3,9 +3,10 @@
  * frontend form validation so the two cannot drift.
  *
  * This file is framework-free (only `zod`) and is kept byte-identical with
- * `backend/src/schemas/domain/trade.ts`. `scripts/check-schema-parity.mjs`
- * fails CI if they diverge. The documented next rollout step is to promote this
- * to a `packages/domain-schemas` workspace package (see docs/shared-schemas.md).
+ * its counterpart in the yakzagri-flow backend repository
+ * (`backend/src/schemas/domain/trade.ts`), see docs/shared-schemas.md for the
+ * parity strategy. It is intentionally self-contained: the frontend repo owns
+ * this copy and must not import the backend package directly.
  */
 import { z } from "zod";
 

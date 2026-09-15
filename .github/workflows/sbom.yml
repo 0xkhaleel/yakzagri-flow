@@ -1,9 +1,10 @@
 name: SBOM
 
-# Generates a CycloneDX Software Bill of Materials for each release artifact
-# (backend, frontend, mobile) and attaches it to the GitHub Release, per
-# docs/sbom.md. Also runs weekly on main to diff the current dependency tree
-# against the most recently published SBOMs and flag drift/new vulns.
+# Generates a CycloneDX Software Bill of Materials for the frontend release
+# artifact and attaches it to the GitHub Release. Also runs weekly on main to
+# diff the current dependency tree against the most recently published SBOMs
+# and flag drift/new vulns.
+
 on:
   release:
     types: [published]
@@ -21,11 +22,8 @@ permissions:
 jobs:
   generate-sbom:
     if: github.event_name == 'release' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    name: Generate SBOM (${{ matrix.component }})
+    name: Generate SBOM (frontend)
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        component: [backend, frontend, mobile]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,14 +37,14 @@ jobs:
         run: |
           npx --yes @cyclonedx/cyclonedx-npm \
             --output-format json \
-            --output-file "sbom-${{ matrix.component }}.cdx.json" \
-            "${{ matrix.component }}/package.json"
+            --output-file "sbom-frontend.cdx.json" \
+            "frontend/package.json"
 
       - name: Upload SBOM as workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-${{ matrix.component }}
-          path: sbom-${{ matrix.component }}.cdx.json
+          name: sbom-frontend
+          path: sbom-frontend.cdx.json
           retention-days: 400
 
       - name: Attach SBOM to GitHub Release
@@ -55,7 +53,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ github.event.release.tag_name || github.ref_name }}"
-          gh release upload "$TAG" "sbom-${{ matrix.component }}.cdx.json" --clobber --repo "${{ github.repository }}"
+          gh release upload "$TAG" "sbom-frontend.cdx.json" --clobber --repo "${{ github.repository }}"
 
   vulnerability-diff:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -70,15 +68,13 @@ jobs:
         with:
           node-version: 22
 
-      - name: Generate current SBOMs
+      - name: Generate current SBOM
         run: |
           mkdir -p sbom-current
-          for c in backend frontend mobile; do
-            npx --yes @cyclonedx/cyclonedx-npm \
-              --output-format json \
-              --output-file "sbom-current/$c.cdx.json" \
-              "$c/package.json"
-          done
+          npx --yes @cyclonedx/cyclonedx-npm \
+            --output-format json \
+            --output-file "sbom-current/frontend.cdx.json" \
+            "frontend/package.json"
 
       - name: Fetch previous SBOM release artifacts (best-effort)
         env:

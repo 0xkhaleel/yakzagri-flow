@@ -2,8 +2,9 @@
  * Divergence / acceptance-parity test for the shared trade domain schema.
  *
  * `createTradeInputSchema` is consumed by BOTH the backend request validator
- * (`backend/src/schemas/trade.schemas.ts`) and the frontend trade-creation form
- * (`Step3Review.tsx`). This suite fuzzes thousands of inputs and asserts the
+ * (maintained in the yakzagri-flow backend repository) and the frontend
+ * trade-creation form (`Step3Review.tsx`). This suite fuzzes thousands of
+ * inputs and asserts the
  * schema's accept/reject decision matches an independent reference predicate
  * derived from the documented domain rules — so client and server can never
  * disagree about what a valid trade is.

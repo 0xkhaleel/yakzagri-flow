@@ -1,12 +1,11 @@
-# 🌾 EziAgric: Trust as a Service for Agricultural Products
+# 🌾 yakzagri-flow Frontend: Trust as a Service for Agricultural Products
 
-![Stellar](https://img.shields.io/badge/Network-Stellar-black?style=for-the-badge&logo=stellar)
-![Soroban](<https://img.shields.io/badge/Contracts-Soroban%20(Rust)-orange?style=for-the-badge>)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-**EziAgric** is a decentralized escrow protocol designed to secure agricultural trade across different regions. By leveraging **Soroban Smart Contracts**, Amana eliminates the "Trust Gap" between buyers and sellers, ensuring fair trade even when parties are hundreds of miles apart.
+**yakzagri-flow (Amana)** is a decentralized escrow protocol designed to secure agricultural trade across different regions. By leveraging **Soroban Smart Contracts** on the **Stellar network**, Amana eliminates the "Trust Gap" between buyers and sellers, ensuring fair trade even when parties are hundreds of miles apart.
 
-This is the main repository containing the smart contracts and orchestration logic. Backend, frontend, and mobile applications are maintained in this monorepo for simpler development and unified deployment.
+**This repository contains the frontend web application only.** The backend API, Soroban smart contracts, mobile app, infrastructure, and operational tooling live in the separate [yakzagri-flow backend](https://github.com/yakzagri-flow/yakzagri-flow) repository.
 
 ---
 
@@ -16,91 +15,59 @@ To provide a programmable safety net for regional commodity trading. Amana ensur
 
 ## 🛠 Features
 
-- **Smart Escrow:** Secure funds holding using cNGN/stablecoins on the Stellar network.
+- **Smart Escrow UI:** Build, fund, and track trades backed by secure fund holding using cNGN/stablecoins on the Stellar network.
 - **Dynamic Loss Sharing:** Negotiable risk-sharing ratios (e.g., 50/50, 70/30) hardcoded into every trade to handle transit accidents or theft.
 - **Proof-of-Delivery (PoD):** An optional video-based verification protocol involving the buyer and the driver to confirm the state of goods. Video evidence can be submitted and stored on IPFS for dispute resolution.
 - **Volatility Protection:** Utilizes Stellar Path Payments to allow users to pay in local currency (NGN) while locking value in cNGN.
-- **Automated Settlement:** A flat 1% platform fee is automatically deducted upon successful trade completion.
+- **Wallet Integration:** Freighter / Albedo wallet connection with a wallet state machine and offline-first support.
+- **Admin & Mediator Dashboards:** Admin feature gates, dispute-resolution workflows, and treasury/streams/asset views.
 
 ## 🏗 Technical Stack
 
-- **Frontend:** [Next.js](https://nextjs.org/) (App Router)
-- **Smart Contracts:** [Soroban](https://soroban.stellar.org/) (Rust)
-- **Blockchain:** [Stellar Network](https://www.stellar.org/)
-- **Wallet Connection:** [Freighter](https://www.freighter.app/) / [Albedo](https://albedo.link/)
-- **Storage:** IPFS (via Pinata) for decentralized storage of video evidence.
-- **Database:** Supabase (Off-chain metadata, driver logs, and user profiles).
-- **Observability:** OpenTelemetry distributed tracing with correlation IDs for end-to-end request tracking.
+- **Framework:** [Next.js](https://nextjs.org/) 16 (App Router, React 19, Turbopack)
+- **Styling:** Tailwind CSS 4 with design-token-driven theme
+- **State:** Zustand (wallet, trades, UI, notifications, offline queue)
+- **Blockchain:** [Stellar](https://www.stellar.org/) via `@stellar/stellar-sdk` + Freighter/Albedo
+- **API:** Typed Zod-validated clients against the backend API (`/api/v1`)
+- **Storage:** IPFS (via Pinata) + Supabase for off-chain metadata
+- **Testing:** Jest + Testing Library (unit), Playwright (e2e + visual), Pact (API contract)
+- **Observability:** OpenTelemetry traced fetch + CSP via middleware
 
-## 🧪 Local Environments (Folder-Based)
+## 🧪 Local Development
 
-- `frontend/` → Next.js app environment (UI + wallet + Supabase/Pinata client integration)
-- `backend/` → Node.js/TypeScript API environment (Supabase + Pinata + integration endpoints)
-- `mobile/` → React Native Expo environment (mobile wallet, notification, and trade UX)
-- `contracts/` → Rust/Soroban smart contract environment
+### Setup
 
-### Frontend setup
+```bash
+cd frontend
+cp .env.example .env.local
+pnpm install
+pnpm dev
+```
 
-1. `cd frontend`
-2. `cp .env.example .env.local`
-3. `npm install`
-4. `npm run dev`
+### Common scripts (run inside `frontend/`)
 
-### Backend setup
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start the Next.js dev server |
+| `pnpm build` | Production build |
+| `pnpm start` | Start the production server |
+| `pnpm lint` | ESLint |
+| `pnpm test` | Jest unit + component tests |
+| `pnpm exec playwright test` | Playwright e2e + visual tests |
 
-1. `cd backend`
-2. `cp .env.example .env`
-3. `cp .env.tracing.example .env.tracing` (for distributed tracing configuration)
-4. `npm install`
-5. `npm run dev`
+### Backend API
 
-### Mobile setup
-
-1. `cd mobile`
-2. `cp .env.example .env.local`
-3. `npm install`
-4. `npm start`
-
-### Backend API docs
-
-- Source of truth: `backend/src/docs/openapi.yaml`
-- Dev Swagger UI: `http://localhost:4000/api/docs`
-- JSON export: `http://localhost:4000/api/docs/openapi.json`
-
-The backend writes `backend/src/docs/openapi.json` from the YAML spec in non-production runs so reviewers can inspect either format.
-
-### Contracts setup
-
-1. `cd contracts/amana_escrow`
-2. `cargo build`
+The frontend talks to the backend API (default `http://localhost:4000`, prefix `/api/v1`).
+Set `NEXT_PUBLIC_API_URL` in `.env.local` to point at a running backend instance.
+See [`docs/api/`](./docs/api/) for the API contract documentation.
 
 ## 🔒 Required PR CI Gates
 
-Amana enforces stack-level CI gates on pull requests through `.github/workflows/ci.yml`.
+CI is defined in `.github/workflows/ci.yml` and is frontend-scoped only:
 
-- **Frontend Required Gate**: `npm ci`, `npm run lint`, `npm run build`, `npm test` in `frontend/`
-- **Backend Required Gate**: `npm ci`, `npm run build`, `npm test` in `backend/`
-- **Mobile Required Gate**: `npm ci`, `npm run type-check`, `npm run lint` in `mobil
-Amana enforces stack-level CI gates on pull requests through `.github/workflows/ci.yml`.
-
-- **Frontend Required Gate**: `npm ci`, `npm run lint`, `npm run build`, `npm test` in `frontend/`
-- **Backend Required Gate**: `npm ci`, `npm run build`, `npm test` in `backend/`
-- **Mobile Required Gate**: `npm ci`, `npm run type-check`, `npm run lint` in `mobile/`
-- **Contracts Required Gate**: `cargo test` in `contracts/amana_escrow/`
-
-Path-aware execution is enabled to avoid unnecessary runtime. If a stack has no changed files, the gate reports a skip-note and passes.
-
-### Branch protection setup (GitHub)
-
-For the protected branch (`main`), set these required status checks:
-
-- `Frontend Required Gate`
-- `Backend Required Gate`
-- `Contracts Required Gate`
-
----
-
----
+- **Frontend Required Gate**: `pnpm install`, `pnpm lint`, `tsc --noEmit`, `pnpm build`, `pnpm test` in `frontend/`
+- **Visual Regression Gate**: Playwright snapshot tests (Chromium desktop + mobile)
+- **Security Audit**: blocking `pnpm audit` gate with expiring waivers (`.github/audit-waivers.json`)
 
 ## 🔄 How It Works (The Amana Flow)
 
@@ -111,80 +78,15 @@ For the protected branch (`main`), set these required status checks:
    - **Dispute:** Buyer uploads a video of loss/damage with driver affirmation. A mediator reviews the evidence.
 5. **Settlement:** Based on the outcome, funds are distributed (either 100% to one party or split via the `Loss_Ratio`).
 
----
+## 📐 Frontend Documentation
 
-## 🗺 Roadmap
-
-### Phase 1: The Vault (MVP)
-
-- [x] Develop core Soroban contract logic (`deposit`, `release`, `refund`).
-- [x] Implement basic Next.js UI for trade creation.
-
-### Phase 2: The Agreement Engine
-
-- [x] Integrate `Loss_Ratio` variables into the smart contract.
-- [x] Build the "Mediator" dashboard for dispute resolution.
-
-### Phase 3: Evidence & Logistics
-
-- [x] IPFS integration for video evidence uploads.
-- [x] Driver manifest logging and tracking interface.
-
-### Phase 4: Mainnet & Scale
-
-- [ ] Public pilot program with regional agricultural cooperatives.
-- [x] Implementation of a "Trust Score" reputation system.
-
----
-
-## 🔍 Distributed Tracing
-
-Amana includes comprehensive distributed tracing with OpenTelemetry for end-to-end request visibility and faster incident triage.
-
-### Features
-
-- **Correlation IDs**: Unique identifiers spanning frontend-backend requests
-- **Request Tracing**: Complete request lifecycle tracking
-- **Service Integration**: Automatic tracing for external services (IPFS, Stellar)
-- **Observability**: Jaeger, Zipkin, and Prometheus integration
-
-### Quick Start
-
-1. Configure tracing environment variables (see `backend/.env.tracing.example`)
-2. Start Jaeger for trace visualization: `docker run -p 16686:16686 jaegertracing/all-in-one`
-3. View traces at `http://localhost:16686`
-4. Check metrics at `http://localhost:9464/metrics`
-
-### Documentation
-
-See [DISTRIBUTED_TRACING_GUIDE.md](./DISTRIBUTED_TRACING_GUIDE.md) for detailed setup and usage instructions.
-
----
-
-## 📐 Architecture Decision Records
-
-Key architectural decisions are documented as ADRs in [`docs/adr/`](./docs/adr):
-
-- [ADR-001: Stellar Path Payment Architecture](./docs/adr/ADR-001-stellar-path-payment-architecture.md)
-- [ADR-002: Escrow Loss-Sharing Model](./docs/adr/ADR-002-escrow-loss-sharing-model.md)
-- [ADR-003: Off-chain vs. On-chain Data Partitioning](./docs/adr/ADR-003-offchain-vs-onchain-data-partitioning.md)
-- [ADR-004: Idempotency and Retry Strategy](./docs/adr/ADR-004-idempotency-and-retry-strategy.md)
-- [ADR-005: Frontend State Management](./docs/adr/ADR-005-frontend-state-management.md)
-
-## 🔐 Security & Operations
-
-- [Threat Model](./docs/threat-model.md) — reviewed quarterly and on trigger events; see §8 for cadence/ownership and `docs/threat-model-review-checklist.md` for the reviewer checklist.
-- [Secrets Policy & Rotation](./docs/secrets-policy.md) — secrets inventory (owner, location, max-age), rotation automation, and verification. Rotation reminders are opened automatically by [`.github/workflows/secrets-rotation-reminder.yml`](./.github/workflows/secrets-rotation-reminder.yml).
-- [PII Encryption at Rest](./docs/pii-encryption.md) — classified PII column inventory, app-layer envelope encryption design, blind-index search, key rotation procedure, and decrypt access logging.
-- [Software Bill of Materials (SBOM)](./docs/sbom.md) — CycloneDX SBOM generated for every release artifact via [`.github/workflows/sbom.yml`](./.github/workflows/sbom.yml), attached to GitHub Releases, with a weekly vulnerability diff scan.
-- [Golden Signals Dashboard](./docs/dashboards.md) — Grafana dashboard stored as code ([`infra/grafana/`](./infra/grafana)) covering API latency/traffic/errors and DB/queue saturation, with deploy annotations wired into staging deploys.
-- [Alert Routing Policy](./docs/alert-routing-policy.md) — page-vs-ticket severity rubric, runbook linkage enforced in CI, per-alert dedup windows, and the [monthly alert review log](./docs/alert-review-log.md).
-- [Synthetic Probes Policy](./docs/synthetic-probes-policy.md) — hourly staging probe of the core escrow journey (auth → create → deposit → release), with failure alerting and a results dashboard log.
-- [Incident Response](./docs/runbooks/incident-response.md) — severity levels, incident roles, and channel/ticket conventions; see the [postmortem template](./docs/runbooks/postmortem-template.md), the [postmortem archive](./docs/postmortems/README.md), and a worked [tabletop exercise](./docs/runbooks/tabletop-exercise-escrow-drain.md).
+- [`frontend/docs/`](./frontend/docs/) — accessibility, i18n, offline resilience, wallet states, admin route guard
+- [`docs/api/`](./docs/api/) — backend API contract the frontend consumes
+- [`docs/shared-schemas.md`](./docs/shared-schemas.md) — shared domain-schema parity strategy
 
 ## 🤝 Contributing
 
-EziAgric is an open-source project aimed at improving food security and trade efficiency. We welcome developers, designers, and agricultural experts!
+yakzagri-flow is an open-source project aimed at improving food security and trade efficiency. We welcome developers, designers, and agricultural experts!
 
 1. Fork the Project.
 2. Create your Feature Branch (`git checkout -b feature/NewFeature`).
@@ -192,15 +94,6 @@ EziAgric is an open-source project aimed at improving food security and trade ef
 4. Push to the Branch (`git push origin feature/NewFeature`).
 5. Open a Pull Request.
 
-### Admin route development
-
-If you are adding or modifying admin routes, see the
-[Admin Route Contribution Guide](./docs/admin-route-contribution-guide.md)
-for architecture details, middleware requirements, testing expectations, and a
-step-by-step example.
-
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
-
-// setting up and starting out

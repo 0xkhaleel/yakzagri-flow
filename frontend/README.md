@@ -100,6 +100,8 @@ npm run test:visual:update
 
 ## Repository Scope
 
-This frontend lives inside the `frontend/` folder of the Amana monorepo. It serves as the UI for buyers, sellers, and mediators interacting with the backend API.
+This is the yakzagri-flow **frontend web application** (Next.js), living in the `frontend/` folder of this repository. It is the UI for buyers, sellers, and mediators interacting with the backend API and the Stellar network directly.
+
+The backend API, Soroban smart contracts, mobile app, and infrastructure live in the separate yakzagri-flow backend repository.
 
 If you are consuming the backend API, point the frontend environment configuration to the correct backend endpoint.

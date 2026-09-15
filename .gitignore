@@ -1,25 +1,21 @@
 node_modules/
 **/node_modules/
-# Any package `dist/` (includes backend TypeScript output)
+# Next.js build output
+.next/
+# TypeScript build output
 dist/
+# Test coverage
 coverage/
+# Test results
+jest-results.json
+# Environment files
 .env
 .env.staging
 .env.production
 .env.local
+# Editor config
 .vscode/
+# Logs
 *.log
-backend/lint-output.txt
-
-# Pre-migration database backups
-backups/
-
 # Gitleaks SARIF reports (generated in CI, not committed)
 gitleaks-report.sarif
-
-.kiro/specs/avatar-component/.config.kiro
-.kiro/specs/avatar-component/design.md
-.kiro/specs/avatar-component/requirements.md
-.kiro/specs/avatar-component/tasks.md
-
-.kiro/

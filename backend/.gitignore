@@ -1,6 +1,0 @@
-node_modules/
-
-# TypeScript emit from `npm run build` — never commit (merge noise, CI drift)
-dist/
-
-.env
