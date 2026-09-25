@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { formatNumber } from "@/lib/i18n/format";
 import {
   api,
   type TradeResponse,
@@ -570,7 +571,7 @@ export default function VaultManagePage() {
                 />
                 <StatCard
                   label="Locked in Escrow"
-                  value={`$${totalLocked.toLocaleString()}`}
+                  value={`$${formatNumber(totalLocked)}`}
                   sub="cNGN"
                   accent
                 />
@@ -578,7 +579,7 @@ export default function VaultManagePage() {
                   label="Wallet Balance"
                   value={
                     walletBalance
-                      ? `${parseFloat(walletBalance.balance).toLocaleString()} ${walletBalance.asset}`
+                      ? `${formatNumber(parseFloat(walletBalance.balance))} ${walletBalance.asset}`
                       : "—"
                   }
                   sub="Available"
@@ -701,7 +702,7 @@ export default function VaultManagePage() {
                           {/* Amount */}
                           <div>
                             <p className="text-sm font-semibold text-text-primary">
-                              {parseFloat(trade.amountCngn).toLocaleString()}{" "}
+                              {formatNumber(parseFloat(trade.amountCngn))}{" "}
                               cNGN
                             </p>
                             <p className="text-xs text-text-muted mt-0.5">

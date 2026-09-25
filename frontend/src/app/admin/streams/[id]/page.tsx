@@ -13,6 +13,7 @@ import {
   ApiError,
 } from "@/lib/api";
 import { Breadcrumb, LoadingState, ErrorState, CurrencyInput } from "@/components/ui";
+import { formatDateTime } from "@/lib/i18n/format";
 import {
   getAssetInfo,
   stroopsToAmount,
@@ -358,7 +359,7 @@ export default function AdminStreamManagementPage() {
                       <div>
                         <p className="text-text-muted">Timestamp</p>
                         <p className="font-medium text-text-secondary">
-                          {new Date(clawbackPreview.timestamp).toLocaleString()}
+                          {formatDateTime(clawbackPreview.timestamp)}
                         </p>
                       </div>
                     </div>

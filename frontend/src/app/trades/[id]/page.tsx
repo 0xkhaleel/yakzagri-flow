@@ -9,15 +9,10 @@ import { useTradeDetail } from "@/hooks/useTradeDetail";
 import { useWallet } from "@/hooks/useWallet";
 import { api, ApiError } from "@/lib/api";
 import { apiConfig } from "@/lib/api";
+import { formatDateTime } from "@/lib/i18n/format";
 
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(dateString);
 }
 
 function formatAddress(address: string) {
