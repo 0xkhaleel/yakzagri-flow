@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
 import { StrKey } from "@stellar/stellar-sdk";
-import { formatNaira, formatNumber } from "@/lib/i18n";
 import { useTrade } from "../TradeContext";
 import { validateStep1 } from "../validation";
+import { formatCurrencyAmount, getCurrencyInfo } from "@/lib/currency";
 
 const COMMODITIES = ["Maize", "Rice", "Sorghum", "Millet", "Cassava", "Yam", "Groundnut", "Soybean"];
 const UNITS = ["kg", "tonnes", "bags (50kg)", "bags (100kg)"];
@@ -19,9 +19,10 @@ export default function Step1Details() {
 
   const totalDisplay = isNaN(totalValue)
     ? "—"
-    : data.currency === "NGN"
-      ? formatNaira(totalValue)
-      : `${formatNumber(totalValue, { maximumFractionDigits: 2 })} USDC`;
+    : formatCurrencyAmount(totalValue, data.currency, {
+        showCode: true,
+        grouping: true,
+      });
 
   const isQtyValid = data.quantity !== "" && !isNaN(qty) && qty > 0;
   const isPriceValid = data.pricePerUnit !== "" && !isNaN(price) && price > 0;
@@ -126,8 +127,8 @@ export default function Step1Details() {
             onChange={(e) => update({ currency: e.target.value })}
             className="bg-bg-input border border-border-default rounded-md px-4 py-3 text-text-primary focus:outline-none focus:border-border-focus"
           >
-            <option value="NGN">NGN</option>
-            <option value="cNGN">USDC</option>
+            <option value="NGN">{getCurrencyInfo("NGN").code}</option>
+            <option value="cNGN">{getCurrencyInfo("cNGN").code}</option>
           </select>
         </div>
       </div>

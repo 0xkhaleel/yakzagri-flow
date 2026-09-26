@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useTrade } from "../TradeContext";
 import { validateStep2 } from "../validation";
+import { formatCurrencyAmount } from "@/lib/currency";
 
 export default function Step2Negotiation() {
   const { data, update, setStep } = useTrade();
@@ -19,8 +20,16 @@ export default function Step2Negotiation() {
       ? parseFloat(data.quantity) * parseFloat(data.pricePerUnit)
       : 0;
 
-  const buyerLoss = totalValue ? ((data.buyerRatio / 100) * totalValue).toLocaleString("en-NG") : "—";
-  const sellerLoss = totalValue ? ((data.sellerRatio / 100) * totalValue).toLocaleString("en-NG") : "—";
+  const buyerLoss = totalValue ? formatCurrencyAmount(
+    (data.buyerRatio / 100) * totalValue,
+    data.currency,
+    { grouping: true }
+  ) : "—";
+  const sellerLoss = totalValue ? formatCurrencyAmount(
+    (data.sellerRatio / 100) * totalValue,
+    data.currency,
+    { grouping: true }
+  ) : "—";
 
   const handleBlur = (field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));

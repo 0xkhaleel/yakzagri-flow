@@ -778,7 +778,7 @@ export default function VaultManagePage() {
               {/* ── Right column (1/3 width) ── */}
               <div className="space-y-6">
                 {/* Payment overview */}
-                <PaymentOverviewCard totalCngn={totalLocked} ngnRate={1580} />
+                <PaymentOverviewCard totalCngn={totalLocked} />
 
                 {/* Audit log */}
                 <AuditLogCard

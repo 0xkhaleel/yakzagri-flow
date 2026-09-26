@@ -3,6 +3,7 @@
 import React from "react";
 import type { TradeDetail } from "@/types/trade";
 import { TradeAmountRow } from "./TradeAmountRow";
+import { convertCngnToNgn } from "@/lib/exchangeRate";
 
 interface FinancialSummaryProps {
   trade: TradeDetail;
@@ -38,7 +39,7 @@ function FinancialRow({
 }
 
 export function FinancialSummary({ trade }: FinancialSummaryProps) {
-  const ngnEquivalent = Math.round(trade.vaultAmountLocked * 1600);
+  const ngnEquivalent = convertCngnToNgn(trade.vaultAmountLocked);
 
   return (
     <div className="bg-card rounded-xl border border-border-default p-6 shadow-card">
