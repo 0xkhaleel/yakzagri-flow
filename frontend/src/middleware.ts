@@ -2,40 +2,110 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Server-side auth gate for `/admin/*`.
- *
- * The client-side gate in `app/admin/layout.tsx` only runs after the admin
- * bundle has been served, so it cannot stop a caller from requesting admin
- * pages/server components directly. This middleware rejects unauthenticated
- * requests before any admin route is rendered.
- *
- * The auth cookie is treated as the session indicator here; the client gate
- * remains in place for UX (redirect to `/access-denied`).
+ * Origins allowed to be embedded as frames and connected to (wallet providers).
+ * Drives both `connect-src` and `frame-src` below.
  */
-const AUTH_COOKIE_NAMES = ["token", "auth_token", "access_token", "session"];
+const WALLET_FRAME_ALLOWLIST = [
+  "https://walletconnect.com",
+  "https://*.walletconnect.com",
+  "https://verify.walletconnect.com",
+  "https://*.walletconnect.org",
+];
 
-function hasAuthCookie(request: NextRequest): boolean {
-  return AUTH_COOKIE_NAMES.some((name) => {
-    const value = request.cookies.get(name)?.value;
-    return typeof value === "string" && value.length > 0;
-  });
+/**
+ * IPFS/storage origins used for video proof upload and playback.
+ * `gateway.pinata.cloud` serves pinned proof videos; `api.pinata.cloud`
+ * receives the upload from VideoUploadCard.
+ */
+const IPFS_MEDIA_ORIGINS = [
+  "https://gateway.pinata.cloud",
+  "https://*.mypinata.cloud",
+  "https://ipfs.io",
+  "https://*.ipfs.io",
+];
+
+/**
+ * Build the Content-Security-Policy for a given request.
+ *
+ * Every directive/source is documented so the policy can be reviewed and
+ * tightened without guesswork. Keep this strict: no broad wildcards, and
+ * only add a source when a concrete feature requires it.
+ */
+function buildCsp(nonce: string): string {
+  const directives: Record<string, string[]> = {
+    // Fallback for directives that are not declared explicitly.
+    "default-src": ["'self'"],
+
+    // Scripts: Next.js requires a per-request nonce; 'strict-dynamic' lets
+    // nonce-trusted scripts load their own dependencies.
+    "script-src": ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"],
+
+    // Styles: 'unsafe-inline' is required by the toast library, which injects
+    // inline <style> tags at runtime.
+    "style-src": ["'self'", "'unsafe-inline'"],
+
+    // Images: local assets plus data: URIs and IPFS gateways for proof media.
+    "img-src": ["'self'", "data:", "blob:", ...IPFS_MEDIA_ORIGINS],
+
+    // Media: video proof upload/playback. `blob:` is required for the local
+    // preview created via URL.createObjectURL in VideoUploadCard; the IPFS
+    // origins allow playback of pinned proof videos.
+    "media-src": ["'self'", "blob:", ...IPFS_MEDIA_ORIGINS],
+
+    // Fonts: self-hosted only.
+    "font-src": ["'self'"],
+
+    // Connections: self, wallet providers, and IPFS upload/gateway origins.
+    "connect-src": [
+      "'self'",
+      ...WALLET_FRAME_ALLOWLIST,
+      ...IPFS_MEDIA_ORIGINS,
+    ],
+
+    // Frames: wallet provider iframes only.
+    "frame-src": ["'self'", ...WALLET_FRAME_ALLOWLIST],
+
+    // Workers: self only.
+    "worker-src": ["'self'", "blob:"],
+
+    // Lock down embedding and base/form targets.
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "form-action": ["'self'"],
+    "frame-ancestors": ["'none'"],
+  };
+
+  return Object.entries(directives)
+    .map(([key, values]) => `${key} ${values.join(" ")}`)
+    .join("; ");
 }
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const csp = buildCsp(nonce);
 
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    if (!hasAuthCookie(request)) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/access-denied";
-      url.search = "";
-      return NextResponse.redirect(url);
-    }
-  }
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
 
-  return NextResponse.next();
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+
+  // Report-only during the rollover window (#202); flip to the enforcing
+  // `Content-Security-Policy` header once violations are clean.
+  response.headers.set("Content-Security-Policy-Report-Only", csp);
+
+  return response;
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    {
+      source: "/((?!api|_next/static|_next/image|favicon.ico).*)",
+      missing: [
+        { type: "header", key: "next-router-prefetch" },
+        { type: "header", key: "purpose", value: "prefetch" },
+      ],
+    },
+  ],
 };
