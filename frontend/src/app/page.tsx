@@ -7,6 +7,7 @@ import {
   Lock,
   CheckCircle2,
   Star,
+  Gavel,
 } from "lucide-react";
 import Link from "next/link";
 import { LandingCtaButtons } from "@/components/landing/LandingCtaButtons";
@@ -36,11 +37,18 @@ const steps = [
     icon: Truck,
   },
   {
-    step: "04",
-    title: "Verify & complete",
+    step: "03",
+    title: "Confirm receipt",
     description:
-      "Seller delivers goods. Buyer confirms receipt on-chain. Funds release instantly from escrow to seller.",
+      "Buyer inspects the delivered goods and confirms receipt on-chain, triggering the release of funds from escrow.",
     icon: CheckCircle2,
+  },
+  {
+    step: "04",
+    title: "Resolve disputes",
+    description:
+      "If either party contests the delivery, certified mediators review the on-chain evidence and issue a binding ruling.",
+    icon: Gavel,
   },
 ];
 
@@ -158,11 +166,11 @@ export default function Home() {
             How it works
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-base text-text-secondary">
-            Three steps from agreement to settlement — fully on-chain, fully
+            Four steps from agreement to settlement — fully on-chain, fully
             auditable.
           </p>
 
-          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {steps.map((item) => {
               const Icon = item.icon;
               return (
@@ -203,59 +211,4 @@ export default function Home() {
 
           <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2">
             {features.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <div
-                  key={feature.title}
-                  className="flex gap-4 rounded-xl border border-border-default bg-bg-elevated p-6 transition-colors hover:border-border-hover"
-                >
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gold-muted">
-                    <Icon className="h-5 w-5 text-gold" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-semibold">{feature.title}</h3>
-                    <p className="mt-1 text-sm leading-relaxed text-text-secondary">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Bottom CTA ───────────────────────────────────────────────────── */}
-      <section className="px-6 py-20 lg:px-10">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-gold/20 bg-gradient-card-glow p-10 text-center shadow-glow-gold">
-          <h2 className="text-2xl font-bold md:text-3xl">
-            Ready to settle your first trade?
-          </h2>
-          <p className="mx-auto mt-4 max-w-md text-base text-text-secondary">
-            Connect your Freighter wallet and create a trade in under two
-            minutes.
-          </p>
-          <LandingCtaButtons />
-        </div>
-      </section>
-
-      {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-border-default px-6 py-8 lg:px-10">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-text-muted sm:flex-row">
-          <span>© {new Date().getFullYear()} Amana. Agricultural escrow on Stellar.</span>
-          <nav aria-label="Footer navigation" className="flex gap-6">
-            <Link href="/trades" className="hover:text-text-secondary transition-colors">
-              Trades
-            </Link>
-            <Link href="/vault" className="hover:text-text-secondary transition-colors">
-              Vault
-            </Link>
-            <Link href="/dashboard" className="hover:text-text-secondary transition-colors">
-              Dashboard
-            </Link>
-          </nav>
-        </div>
-      </footer>
-    </div>
-  );
-}
+              const I
