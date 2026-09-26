@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { FileText, Eye } from "lucide-react";
 import Image from 'next/image';
@@ -34,7 +36,7 @@ export function ContractManifestCard({
 
   return (
     <BentoCard
-      title="Contract Manifest"
+      title={translateCopy("ui.contract_manifest_1052b0a")}
       icon={<FileText className="w-5 h-5" />}
       glowVariant="gold"
       className="h-106.5"
@@ -48,13 +50,13 @@ export function ContractManifestCard({
       <div className="grid grid-cols-2 gap-6 mb-2 pl-5 pr-5">
         <div>
           <p className="text-xs font-semibold tracking-widest text-text-secondary uppercase mb-1">
-            Agreement Date
+            {translateCopy("ui.agreement_date_423ea5e")}
           </p>
           <p className="text-sm font-medium text-text-primary">{agreementDate}</p>
         </div>
         <div>
           <p className="text-xs font-semibold tracking-widest text-text-secondary uppercase mb-1">
-            Settlement Type
+            {translateCopy("ui.settlement_type_6c68618")}
           </p>
           <p className="text-sm font-medium text-text-primary">{settlementType}</p>
         </div>
@@ -63,7 +65,7 @@ export function ContractManifestCard({
       <div className="grid grid-cols-2 gap-6 mb-6 pl-5 pr-5">
         <div className="mt-15">
           <p className="text-xs font-semibold tracking-widest text-text-secondary uppercase mb-2">
-            Origin Party
+            {translateCopy("ui.origin_party_396fa75")}
           </p>
           <div className="flex items-center gap-2">
             <span
@@ -76,7 +78,7 @@ export function ContractManifestCard({
         </div>
         <div className="mt-15">
           <p className="text-xs font-semibold tracking-widest text-text-secondary uppercase mb-2">
-            Recipient Party
+            {translateCopy("ui.recipient_party_1e39325")}
           </p>
           <div className="flex items-center gap-2">
             <span
@@ -92,22 +94,26 @@ export function ContractManifestCard({
       <div className="flex gap-3 mt-15">
         <button
           onClick={onExportPdf}
-          className="flex-1 flex items-center justify-center gap-2 bg-[#1E2D2666] hover:bg-bg-input text-text-primary font-medium py-2.5 px-4 rounded-xl transition-colors "
+          disabled={!onExportPdf}
+          title={!onExportPdf ? "A contract PDF is not available for this position." : undefined}
+          className="flex-1 flex items-center justify-center gap-2 bg-[#1E2D2666] hover:bg-bg-input text-text-primary font-medium py-2.5 px-4 rounded-xl transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
            <Image
               src={Download}
-              alt="export icon"
+              alt={translateCopy("ui.export_icon_1c4dcec")}
               width={11.67}
               height={11.67}
              />
-          Export PDF
+          {translateCopy("ui.export_pdf_3dd7d56")}
         </button>
         <button
           onClick={onViewClauses}
-          className="flex-1 flex items-center justify-center gap-2 bg-[#1E2D2666] hover:bg-bg-input text-text-primary font-medium py-2.5 px-4 rounded-xl transition-colors"
+          disabled={!onViewClauses}
+          title={!onViewClauses ? "Contract clauses are not available for this position." : undefined}
+          className="flex-1 flex items-center justify-center gap-2 bg-[#1E2D2666] hover:bg-bg-input text-text-primary font-medium py-2.5 px-4 rounded-xl transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Eye className="w-4 h-4" />
-          View Clauses
+          {translateCopy("ui.view_clauses_55dc206")}
         </button>
       </div>
     </BentoCard>

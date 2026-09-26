@@ -1,7 +1,10 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signTransaction } from "@stellar/freighter-api";
 import {
   AuditLogCard,
@@ -13,7 +16,9 @@ import {
 } from "@/components/vault";
 import { DriverManifestForm, LoadingState, type DriverManifestData } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
+import { formatDate, formatDateTime } from "@/lib/i18n";
 import { useWallet } from "@/hooks/useWallet";
+import { formatDateTime, formatNumber } from "@/lib/i18n/format";
 import {
   api,
   apiConfig,
@@ -25,15 +30,15 @@ import {
 const FOOTER_CONTENT = {
   version: "V4.8.2",
   links: [
-    { label: "Privacy Protocol", href: "#" },
-    { label: "Compliance", href: "#" },
-    { label: "Audit Report", href: "#" },
+    { label: "Privacy Protocol", href: "/settings" },
+    { label: "Compliance", href: "/vault" },
+    { label: "Audit Report", href: "/vault/manage" },
   ],
   socialLinks: [
-    { platform: "x" as const, href: "#" },
-    { platform: "instagram" as const, href: "#" },
-    { platform: "tiktok" as const, href: "#" },
-    { platform: "discord" as const, href: "#" },
+    { platform: "x" as const, href: "https://x.com" },
+    { platform: "instagram" as const, href: "https://www.instagram.com" },
+    { platform: "tiktok" as const, href: "https://www.tiktok.com" },
+    { platform: "discord" as const, href: "https://discord.com" },
   ],
 };
 
@@ -47,6 +52,7 @@ const PARTNERS = [
 ];
 
 export default function VaultPage() {
+  const router = useRouter();
   const {
     shortAddress,
     token,
@@ -118,7 +124,7 @@ export default function VaultPage() {
             ? ("multi-sig" as const)
             : ("ledger" as const),
       title: `Trade ${trade.status.toLowerCase().replace(/_/g, " ")}`,
-      metadata: `${new Date(trade.updatedAt).toLocaleString()} - ${trade.tradeId}`,
+      metadata: `${formatDateTime(trade.updatedAt)} - ${trade.tradeId}`,
     })) ?? [
       {
         type: "ledger" as const,
@@ -133,6 +139,11 @@ export default function VaultPage() {
   const manifestTrade =
     recentTrades?.items.find((trade) => ["FUNDED", "DELIVERED"].includes(trade.status)) ??
     recentTrades?.items[0];
+  const releaseTrade = recentTrades?.items.find((trade) => ["FUNDED", "DELIVERED"].includes(trade.status));
+
+  const handleReviewRelease = () => {
+    if (releaseTrade) router.push(`/trades/${encodeURIComponent(releaseTrade.tradeId)}`);
+  };
 
   const manifestSubmittingRef = useRef(false);
 
@@ -204,9 +215,9 @@ export default function VaultPage() {
         {/* Page header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-text-primary">Vault Overview</h1>
+            <h1 className="text-xl font-bold text-text-primary">{translateCopy("ui.vault_overview_4ce764e")}</h1>
             <p className="text-xs text-text-secondary mt-0.5">
-              Your escrow positions and custody status.
+              {translateCopy("ui.your_escrow_positions_and_custod_2b5401d")}
             </p>
           </div>
           <Link
@@ -218,7 +229,7 @@ export default function VaultPage() {
               <circle cx="8" cy="8.5" r="2" />
               <path d="M8 3V1" />
             </svg>
-            Manage Vault
+            {translateCopy("ui.manage_vault_e06a8cf")}
           </Link>
         </div>
 
@@ -227,14 +238,14 @@ export default function VaultPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-text-secondary">
-                Vault Identity
+                {translateCopy("ui.vault_identity_c1fb7c1")}
               </p>
               <p className="mt-1 text-sm text-text-primary">
                 {shortAddress ?? "No connected wallet"}
               </p>
               {isAuthenticated && balance !== null && (
                 <p className="mt-1 text-xs text-text-muted">
-                  Balance: <span className="font-medium text-text-secondary">{balance} {asset}</span>
+                  {translateCopy("ui.balance_802dc02")}{" "}<span className="font-medium text-text-secondary">{balance} {asset}</span>
                 </p>
               )}
             </div>
@@ -262,7 +273,7 @@ export default function VaultPage() {
 
         {/* Loading skeleton */}
         {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-busy="true" aria-label="Loading vault data">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-busy="true" aria-label={translateCopy("ui.loading_vault_data_8cfa64c")}>
             <LoadingState variant="card" rows={3} />
             <LoadingState variant="card" rows={3} />
             <LoadingState variant="card" rows={2} />
@@ -278,7 +289,7 @@ export default function VaultPage() {
               onClick={() => void fetchVaultData()}
               className="mt-3 rounded-lg border border-border-default px-4 py-1.5 text-xs font-medium text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
             >
-              Retry
+              {translateCopy("common.retry")}
             </button>
           </div>
         )}
@@ -286,12 +297,12 @@ export default function VaultPage() {
         {/* Empty state */}
         {isEmpty && (
           <div className="rounded-2xl border border-border-default bg-card p-8 text-center">
-            <p className="text-text-muted text-sm">No trades yet. Create a trade to get started.</p>
+            <p className="text-text-muted text-sm">{translateCopy("ui.no_trades_yet_create_a_trade_to__922412e")}</p>
             <Link
               href="/trades/create"
               className="mt-4 inline-flex rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-gold-hover transition-colors"
             >
-              Create Trade
+              {translateCopy("ui.create_trade_2747e94")}
             </Link>
           </div>
         )}
@@ -302,12 +313,12 @@ export default function VaultPage() {
             {/* Driver manifest */}
             <div className="rounded-2xl border border-border-default bg-card p-4 md:p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <p className="text-sm font-medium text-text-secondary">Driver/Vehicle Manifest</p>
+                <p className="text-sm font-medium text-text-secondary">{translateCopy("ui.driver_vehicle_manifest_3fdf622")}</p>
                 <button
                   onClick={() => setIsManifestOpen(true)}
                   className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse transition-colors hover:bg-gold-hover"
                 >
-                  Log Driver Details
+                  {translateCopy("ui.log_driver_details_74e4dc8")}
                 </button>
               </div>
               {manifestStatus && (
@@ -317,9 +328,9 @@ export default function VaultPage() {
               )}
               {manifestData && (
                 <div className="mt-4 rounded-lg border border-border-default bg-bg-elevated p-3 text-sm text-text-primary">
-                  <p><strong>Driver:</strong> {manifestData.driverName}</p>
-                  <p><strong>Phone:</strong> {manifestData.driverPhone}</p>
-                  <p><strong>License:</strong> {manifestData.licensePlate}</p>
+                  <p><strong>{translateCopy("ui.driver_b5b7f6b")}</strong> {manifestData.driverName}</p>
+                  <p><strong>{translateCopy("ui.phone_daeea4d")}</strong> {manifestData.driverPhone}</p>
+                  <p><strong>{translateCopy("ui.license_de13bf1")}</strong> {manifestData.licensePlate}</p>
                 </div>
               )}
             </div>
@@ -356,7 +367,7 @@ export default function VaultPage() {
                     },
                     {
                       label: "Total Volume",
-                      date: `$${vaultValue.toLocaleString()}`,
+                      date: `$${formatNumber(vaultValue)}`,
                       status: "pending",
                     },
                   ]}
@@ -368,7 +379,7 @@ export default function VaultPage() {
                   value={vaultValue}
                   currency="USD"
                   isInsured={isAuthenticated}
-                  onReleaseFunds={() => undefined}
+                  onReleaseFunds={releaseTrade ? handleReviewRelease : undefined}
                 />
               </div>
 
@@ -377,7 +388,7 @@ export default function VaultPage() {
                   contractId={recentTrades?.items[0]?.tradeId ?? "No active trades"}
                   agreementDate={
                     recentTrades?.items[0]?.createdAt
-                      ? new Date(recentTrades.items[0].createdAt).toLocaleDateString()
+                      ? formatDate(recentTrades.items[0].createdAt)
                       : "—"
                   }
                   settlementType="Immediate / Fiat-Backed"
@@ -395,8 +406,7 @@ export default function VaultPage() {
                       : "Seller",
                     color: "emerald",
                   }}
-                  onExportPdf={() => undefined}
-                  onViewClauses={() => undefined}
+                  onExportPdf={() => window.print()}
                 />
               </div>
 
@@ -405,7 +415,7 @@ export default function VaultPage() {
               </div>
 
               <div className="md:col-span-2 lg:col-span-3 rounded-2xl border border-border-default bg-card p-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-gold">Partner network</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-gold">{translateCopy("ui.partner_network_0e05b9c")}</p>
                 <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
                   {PARTNERS.map((partner) => (
                     <div

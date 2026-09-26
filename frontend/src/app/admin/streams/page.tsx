@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -66,11 +68,6 @@ export default function AdminStreamsPage() {
     fetchStreams();
   }, [fetchStreams]);
 
-  const handleClawbackSuccess = useCallback(() => {
-    setActiveStreamId(null);
-    fetchStreams();
-  }, [fetchStreams]);
-
   if (!isAdmin) {
     return (
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="admin-streams-page">
@@ -83,7 +80,7 @@ export default function AdminStreamsPage() {
     return (
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="admin-streams-page">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-text-primary">Stream Admin</h1>
+          <h1 className="text-3xl font-bold text-text-primary">{translateCopy("ui.stream_admin_eeae618")}</h1>
         </div>
         <SkeletonList rows={PAGE_SIZE} />
       </div>
@@ -103,7 +100,7 @@ export default function AdminStreamsPage() {
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="admin-streams-page">
         <ErrorState
           variant="card"
-          title="Couldn't load streams"
+          title={translateCopy("ui.couldn_t_load_streams_a4e5f76")}
           message={error}
           onRetry={fetchStreams}
         />
@@ -114,7 +111,7 @@ export default function AdminStreamsPage() {
   return (
     <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="admin-streams-page">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-text-primary">Stream Admin</h1>
+        <h1 className="text-3xl font-bold text-text-primary">{translateCopy("ui.stream_admin_eeae618")}</h1>
       </div>
 
       <VirtualizedList
@@ -124,7 +121,7 @@ export default function AdminStreamsPage() {
         keyExtractor={(stream) => stream.streamId}
         isEmpty={streams.length === 0}
         emptyState={
-          <div className="text-center py-12 text-text-secondary">No streams to display</div>
+          <div className="text-center py-12 text-text-secondary">{translateCopy("ui.no_streams_to_display_91bc4d9")}</div>
         }
         renderItem={(stream) => {
           const isActionable = BigInt(stream.unclaimed || "0") > BigInt(0);
@@ -144,12 +141,12 @@ export default function AdminStreamsPage() {
                     </span>
                   </div>
                   <div className="text-sm text-text-secondary mb-1">
-                    Recipient: {stream.recipient}
+                    {translateCopy("ui.recipient_ec17b25")}{" "}{stream.recipient}
                   </div>
                   <div className="text-sm text-text-secondary">
-                    Remaining vested: <span className="font-mono text-text-primary">{stream.unclaimed}</span>
+                    {translateCopy("ui.remaining_vested_34f9f34")}{" "}<span className="font-mono text-text-primary">{stream.unclaimed}</span>
                     {" · "}
-                    Vesting state: {stream.vestingState}
+                    {translateCopy("ui.vesting_state_233c2e2")}{" "}{stream.vestingState}
                   </div>
                 </div>
                 <div>
@@ -159,10 +156,10 @@ export default function AdminStreamsPage() {
                       size="sm"
                       onClick={() => setActiveStreamId(isOpen ? null : stream.streamId)}
                     >
-                      {isOpen ? "Cancel" : "Clawback"}
+                      {isOpen ? "Cancel" : "Preview clawback"}
                     </Button>
                   ) : (
-                    <span className="text-xs text-text-secondary">No clawback available</span>
+                    <span className="text-xs text-text-secondary">{translateCopy("ui.no_clawback_available_33fc8e7")}</span>
                   )}
                 </div>
               </div>
@@ -173,7 +170,6 @@ export default function AdminStreamsPage() {
                     token={token}
                     streamId={stream.streamId}
                     remainingVested={stream.unclaimed}
-                    onSuccess={handleClawbackSuccess}
                   />
                 </div>
               )}
@@ -190,10 +186,10 @@ export default function AdminStreamsPage() {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
-            Previous
+            {translateCopy("ui.previous_50f9428")}
           </Button>
           <span className="px-3 py-1 text-sm text-text-secondary">
-            Page {page} of {totalPages}
+            {translateCopy("ui.page_fb06270")}{" "}{page} {translateCopy("ui.of_de04fa0")}{" "}{totalPages}
           </span>
           <Button
             variant="secondary"
@@ -201,7 +197,7 @@ export default function AdminStreamsPage() {
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
           >
-            Next
+            {translateCopy("ui.next_bc98198")}
           </Button>
         </div>
       )}

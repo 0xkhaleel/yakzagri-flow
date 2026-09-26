@@ -14,6 +14,7 @@ interface FreighterIdentityState {
   isAuthorized: boolean;
   isWalletDetected: boolean;
   isLoading: boolean;
+  error: string | null;
   connectWallet: () => Promise<void>;
   refreshIdentity: () => Promise<void>;
 }
@@ -32,6 +33,7 @@ const initialState: FreighterIdentitySnapshot = {
   isAuthorized: false,
   isWalletDetected: false,
   isLoading: true,
+  error: null,
 };
 
 let storeState = initialState;
@@ -105,6 +107,7 @@ async function runRefreshIdentity(): Promise<void> {
       isAuthorized: hasWallet && hasPermission,
       isWalletDetected: hasWallet,
       isLoading: false,
+      error: null,
     }));
   } catch {
     if (!isLatestOperation(operationId)) {
@@ -117,6 +120,7 @@ async function runRefreshIdentity(): Promise<void> {
       isAuthorized: false,
       isWalletDetected: false,
       isLoading: false,
+      error: "Failed to read wallet state",
     }));
   }
 }
@@ -145,6 +149,7 @@ async function refreshIdentityStore(): Promise<void> {
 async function connectWalletStore(): Promise<void> {
   const operationId = beginOperation();
   updateStore((state) => ({ ...state, isLoading: true }));
+  let accessError: string | null = null;
 
   try {
     const requestResult = await requestAccess();
@@ -159,14 +164,20 @@ async function connectWalletStore(): Promise<void> {
         isAuthorized: true,
         isWalletDetected: true,
         isLoading: false,
+        error: null,
       }));
       return;
     }
-  } catch {
+    accessError = requestResult.error?.message || "Failed to connect wallet";
+  } catch (error) {
+    accessError = error instanceof Error ? error.message : "Failed to connect wallet";
     // Fall through to a full refresh so the store reflects the latest wallet state.
   }
 
   await refreshIdentityStore();
+  if (accessError) {
+    updateStore((state) => ({ ...state, error: accessError }));
+  }
 }
 
 export function __resetFreighterIdentityStoreForTests(): void {
@@ -178,7 +189,7 @@ export function __resetFreighterIdentityStoreForTests(): void {
 }
 
 export function useFreighterIdentity(): FreighterIdentityState {
-  const { address, isAuthorized, isWalletDetected, isLoading } =
+  const { address, isAuthorized, isWalletDetected, isLoading, error } =
     useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   useEffect(() => {
@@ -196,6 +207,7 @@ export function useFreighterIdentity(): FreighterIdentityState {
     isAuthorized,
     isWalletDetected,
     isLoading,
+    error,
     connectWallet: connectWalletStore,
     refreshIdentity: refreshIdentityStore,
   };

@@ -4,11 +4,6 @@ const STATIC_ASSETS = [
   "/manifest.json",
 ];
 
-const API_CACHE_NAME = "amana-api-cache-v1";
-const API_CACHE_TTL_MS = 5 * 60 * 1000;
-
-const STATIC_ASSET_PATTERN = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|otf|webp|avif)$/;
-
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -23,7 +18,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME && key !== API_CACHE_NAME)
+          .filter((key) => key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       );
     })
@@ -39,15 +34,8 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // Never cache streaming/video/audio or range requests.
-  if (request.headers.has("range")) return;
-  const destination = request.destination;
-  if (destination === "video" || destination === "audio") return;
-
-  // App data routes: network-first with cache fallback.
-  if (url.origin === self.location.origin &&
-      (url.pathname.startsWith("/api/") || url.pathname.startsWith("/trades/"))) {
-    event.respondWith(networkFirstWithCache(request));
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/trades/")) {
+    event.respondWith(networkOnly(request));
     return;
   }
 
@@ -58,47 +46,28 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Non-essential / cross-origin requests (analytics, third-party fonts,
-  // external images) bypass the SW cache and go straight to the network.
+  event.respondWith(networkOnly(request));
 });
 
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-  const network = fetch(request)
-    .then((response) => {
-      if (response.ok) {
-        cache.put(request, response.clone());
-      }
-      return response;
-    })
-    .catch(() => cached || new Response("Offline", { status: 503 }));
-  return cached || network;
-}
-
-async function networkFirstWithCache(request) {
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
   try {
     const response = await fetch(request);
     if (response.ok) {
-      const cache = await caches.open(API_CACHE_NAME);
-      const cloned = response.clone();
-      const body = await cloned.text();
-      cache.put(request, new Response(body, {
-        headers: {
-          ...Object.fromEntries(cloned.headers.entries()),
-          "x-amana-cache-time": String(Date.now()),
-        },
-      }));
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
     }
     return response;
   } catch {
-    const cached = await caches.match(request);
-    if (cached) {
-      const cacheTime = cached.headers.get("x-amana-cache-time");
-      if (cacheTime && Date.now() - parseInt(cacheTime) < API_CACHE_TTL_MS) {
-        return cached;
-      }
-    }
+    return new Response("Offline", { status: 503 });
+  }
+}
+
+async function networkOnly(request) {
+  try {
+    return await fetch(request);
+  } catch {
     return new Response(JSON.stringify({ offline: true, error: "You are offline" }), {
       status: 503,
       headers: { "Content-Type": "application/json" },

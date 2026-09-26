@@ -10,16 +10,11 @@ import {
   Clock,
   LucideProps,
 } from "lucide-react";
+import type { TradeStatus } from "@/types/trade";
 
 // ── Types ────────────────────────────────────────────────────────
 
-export type TradeStatus =
-  | "delivered"
-  | "in-transit"
-  | "disputed"
-  | "locked"
-  | "draft"
-  | "pending";
+export type { TradeStatus };
 
 export interface StatusBadgeProps {
   status: TradeStatus;

@@ -19,7 +19,7 @@ To provide a programmable safety net for regional commodity trading. Amana ensur
 - **Dynamic Loss Sharing:** Negotiable risk-sharing ratios (e.g., 50/50, 70/30) hardcoded into every trade to handle transit accidents or theft.
 - **Proof-of-Delivery (PoD):** An optional video-based verification protocol involving the buyer and the driver to confirm the state of goods. Video evidence can be submitted and stored on IPFS for dispute resolution.
 - **Volatility Protection:** Utilizes Stellar Path Payments to allow users to pay in local currency (NGN) while locking value in cNGN.
-- **Wallet Integration:** Freighter / Albedo wallet connection with a wallet state machine and offline-first support.
+- **Wallet Integration:** Freighter wallet connection with a wallet state machine and offline-first support.
 - **Admin & Mediator Dashboards:** Admin feature gates, dispute-resolution workflows, and treasury/streams/asset views.
 
 ## 🏗 Technical Stack
@@ -27,7 +27,7 @@ To provide a programmable safety net for regional commodity trading. Amana ensur
 - **Framework:** [Next.js](https://nextjs.org/) 16 (App Router, React 19, Turbopack)
 - **Styling:** Tailwind CSS 4 with design-token-driven theme
 - **State:** Zustand (wallet, trades, UI, notifications, offline queue)
-- **Blockchain:** [Stellar](https://www.stellar.org/) via `@stellar/stellar-sdk` + Freighter/Albedo
+- **Blockchain:** [Stellar](https://www.stellar.org/) via `@stellar/stellar-sdk` + Freighter
 - **API:** Typed Zod-validated clients against the backend API (`/api/v1`)
 - **Storage:** IPFS (via Pinata) + Supabase for off-chain metadata
 - **Testing:** Jest + Testing Library (unit), Playwright (e2e + visual), Pact (API contract)

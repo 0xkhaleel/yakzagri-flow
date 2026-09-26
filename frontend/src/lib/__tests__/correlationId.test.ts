@@ -7,6 +7,9 @@ import {
   extractBackendCorrelationId,
   resolveCorrelationId,
 } from "../correlationId";
+import { getCorrelationId } from "../actionDedup";
+import { createCorrelationId } from "../traced-fetch";
+import { useOfflineQueueStore } from "../../stores/offlineQueueStore";
 
 describe("generateCorrelationId", () => {
   it("returns a string matching amana-<base36>-<hex8> format", () => {
@@ -18,6 +21,29 @@ describe("generateCorrelationId", () => {
     const ids = Array.from({ length: 50 }, generateCorrelationId);
     const unique = new Set(ids);
     expect(unique.size).toBe(50);
+  });
+});
+
+describe("Standardized correlation-ID across call sites", () => {
+  it("getCorrelationId from actionDedup returns amana standard format", () => {
+    const id = getCorrelationId();
+    expect(id).toMatch(/^amana-[0-9a-z]+-[0-9a-f]{8}$/);
+  });
+
+  it("createCorrelationId from traced-fetch returns amana standard format", () => {
+    const id = createCorrelationId();
+    expect(id).toMatch(/^amana-[0-9a-z]+-[0-9a-f]{8}$/);
+  });
+
+  it("useOfflineQueueStore default correlationId follows amana standard format", () => {
+    useOfflineQueueStore.getState().clear();
+    const entry = useOfflineQueueStore.getState().enqueue({
+      type: "create-trade",
+      endpoint: "/trades",
+      method: "POST",
+    });
+    expect(entry.correlationId).toMatch(/^amana-[0-9a-z]+-[0-9a-f]{8}$/);
+    useOfflineQueueStore.getState().clear();
   });
 });
 
