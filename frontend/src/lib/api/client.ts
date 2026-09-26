@@ -28,9 +28,57 @@ export class ApiError extends Error {
 
 const TOKEN_STORAGE_KEY = "amana_jwt";
 
+/**
+ * Decode a JWT payload without throwing. Returns null for malformed tokens
+ * (bad base64, bad JSON, non-object payloads) so callers can treat them as
+ * unauthenticated instead of crashing.
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "=",
+    );
+    const json =
+      typeof atob === "function"
+        ? atob(padded)
+        : Buffer.from(padded, "base64").toString("binary");
+    const payload = JSON.parse(json);
+    if (!payload || typeof payload !== "object") return null;
+    return payload as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Returns true when the token is structurally valid and not expired.
+ * Malformed tokens and tokens without a usable `exp` are treated as invalid
+ * so they can never be used to bypass auth.
+ */
+export function isTokenValid(token: string | null | undefined): boolean {
+  if (!token || typeof token !== "string") return false;
+  const payload = decodeJwtPayload(token);
+  if (!payload) return false;
+  const exp = payload.exp;
+  if (typeof exp !== "number" || !Number.isFinite(exp)) return false;
+  // `exp` is seconds since epoch (backend JWT semantics); compare in ms.
+  return exp * 1000 > Date.now();
+}
+
 function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
-  return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  const token = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  if (!token) return null;
+  if (!isTokenValid(token)) {
+    // Expired or malformed token: drop it so it can't be reused.
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    return null;
+  }
+  return token;
 }
 
 export const navigationHelpers = {
