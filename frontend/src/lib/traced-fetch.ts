@@ -117,11 +117,17 @@ export class TracedHttpClient {
     const requestId = this.generateRequestId();
 
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       'X-Correlation-Id': correlationId,
       'X-Request-Id': requestId,
       ...this.baseHeaders,
     };
+
+    // Only set Content-Type when there is a request body. Setting it on
+    // bodyless requests (e.g. GET/HEAD) forces a CORS preflight on every
+    // cross-origin call, so we omit it unless a payload is present.
+    if (options.body != null) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     // Add custom headers from options
     if (options.headers) {
@@ -308,62 +314,9 @@ export class TracedHttpClient {
   async delete<T = unknown>(url: string, options: TracedRequestOptions = {}): Promise<TracedResponse<T>> {
     return this.request<T>('DELETE', url, options);
   }
-
-  /**
-   * Upload file with tracing
-   */
-  async upload<T = unknown>(url: string, file: File, options: TracedRequestOptions = {}): Promise<TracedResponse<T>> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return this.request<T>('POST', url, {
-      ...options,
-      body: formData,
-      headers: {
-        ...options.headers,
-        // Don't set Content-Type for FormData - browser will set it with boundary
-      },
-    });
-  }
 }
 
 /**
  * Default traced HTTP client instance
  */
 export const tracedHttpClient = TracedHttpClient.getInstance();
-
-/**
- * Initialize the HTTP client with default settings
- */
-export function initializeHttpClient(baseURL: string = 'http://localhost:4000'): void {
-  tracedHttpClient.setBaseURL(baseURL);
-  
-  // Set user agent for better debugging
-  tracedHttpClient.setDefaultHeaders({
-    'User-Agent': `Amana-Frontend/${navigator.userAgent}`,
-    'X-Client-Version': '1.0.0',
-    'X-Client-Platform': navigator.platform,
-  });
-}
-
-/**
- * Utility to create a new correlation ID for a specific user flow
- */
-export function createCorrelationId(): string {
-  const client = TracedHttpClient.getInstance();
-  return client['generateUUID']();
-}
-
-/**
- * Utility to set correlation ID for the current session
- */
-export function setSessionCorrelationId(correlationId: string): void {
-  sessionStorage.setItem('amana-correlation-id', correlationId);
-}
-
-/**
- * Utility to get current session correlation ID
- */
-export function getSessionCorrelationId(): string | null {
-  return sessionStorage.getItem('amana-correlation-id');
-}

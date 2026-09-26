@@ -80,6 +80,41 @@ describe("API Client", () => {
         "Network error",
       );
     });
+
+    it("should not set Content-Type on GET requests without a body", async () => {
+      const fetchMock = jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({ data: "test" }),
+        } as Response),
+      );
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      await request<{ data: string }>("/test");
+
+      const init = fetchMock.mock.calls[0][1] as RequestInit;
+      const headers = (init.headers ?? {}) as Record<string, string>;
+      expect(headers["Content-Type"]).toBeUndefined();
+    });
+
+    it("should set Content-Type: application/json when a body is present", async () => {
+      const fetchMock = jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({ data: "test" }),
+        } as Response),
+      );
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      await request<{ data: string }>("/test", {
+        method: "POST",
+        body: JSON.stringify({ hello: "world" }),
+      });
+
+      const init = fetchMock.mock.calls[0][1] as RequestInit;
+      const headers = (init.headers ?? {}) as Record<string, string>;
+      expect(headers["Content-Type"]).toBe("application/json");
+    });
   });
 
   describe("requestWithResult", () => {
