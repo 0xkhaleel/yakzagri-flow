@@ -44,10 +44,16 @@ export const navigationHelpers = {
 function createHeaders(
   headers?: HeadersInit,
   token?: string | null,
+  hasBody?: boolean,
 ): Record<string, string> {
-  const resolvedHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const resolvedHeaders: Record<string, string> = {};
+
+  // Only advertise a JSON content type when a request body is actually sent.
+  // Setting it on bodyless requests (GET/HEAD/DELETE) forces CORS preflights
+  // for cross-origin calls and needlessly widens the preflight surface.
+  if (hasBody) {
+    resolvedHeaders["Content-Type"] = "application/json";
+  }
 
   if (headers instanceof Headers) {
     headers.forEach((value, key) => {
@@ -143,10 +149,12 @@ export async function request<T>(
 
   const authToken = token ?? (!skipAuth ? getStoredToken() : null);
 
+  const hasBody = fetchOptions.body != null;
+
   try {
     const response = await fetch(resolveApiUrl(endpoint), {
       ...fetchOptions,
-      headers: createHeaders(headers, authToken),
+      headers: createHeaders(headers, authToken, hasBody),
     });
 
     const data = await response.json().catch(() => null);
