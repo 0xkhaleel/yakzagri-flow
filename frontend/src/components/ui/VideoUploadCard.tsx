@@ -9,6 +9,20 @@ export interface VideoUploadCardProps {
   onUpload?: (ipfsHash: string) => void;
 }
 
+/**
+ * Server-side proxy route that pins files to IPFS.
+ * The Pinata secret (PINATA_SECRET / PINATA_JWT) is only read on the server,
+ * never inlined into the client bundle.
+ */
+const PINATA_UPLOAD_ENDPOINT = "/api/pinata/upload";
+
+/**
+ * Public IPFS gateway used to render the uploaded asset.
+ * Safe to expose, so it is read from a NEXT_PUBLIC_* var (inlined by Next.js).
+ */
+const IPFS_GATEWAY =
+  process.env.NEXT_PUBLIC_PINATA_GATEWAY ?? "https://gateway.pinata.cloud";
+
 export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -45,12 +59,9 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
           }
         };
         xhr.onerror = () => reject(new Error("Network error during upload"));
-        xhr.open(
-          "POST",
-          "https://api.pinata.cloud/pinning/pinFileToIPFS"
-        );
-        const jwt = process.env.NEXT_PUBLIC_PINATA_JWT;
-        if (jwt) xhr.setRequestHeader("Authorization", `Bearer ${jwt}`);
+        // Upload through the server-side proxy so the Pinata secret
+        // (PINATA_SECRET / PINATA_JWT) never reaches the browser.
+        xhr.open("POST", PINATA_UPLOAD_ENDPOINT);
         xhr.send(data);
       });
 
@@ -165,7 +176,7 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
             {ipfsHash}
           </span>
           <a
-            href={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}
+            href={`${IPFS_GATEWAY}/ipfs/${ipfsHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 text-gold hover:text-gold-hover transition-colors"
