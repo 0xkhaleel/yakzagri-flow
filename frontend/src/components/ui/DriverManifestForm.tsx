@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -73,12 +75,12 @@ export function DriverManifestForm({ isOpen, onComplete, onDismiss }: DriverMani
             <div className="p-6 border-b border-border-default">
               <div className="flex items-center gap-3 mb-4">
                 <span className={clsx("rounded-lg p-2", iconAccent)}>
-                  <Icon name="truck" size="lg" aria-label="driver vehicle" className="text-gold" />
+                  <Icon name="truck" size="lg" aria-label={translateCopy("ui.driver_vehicle_986d191")} className="text-gold" />
                 </span>
                 <div>
-                  <Dialog.Title className="text-xl font-semibold text-primary">Driver Manifest</Dialog.Title>
+                  <Dialog.Title className="text-xl font-semibold text-primary">{translateCopy("ui.driver_manifest_9fe8366")}</Dialog.Title>
                   <Dialog.Description className="text-sm text-secondary mt-1">
-                    Enter driver and vehicle data for the Ship-First transit phase.
+                    {translateCopy("ui.enter_driver_and_vehicle_data_fo_9c7eb0e")}
                   </Dialog.Description>
                 </div>
               </div>
@@ -92,7 +94,7 @@ export function DriverManifestForm({ isOpen, onComplete, onDismiss }: DriverMani
                   className="w-full rounded-xl border border-border-default bg-bg-input px-4 py-2 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/30"
                   value={driverName}
                   onChange={(event) => setDriverName(event.target.value)}
-                  placeholder="e.g. Amina Khalid"
+                  placeholder={translateCopy("ui.e_g_amina_khalid_d133ea8")}
                   required
                 />
               </FormField>
@@ -109,7 +111,7 @@ export function DriverManifestForm({ isOpen, onComplete, onDismiss }: DriverMani
                   className="w-full rounded-xl border border-border-default bg-bg-input px-4 py-2 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/30"
                   value={driverPhone}
                   onChange={(event) => setDriverPhone(event.target.value)}
-                  placeholder="e.g. +234 803 000 0000"
+                  placeholder={translateCopy("ui.e_g_234_803_000_0000_a54ac33")}
                   pattern="^\\+?[0-9\s-]{7,20}$"
                   required
                 />
@@ -122,7 +124,7 @@ export function DriverManifestForm({ isOpen, onComplete, onDismiss }: DriverMani
                   className="w-full rounded-xl border border-border-default bg-bg-input px-4 py-2 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/30"
                   value={licensePlate}
                   onChange={(event) => setLicensePlate(event.target.value)}
-                  placeholder="e.g. GEG 1123 H"
+                  placeholder={translateCopy("ui.e_g_geg_1123_h_814141c")}
                   required
                 />
               </FormField>
@@ -133,14 +135,14 @@ export function DriverManifestForm({ isOpen, onComplete, onDismiss }: DriverMani
                   onClick={handleClose}
                   className="flex-1 px-4 py-2 rounded-lg border border-border-default text-secondary hover:bg-elevated transition-colors"
                 >
-                  Cancel
+                  {translateCopy("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={!submitEnabled}
                   className="flex-1 px-4 py-2 rounded-lg bg-gold text-text-inverse font-medium hover:bg-gold-hover transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Submit Manifest
+                  {translateCopy("ui.submit_manifest_13f57ee")}
                 </button>
               </div>
             </form>

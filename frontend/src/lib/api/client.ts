@@ -44,10 +44,16 @@ export const navigationHelpers = {
 function createHeaders(
   headers?: HeadersInit,
   token?: string | null,
+  hasBody?: boolean,
 ): Record<string, string> {
-  const resolvedHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const resolvedHeaders: Record<string, string> = {};
+
+  // Only advertise a JSON content type when a request body is actually sent.
+  // Setting it on bodyless requests (GET/HEAD/DELETE) forces CORS preflights
+  // for cross-origin calls and needlessly widens the preflight surface.
+  if (hasBody) {
+    resolvedHeaders["Content-Type"] = "application/json";
+  }
 
   if (headers instanceof Headers) {
     headers.forEach((value, key) => {
@@ -126,18 +132,29 @@ export function resolveApiUrl(endpoint: string): string {
     : `${getApiBaseUrl()}${getApiVersionPrefix()}${endpoint}`;
 }
 
+export type RequestOptions<T> = FetchOptions & {
+  /**
+   * Optional zod schema used to validate the live response payload. When
+   * provided, schema drift (backend returning an unexpected shape) is caught
+   * and surfaced as an ApiError instead of silently flowing into the UI.
+   */
+  schema?: z.ZodSchema<T>;
+};
+
 export async function request<T>(
   endpoint: string,
-  options: FetchOptions = {},
+  options: RequestOptions<T> = {},
 ): Promise<T> {
-  const { token, skipAuth, headers, ...fetchOptions } = options;
+  const { token, skipAuth, headers, schema, ...fetchOptions } = options;
 
   const authToken = token ?? (!skipAuth ? getStoredToken() : null);
+
+  const hasBody = fetchOptions.body != null;
 
   try {
     const response = await fetch(resolveApiUrl(endpoint), {
       ...fetchOptions,
-      headers: createHeaders(headers, authToken),
+      headers: createHeaders(headers, authToken, hasBody),
     });
 
     const data = await response.json().catch(() => null);
@@ -151,6 +168,22 @@ export async function request<T>(
         (data as { error?: string })?.error || response.statusText,
         data,
       );
+    }
+
+    if (schema) {
+      const validationResult = schema.safeParse(data);
+      if (!validationResult.success) {
+        trackApiFailure(endpoint, response.status, {
+          method: fetchOptions.method ?? "GET",
+          error: "Response validation failed",
+        });
+        throw new ApiError(
+          500,
+          "Response validation failed",
+          validationResult.error,
+        );
+      }
+      return validationResult.data;
     }
 
     return data as T;
@@ -175,19 +208,7 @@ export async function requestWithResult<T>(
   options: FetchOptions = {},
 ): Promise<ApiResult<T>> {
   try {
-    const data = await request<T>(endpoint, options);
-
-    if (schema) {
-      const validationResult = schema.safeParse(data);
-      if (!validationResult.success) {
-        throw new ApiError(
-          500,
-          "Response validation failed",
-          validationResult.error,
-        );
-      }
-      return { success: true, data: validationResult.data };
-    }
+    const data = await request<T>(endpoint, { ...options, schema });
 
     return { success: true, data };
   } catch (error) {

@@ -14,7 +14,7 @@
  * callers do not need to await it; state updates trigger re-renders.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useOffline } from "./useOffline";
 import { useAuth } from "./useAuth";
 import { api, ApiError } from "@/lib/api";
@@ -62,6 +62,11 @@ export function useCachedTrades(
 
   const cacheKey = paramsKey(params);
 
+  // Keep the latest params in a ref so effects/callbacks don't depend on the
+  // caller's object identity (which changes every render).
+  const paramsRef = useRef(params);
+  paramsRef.current = params;
+
   // Seed state from cache on first render
   const initialRead = cacheRead<TradeListResponse>(DOMAIN, cacheKey);
   const [data, setData] = useState<TradeListResponse | null>(
@@ -84,7 +89,7 @@ export function useCachedTrades(
     setError(null);
 
     try {
-      const fresh = await api.trades.list(token, params);
+      const fresh = await api.trades.list(token, paramsRef.current);
       cacheWrite(DOMAIN, cacheKey, fresh);
       setData(fresh);
       setIsStale(false);
@@ -101,7 +106,7 @@ export function useCachedTrades(
       setIsLoading(false);
       fetchingRef.current = false;
     }
-  }, [isAuthenticated, token, isOffline, params, cacheKey]);
+  }, [isAuthenticated, token, isOffline, cacheKey]);
 
   // Re-read cache when params change
   useEffect(() => {

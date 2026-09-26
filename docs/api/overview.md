@@ -23,7 +23,10 @@ http://localhost:4000
 ```
 
 There is no versioned URL prefix (e.g. no `/v1`) today - all paths in this
-guide are relative to the base URL above.
+guide are relative to the base URL above. The client in `lib/api/*` builds
+request URLs from `NEXT_PUBLIC_API_URL` (default `http://localhost:4000`) and
+appends the same unversioned paths, so any `/api/v1/...` path you may have
+seen in older docs is stale - use the paths documented here.
 
 ## Authentication
 
@@ -73,15 +76,30 @@ A request with a missing, expired, revoked, or otherwise invalid token gets
 ### Public vs. protected endpoints
 
 Most endpoints require a bearer token. A few are intentionally public, e.g.
-`GET /users/:address` (public profile lookup) and the `/health*` endpoints.
-Each endpoint's own doc page notes whether auth is required.
+`GET /users/:address` (public profile lookup), `GET /search` (global search),
+and the `/health*` endpoints. Each endpoint's own doc page notes whether auth
+is required.
 
 ### Admin endpoints
 
 A subset of endpoints (treasury management, admin trade transitions, feature
-flags) additionally require the caller's wallet address to appear in the
-`ADMIN_STELLAR_PUBKEYS` allowlist (a comma-separated list of Stellar public
-keys). See [admin.md](./admin.md) for the full list and behavior.
+flags, audit log, and stream clawback preview) additionally require the
+caller's wallet address to appear in the `ADMIN_STELLAR_PUBKEYS` allowlist (a
+comma-separated list of Stellar public keys). See [admin.md](./admin.md) for
+the full list and behavior.
+
+## Endpoint index
+
+A quick map of the implemented client surface (`lib/api/*`) to its docs:
+
+| Area | Endpoints | Docs |
+|---|---|---|
+| Auth | `/auth/challenge`, `/auth/verify`, `/auth/logout` | this page |
+| Users | `/users/me`, `/users/:address` | this page |
+| Trades | `/trades`, `/trades/:id`, `/trades/:id/history`, `/trades/:id/dispute` | [trades.md](./trades.md) |
+| Search | `/search` | [trades.md](./trades.md#search) |
+| Stellar | `/stellar/*`, `/wallet/path-payment/quote` | [stellar.md](./stellar.md) |
+| Admin | `/admin/*` (incl. audit log, streams clawback preview) | [admin.md](./admin.md) |
 
 ## Rate limits
 
@@ -113,8 +131,8 @@ headers) before retrying.
 
 ## Pagination
 
-List endpoints that support pagination (e.g. `GET /trades`) use `page` +
-`limit` query parameters rather than cursors:
+List endpoints that support pagination (e.g. `GET /trades`, `GET /search`)
+use `page` + `limit` query parameters rather than cursors:
 
 | Parameter | Default | Notes |
 |---|---|---|

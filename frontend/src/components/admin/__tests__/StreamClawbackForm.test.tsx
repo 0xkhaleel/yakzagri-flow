@@ -32,17 +32,20 @@ describe("StreamClawbackForm", () => {
     mockUseToast.mockReturnValue({
       toasts: [],
       addToast: mockAddToast,
+      addToastWithCorrelation: jest.fn(),
+      updateToast: jest.fn(),
       removeToast: jest.fn(),
+      dismissByCorrelation: jest.fn(),
     });
   });
 
-  const renderForm = (onSuccess?: jest.Mock) =>
+  const renderForm = (onPreview?: jest.Mock) =>
     render(
       <StreamClawbackForm
         token="test-token"
         streamId="stream-abc-123"
         remainingVested="7500"
-        onSuccess={onSuccess}
+        onPreview={onPreview}
       />,
     );
 
@@ -50,7 +53,7 @@ describe("StreamClawbackForm", () => {
 
   it("disables the review button while the amount field is empty", () => {
     renderForm();
-    expect(screen.getByRole("button", { name: /review clawback/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /preview clawback/i })).toBeDisabled();
   });
 
   it("shows a clear validation error and disables review for an amount exceeding the remaining balance", async () => {
@@ -60,7 +63,7 @@ describe("StreamClawbackForm", () => {
     await user.type(screen.getByLabelText(/clawback amount/i), "7501");
 
     expect(screen.getByText(/cannot exceed the remaining vested balance of 7500/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /review clawback/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /preview clawback/i })).toBeDisabled();
   });
 
   it("shows a clear validation error for a zero amount", async () => {
@@ -70,7 +73,7 @@ describe("StreamClawbackForm", () => {
     await user.type(screen.getByLabelText(/clawback amount/i), "0");
 
     expect(screen.getByText(/greater than zero/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /review clawback/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /preview clawback/i })).toBeDisabled();
   });
 
   it("enables the review button for a valid amount within the remaining balance", async () => {
@@ -80,19 +83,20 @@ describe("StreamClawbackForm", () => {
     await user.type(screen.getByLabelText(/clawback amount/i), "3000");
 
     expect(screen.queryByText(/cannot exceed|greater than zero|whole number/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /review clawback/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /preview clawback/i })).toBeEnabled();
   });
 
   // ── Confirmation modal (#56) ─────────────────────────────────────────
 
-  it("opens the confirmation modal with the entered amount instead of submitting immediately", async () => {
+  it("opens the preview dialog with the entered amount instead of requesting immediately", async () => {
     const user = userEvent.setup();
     renderForm();
 
     await user.type(screen.getByLabelText(/clawback amount/i), "3000");
-    await user.click(screen.getByRole("button", { name: /review clawback/i }));
+    await user.click(screen.getByRole("button", { name: /preview clawback/i }));
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/read-only preview/i)).toBeInTheDocument();
     expect(mockClawbackPreview).not.toHaveBeenCalled();
     expect(screen.getByText("stream-abc-123")).toBeInTheDocument();
   });
@@ -102,7 +106,7 @@ describe("StreamClawbackForm", () => {
     renderForm();
 
     await user.type(screen.getByLabelText(/clawback amount/i), "3000");
-    await user.click(screen.getByRole("button", { name: /review clawback/i }));
+    await user.click(screen.getByRole("button", { name: /preview clawback/i }));
     await user.click(screen.getByRole("button", { name: /^cancel$/i }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -111,9 +115,9 @@ describe("StreamClawbackForm", () => {
 
   // ── Submission + error mapping (#59) ─────────────────────────────────
 
-  it("submits the clawback preview only after confirming, and reports success", async () => {
+  it("requests the read-only preview only after review and reports its projected balance", async () => {
     const user = userEvent.setup();
-    const onSuccess = jest.fn();
+    const onPreview = jest.fn();
     mockClawbackPreview.mockResolvedValueOnce({
       streamId: "stream-abc-123",
       remainingVested: "7500",
@@ -123,18 +127,19 @@ describe("StreamClawbackForm", () => {
       timestamp: "2026-07-30T12:00:00.000Z",
     });
 
-    renderForm(onSuccess);
+    renderForm(onPreview);
 
     await user.type(screen.getByLabelText(/clawback amount/i), "3000");
-    await user.click(screen.getByRole("button", { name: /review clawback/i }));
-    await user.click(screen.getByRole("button", { name: /confirm clawback/i }));
+    await user.click(screen.getByRole("button", { name: /preview clawback/i }));
+    await user.click(screen.getByRole("button", { name: /run preview/i }));
 
     await waitFor(() => {
       expect(mockClawbackPreview).toHaveBeenCalledWith("test-token", "stream-abc-123", "3000");
     });
-    expect(onSuccess).toHaveBeenCalledWith(
+    expect(onPreview).toHaveBeenCalledWith(
       expect.objectContaining({ postClawbackBalance: "4500" }),
     );
+    expect(screen.getByText(/projected remaining vested balance: 4500/i)).toBeInTheDocument();
     expect(mockAddToast).toHaveBeenCalledWith(
       expect.objectContaining({ type: "success" }),
     );
@@ -154,8 +159,8 @@ describe("StreamClawbackForm", () => {
     renderForm();
 
     await user.type(screen.getByLabelText(/clawback amount/i), "3000");
-    await user.click(screen.getByRole("button", { name: /review clawback/i }));
-    await user.click(screen.getByRole("button", { name: /confirm clawback/i }));
+    await user.click(screen.getByRole("button", { name: /preview clawback/i }));
+    await user.click(screen.getByRole("button", { name: /run preview/i }));
 
     await waitFor(() => {
       expect(mockAddToast).toHaveBeenCalledWith(
@@ -176,8 +181,8 @@ describe("StreamClawbackForm", () => {
     renderForm();
 
     await user.type(screen.getByLabelText(/clawback amount/i), "3000");
-    await user.click(screen.getByRole("button", { name: /review clawback/i }));
-    await user.click(screen.getByRole("button", { name: /confirm clawback/i }));
+    await user.click(screen.getByRole("button", { name: /preview clawback/i }));
+    await user.click(screen.getByRole("button", { name: /run preview/i }));
 
     await waitFor(() => {
       expect(mockAddToast).toHaveBeenCalledWith(
@@ -195,8 +200,8 @@ describe("StreamClawbackForm", () => {
     renderForm();
 
     await user.type(screen.getByLabelText(/clawback amount/i), "3000");
-    await user.click(screen.getByRole("button", { name: /review clawback/i }));
-    await user.click(screen.getByRole("button", { name: /confirm clawback/i }));
+    await user.click(screen.getByRole("button", { name: /preview clawback/i }));
+    await user.click(screen.getByRole("button", { name: /run preview/i }));
 
     await waitFor(() => {
       expect(mockAddToast).toHaveBeenCalledWith(

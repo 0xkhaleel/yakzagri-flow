@@ -1,3 +1,5 @@
+import { readSavedNetwork } from "@/lib/preferences";
+
 const DEFAULT_API_BASE_URL = "http://localhost:4000";
 
 export function getApiBaseUrl(): string {
@@ -20,6 +22,9 @@ export function getApiVersionPrefix(): string {
 }
 
 export function getStellarRpcUrl(): string {
+  const network = readSavedNetwork();
+  if (network === "mainnet") return "https://mainnet.sorobanrpc.com";
+  if (network === "testnet") return "https://soroban-testnet.stellar.org";
   return (
     process.env.NEXT_PUBLIC_STELLAR_RPC_URL ||
     process.env.NEXT_PUBLIC_RPC_URL ||
@@ -28,8 +33,10 @@ export function getStellarRpcUrl(): string {
 }
 
 export function getStellarNetworkPassphrase(): string {
-  const passphrase =
-    process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE ||
+  const network = readSavedNetwork();
+  if (network === "mainnet") return "Public Global Stellar Network ; September 2015";
+  if (network === "testnet") return "Test SDF Network ; September 2015";
+  return (
     process.env.NEXT_PUBLIC_STELLAR_NETWORK ||
     "Test SDF Network ; September 2015";
 

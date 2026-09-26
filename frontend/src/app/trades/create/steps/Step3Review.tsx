@@ -1,19 +1,22 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StrKey } from "@stellar/stellar-sdk";
-import { signTransaction } from "@stellar/freighter-api";
 import { useTrade } from "../TradeContext";
 import { useAuth } from "@/hooks/useAuth";
-import { api, apiConfig, ApiError } from "@/lib/api";
+import { ApiError } from "@/lib/api";
+import { submitTradeCreation } from "@/lib/trades/submitTradeCreation";
 import { createTradeInputSchema, fieldErrors } from "@/lib/domain-schemas/trade";
 import Link from "next/link";
 import { LegalDisclaimerModal } from "@/components/ui/LegalDisclaimerModal";
 import { useOffline } from "@/hooks/useOffline";
 import { useOfflineQueueStore } from "@/stores/offlineQueueStore";
-import { useToast, TOAST_CONTRACT } from "@/hooks/useToast";
+import { useToast } from "@/hooks/useToast";
 import { shouldDedup, registerAction } from "@/lib/actionDedup";
 import { generateIdempotencyKey } from "@/lib/idempotency";
+import { generateCorrelationId } from "@/lib/correlationId";
 
 type Row = { label: string; value: string };
 
@@ -33,7 +36,7 @@ export default function Step3Review() {
   const { isOffline } = useOffline();
   const enqueue = useOfflineQueueStore((s) => s.enqueue);
   const pendingCount = useOfflineQueueStore((s) => s.queue.length);
-  const { addToast, addToastWithCorrelation, updateToast } = useToast();
+  const { addToastWithCorrelation, updateToast } = useToast();
   const [loading, setLoading] = useState(false);
   const submittingRef = useRef(false);
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -45,7 +48,7 @@ export default function Step3Review() {
   const price = parseFloat(data.pricePerUnit);
   const rawAmount = !isNaN(qty) && !isNaN(price) ? qty * price : NaN;
 
-  const total = !isNaN(rawAmount) && rawAmount > 0 ? rawAmount.toLocaleString("en-NG") : "—";
+  const total = !isNaN(rawAmount) && rawAmount > 0 ? formatNumber(rawAmount) : "—";
 
   const amountUsdc = !isNaN(rawAmount) && rawAmount > 0 ? rawAmount.toFixed(7) : "0";
 
@@ -98,7 +101,7 @@ export default function Step3Review() {
       return;
     }
 
-    const correlationId = `corr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const correlationId = generateCorrelationId();
     const idempotencyKey = generateIdempotencyKey();
     registerAction(dedupKey, correlationId, idempotencyKey);
 
@@ -132,39 +135,13 @@ export default function Step3Review() {
     addToastWithCorrelation({ type: "info", title: "In progress", message: "Locking funds…", correlationId, duration: 0 });
 
     try {
-      const createResponse = await api.trades.create(token, payload, { idempotencyKey, correlationId });
-
-      setTradeId(createResponse.tradeId);
-
-      const signResult = await signTransaction(createResponse.unsignedXdr, {
-        networkPassphrase: apiConfig.getStellarNetworkPassphrase(),
+      const submission = await submitTradeCreation(token, payload, {
+        idempotencyKey,
+        correlationId,
       });
 
-      if (signResult.error !== undefined) {
-        throw new Error(signResult.error.message || "Failed to sign transaction");
-      }
-
-      const signedXdr = signResult.signedTxXdr;
-
-      const rpcUrl = apiConfig.getStellarRpcUrl();
-      const submitResponse = await fetch(rpcUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: 1,
-          method: "sendTransaction",
-          params: { transaction: signedXdr },
-        }),
-      });
-
-      const submitResult = await submitResponse.json();
-
-      if (submitResult.error) {
-        throw new Error(submitResult.error.message || "Transaction submission failed");
-      }
-
-      setTxHash(submitResult.result?.hash || createResponse.tradeId);
+      setTradeId(submission.tradeId);
+      setTxHash(submission.transactionHash);
       updateToast(correlationId, { type: "success", title: "Success", message: "Trade created — funds locked.", duration: 5000 });
       // Clear draft on success
       try { localStorage.removeItem("amana:draft-trade"); } catch {}
@@ -193,28 +170,28 @@ export default function Step3Review() {
           </svg>
         </div>
         <div>
-          <p className="text-text-primary font-semibold text-lg">Trade Created</p>
-          <p className="text-text-secondary text-sm mt-1">Funds locked in escrow vault</p>
+          <p className="text-text-primary font-semibold text-lg">{translateCopy("ui.trade_created_c6d612a")}</p>
+          <p className="text-text-secondary text-sm mt-1">{translateCopy("ui.funds_locked_in_escrow_vault_b134ccb")}</p>
         </div>
         <div className="w-full rounded-lg bg-bg-elevated border border-border-default px-4 py-3 text-left">
-          <p className="text-xs text-text-muted mb-1">Trade ID</p>
+          <p className="text-xs text-text-muted mb-1">{translateCopy("ui.trade_id_153d513")}</p>
           <p className="text-emerald font-mono text-sm break-all">{tradeId}</p>
         </div>
         <div className="w-full rounded-lg bg-bg-elevated border border-border-default px-4 py-3 text-left">
-          <p className="text-xs text-text-muted mb-1">Transaction Hash</p>
+          <p className="text-xs text-text-muted mb-1">{translateCopy("ui.transaction_hash_7534364")}</p>
           <p className="text-emerald font-mono text-sm break-all">{txHash}</p>
         </div>
         <button
           onClick={() => router.push(`/trades/${tradeId}`)}
           className="h-12 w-full flex items-center justify-center rounded-full bg-gradient-gold-cta text-text-inverse font-semibold"
         >
-          View Trade Details
+          {translateCopy("ui.view_trade_details_c527f5b")}
         </button>
         <Link
           href="/trades"
           className="text-sm text-text-secondary hover:text-text-primary"
         >
-          View All Trades
+          {translateCopy("ui.view_all_trades_20304ec")}
         </Link>
       </div>
     );
@@ -229,7 +206,7 @@ export default function Step3Review() {
           </svg>
         </div>
         <div>
-          <p className="text-text-primary font-semibold text-lg">Authentication Required</p>
+          <p className="text-text-primary font-semibold text-lg">{translateCopy("ui.authentication_required_fbbe499")}</p>
           <p className="text-text-secondary text-sm mt-1">
             {isWalletConnected
               ? "Sign in with your wallet to create trades."
@@ -247,7 +224,7 @@ export default function Step3Review() {
           onClick={() => setStep(2)}
           className="text-sm text-text-secondary hover:text-text-primary"
         >
-          Go Back
+          {translateCopy("ui.go_back_f03e2d0")}
         </button>
       </div>
     );
@@ -268,8 +245,7 @@ export default function Step3Review() {
       </div>
 
       <div className="rounded-lg bg-gold-muted border border-gold/20 px-4 py-3 text-sm text-gold">
-        By submitting, you authorize a Stellar transaction to create an escrow trade,
-        locking {amountUsdc} cNGN in the Amana escrow contract.
+        {translateCopy("ui.by_submitting_you_authorize_a_st_2a21969")}{" "}{amountUsdc} {translateCopy("ui.cngn_in_the_amana_escrow_contrac_539a265")}
       </div>
 
       {error && (
@@ -277,8 +253,8 @@ export default function Step3Review() {
       )}
       {pendingCount > 0 && (
         <div className="rounded-lg bg-status-warning/10 border border-status-warning/30 px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-status-warning">{pendingCount} queued action(s) will send when online</span>
-          <span className="text-xs text-text-muted">Idempotency keys preserved — no duplicates</span>
+          <span className="text-sm text-status-warning">{pendingCount} {translateCopy("ui.queued_action_s_will_send_when_o_186a14f")}</span>
+          <span className="text-xs text-text-muted">{translateCopy("ui.idempotency_keys_preserved_no_du_0f369d4")}</span>
         </div>
       )}
 
@@ -296,7 +272,7 @@ export default function Step3Review() {
           onClick={() => setStep(2)}
           className="flex-1 h-12 rounded-full border border-border-default text-text-secondary hover:border-border-hover transition-colors disabled:opacity-40"
         >
-          Back
+          {translateCopy("common.back")}
         </button>
         <button
           disabled={loading || !isFormValid}
@@ -309,7 +285,7 @@ export default function Step3Review() {
                 <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
                 <path d="M12 2a10 10 0 0 1 10 10" />
               </svg>
-              Creating Trade...
+              {translateCopy("ui.creating_trade_776cf21")}
             </>
           ) : (
             "Lock Funds & Create Trade"
