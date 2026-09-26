@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 import {
   ArrowRight,
   CircleDollarSign,
@@ -97,22 +99,20 @@ export default function Home() {
         <div className="relative mx-auto max-w-4xl text-center">
           {/* Eyebrow */}
           <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold-muted px-4 py-1.5 text-sm font-medium text-gold">
-            Built on Stellar · Soroban smart contracts
+            {translateCopy("ui.built_on_stellar_soroban_smart_c_299dafe")}
           </span>
 
           {/* Headline */}
           <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-text-primary md:text-5xl">
-            Agricultural trade you can{" "}
+            {translateCopy("ui.agricultural_trade_you_can_597c837")}{" "}
             <span className="bg-gradient-gold-cta bg-clip-text text-transparent">
-              trust
+              {translateCopy("ui.trust_fcbc333")}
             </span>
           </h1>
 
           {/* Sub-headline */}
           <p className="mx-auto mt-6 max-w-2xl text-lg text-text-secondary">
-            Amana is a blockchain-powered escrow platform for agricultural
-            commodities. Lock funds, track delivery, resolve disputes — all
-            with verifiable on-chain evidence.
+            {translateCopy("ui.amana_is_a_blockchain_powered_es_1313368")}
           </p>
 
           {/* CTAs */}
@@ -121,14 +121,14 @@ export default function Home() {
               href="/trades/create"
               className="inline-flex items-center gap-2 rounded-lg bg-gradient-gold-cta px-6 py-3 text-base font-semibold text-text-inverse shadow-glow-gold transition-shadow hover:shadow-glow-gold/60 focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
             >
-              Start a trade
+              {translateCopy("ui.start_a_trade_3bd0ed4")}
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/dashboard"
               className="inline-flex items-center gap-2 rounded-lg border border-border-default px-6 py-3 text-base font-semibold text-text-primary transition-colors hover:border-border-hover hover:bg-bg-card focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
             >
-              Open dashboard
+              {translateCopy("ui.open_dashboard_7ad1cae")}
             </Link>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function Home() {
 
       {/* ── Stats bar ────────────────────────────────────────────────────── */}
       <section
-        aria-label="Platform statistics"
+        aria-label={translateCopy("ui.platform_statistics_5260f1a")}
         className="border-y border-border-default bg-bg-card px-6 py-8 lg:px-10"
       >
         <dl className="mx-auto grid max-w-5xl grid-cols-2 gap-6 md:grid-cols-4">
@@ -155,11 +155,10 @@ export default function Home() {
       <section className="px-6 py-20 lg:px-10">
         <div className="mx-auto max-w-5xl">
           <h2 className="text-center text-2xl font-bold md:text-3xl">
-            How it works
+            {translateCopy("ui.how_it_works_1dd6a17")}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-base text-text-secondary">
-            Three steps from agreement to settlement — fully on-chain, fully
-            auditable.
+            {translateCopy("ui.three_steps_from_agreement_to_se_599643b")}
           </p>
 
           <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -194,11 +193,10 @@ export default function Home() {
       <section className="bg-bg-card px-6 py-20 lg:px-10">
         <div className="mx-auto max-w-5xl">
           <h2 className="text-center text-2xl font-bold md:text-3xl">
-            Why Amana
+            {translateCopy("ui.why_amana_17f89a9")}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-base text-text-secondary">
-            Purpose-built for agricultural supply chains where trust, evidence,
-            and fair resolution matter most.
+            {translateCopy("ui.purpose_built_for_agricultural_s_c37cbf5")}
           </p>
 
           <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -229,11 +227,10 @@ export default function Home() {
       <section className="px-6 py-20 lg:px-10">
         <div className="mx-auto max-w-2xl rounded-2xl border border-gold/20 bg-gradient-card-glow p-10 text-center shadow-glow-gold">
           <h2 className="text-2xl font-bold md:text-3xl">
-            Ready to settle your first trade?
+            {translateCopy("ui.ready_to_settle_your_first_trade_a627297")}
           </h2>
           <p className="mx-auto mt-4 max-w-md text-base text-text-secondary">
-            Connect your Freighter wallet and create a trade in under two
-            minutes.
+            {translateCopy("ui.connect_your_freighter_wallet_an_d3b64b6")}
           </p>
           <LandingCtaButtons />
         </div>
@@ -242,16 +239,16 @@ export default function Home() {
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer className="border-t border-border-default px-6 py-8 lg:px-10">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-text-muted sm:flex-row">
-          <span>© {new Date().getFullYear()} Amana. Agricultural escrow on Stellar.</span>
-          <nav aria-label="Footer navigation" className="flex gap-6">
+          <span>© {new Date().getFullYear()} {translateCopy("ui.amana_agricultural_escrow_on_ste_5f6d434")}</span>
+          <nav aria-label={translateCopy("ui.footer_navigation_a32d98c")} className="flex gap-6">
             <Link href="/trades" className="hover:text-text-secondary transition-colors">
-              Trades
+              {translateCopy("ui.trades_597b109")}
             </Link>
             <Link href="/vault" className="hover:text-text-secondary transition-colors">
-              Vault
+              {translateCopy("ui.vault_fb46e37")}
             </Link>
             <Link href="/dashboard" className="hover:text-text-secondary transition-colors">
-              Dashboard
+              {translateCopy("ui.dashboard_d87f47b")}
             </Link>
           </nav>
         </div>

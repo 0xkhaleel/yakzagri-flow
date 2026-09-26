@@ -4,15 +4,15 @@
 // rendering to the shared i18n module (`@/lib/i18n`) instead of ad-hoc
 // `toLocaleString("en-US")` calls. For fiat (NGN) amounts use `formatNaira`.
 
-import { formatMoney } from "@/lib/i18n/format";
+import { formatMoney, formatNumber } from "@/lib/i18n/format";
 
 export { formatNaira, formatMoney, formatDate, formatDateTime } from "@/lib/i18n/format";
 
 function fixedGrouped(value: number, decimals: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return formatNumber(value, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(value);
+  });
 }
 
 export function formatStroops(stroops: number, decimals: number): string {

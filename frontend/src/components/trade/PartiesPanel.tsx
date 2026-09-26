@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import { Star } from "lucide-react";
@@ -20,7 +22,7 @@ function PartyCard({
   return (
     <div className="flex-1 bg-elevated rounded-lg p-4 border border-border-default">
       <p className="text-xs font-semibold tracking-widest text-text-muted mb-3">
-        THE {role}
+        {translateCopy("ui.the_7164935")}{" "}{role}
       </p>
       <div className="flex items-center gap-3">
         {/* Avatar */}
@@ -54,7 +56,7 @@ function PartyCard({
 
       {/* Trust Score */}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-border-default">
-        <span className="text-xs text-text-muted">Trust Score</span>
+        <span className="text-xs text-text-muted">{translateCopy("ui.trust_score_2c7902e")}</span>
         <div className="flex items-center gap-1.5">
           <span className="text-emerald font-bold text-sm">{party.trustScore}</span>
           <div className="flex gap-0.5">
@@ -79,7 +81,7 @@ export function PartiesPanel({ buyer, seller }: PartiesPanelProps) {
   return (
     <div className="bg-card rounded-xl border border-border-default p-6 shadow-card">
       <h2 className="text-sm font-semibold text-text-secondary mb-4 tracking-wide uppercase">
-        Trade Parties
+        {translateCopy("ui.trade_parties_7194c32")}
       </h2>
       <div className="flex flex-col sm:flex-row gap-4">
         <PartyCard party={buyer} role="BUYER" />

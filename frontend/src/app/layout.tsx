@@ -13,6 +13,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import RegisterSW from "@/components/RegisterSW";
 import { FeatureFlagsProvider } from "@/components/FeatureFlagsProvider";
 import { FlagDebugPanel } from "@/components/admin/FlagDebugPanel";
+import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -76,27 +77,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en-NG" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} font-sans bg-primary text-text-primary antialiased`}
       >
-        <ThemeProvider>
-          <AnalyticsProvider>
-            <AuthProvider>
-              <ToastProvider>
-                <FeatureFlagsProvider>
-                  <AppShell>{children}</AppShell>
-                  <RegisterSW />
-                  <ToastContainer />
-                  <FlagDebugPanel />
-                </FeatureFlagsProvider>
-              </ToastProvider>
-            </AuthProvider>
-          </AnalyticsProvider>
-        </ThemeProvider>
+        <LocaleProvider>
+          <ThemeProvider>
+            <AnalyticsProvider>
+              <AuthProvider>
+                <ToastProvider>
+                  <FeatureFlagsProvider>
+                    <AppShell>{children}</AppShell>
+                    <RegisterSW />
+                    <ToastContainer />
+                    <FlagDebugPanel />
+                  </FeatureFlagsProvider>
+                </ToastProvider>
+              </AuthProvider>
+            </AnalyticsProvider>
+          </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

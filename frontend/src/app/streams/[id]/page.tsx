@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
@@ -82,7 +84,7 @@ export default function StreamDetailPage() {
       <section className="min-h-full bg-bg-primary px-6 py-8 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <ErrorState
-            title="Authentication Required"
+            title={translateCopy("ui.authentication_required_fbbe499")}
             message="Please connect your wallet and sign in to view stream details."
           />
         </div>
@@ -110,9 +112,9 @@ export default function StreamDetailPage() {
         {/* Page header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-text-primary">Stream Details</h1>
+            <h1 className="text-xl font-bold text-text-primary">{translateCopy("ui.stream_details_3f546cf")}</h1>
             <p className="mt-0.5 text-xs text-text-secondary">
-              Vested token stream information • {assetInfo.symbol} ({decimals} decimals)
+              {translateCopy("ui.vested_token_stream_information_ac11f29")}{" "}{assetInfo.symbol} ({decimals} {translateCopy("ui.decimals_5e8b1a0")}
             </p>
           </div>
         </div>
@@ -123,7 +125,7 @@ export default function StreamDetailPage() {
         {/* Error state */}
         {error && !loading && (
           <ErrorState
-            title="Failed to load stream"
+            title={translateCopy("ui.failed_to_load_stream_c24032d")}
             message={error}
           />
         )}
@@ -134,7 +136,7 @@ export default function StreamDetailPage() {
             {/* Stream ID card */}
             <div className="rounded-2xl border border-border-default bg-card p-5">
               <p className="text-xs uppercase tracking-[0.22em] text-text-secondary">
-                Stream ID
+                {translateCopy("ui.stream_id_ca9cac7")}
               </p>
               <p className="mt-2 font-mono text-sm text-text-primary break-all">
                 {streamId}
@@ -145,49 +147,49 @@ export default function StreamDetailPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl border border-border-default bg-card p-5">
                 <p className="text-xs uppercase tracking-[0.22em] text-text-secondary">
-                  Total Vested
+                  {translateCopy("ui.total_vested_84ca85a")}
                 </p>
                 <p className="mt-2 text-2xl font-bold text-text-primary">
                   {stroopsToAmount(streamData.totalVested, decimals)}
                 </p>
                 <p className="mt-1 text-xs text-text-muted">
-                  {assetInfo.symbol} • Total amount vested
+                  {assetInfo.symbol} {translateCopy("ui.total_amount_vested_d1bfb7c")}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-border-default bg-card p-5">
                 <p className="text-xs uppercase tracking-[0.22em] text-status-success">
-                  Claimed
+                  {translateCopy("ui.claimed_83c8788")}
                 </p>
                 <p className="mt-2 text-2xl font-bold text-text-primary">
                   {stroopsToAmount(streamData.claimed, decimals)}
                 </p>
                 <p className="mt-1 text-xs text-text-muted">
-                  {assetInfo.symbol} • Already claimed
+                  {assetInfo.symbol} {translateCopy("ui.already_claimed_2723c67")}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-border-default bg-card p-5">
                 <p className="text-xs uppercase tracking-[0.22em] text-gold">
-                  Unclaimed
+                  {translateCopy("ui.unclaimed_fca0eb7")}
                 </p>
                 <p className="mt-2 text-2xl font-bold text-text-primary">
                   {stroopsToAmount(streamData.unclaimed, decimals)}
                 </p>
                 <p className="mt-1 text-xs text-text-muted">
-                  {assetInfo.symbol} • Available to claim
+                  {assetInfo.symbol} {translateCopy("ui.available_to_claim_217271d")}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-border-default bg-card p-5">
                 <p className="text-xs uppercase tracking-[0.22em] text-status-warning">
-                  Pending Clawback
+                  {translateCopy("ui.pending_clawback_dc060c4")}
                 </p>
                 <p className="mt-2 text-2xl font-bold text-text-primary">
                   {stroopsToAmount(streamData.pendingClawback, decimals)}
                 </p>
                 <p className="mt-1 text-xs text-text-muted">
-                  {assetInfo.symbol} • Clawback pending
+                  {assetInfo.symbol} {translateCopy("ui.clawback_pending_6bf45f6")}
                 </p>
               </div>
             </div>
@@ -195,7 +197,7 @@ export default function StreamDetailPage() {
             {/* Progress bar */}
             <div className="rounded-2xl border border-border-default bg-card p-5">
               <p className="text-xs uppercase tracking-[0.22em] text-text-secondary mb-3">
-                Vesting Progress
+                {translateCopy("ui.vesting_progress_eb0cd55")}
               </p>
               <div className="h-3 w-full overflow-hidden rounded-full bg-bg-elevated">
                 <div
@@ -216,7 +218,7 @@ export default function StreamDetailPage() {
                       Number(BigInt(streamData.totalVested))) *
                     100
                   ).toFixed(2)}
-                  % claimed
+                  {translateCopy("ui.claimed_ea4976c")}
                 </span>
                 <span>
                   {(
@@ -224,7 +226,7 @@ export default function StreamDetailPage() {
                       Number(BigInt(streamData.totalVested))) *
                     100
                   ).toFixed(2)}
-                  % remaining
+                  {translateCopy("ui.remaining_0ebfc6b")}
                 </span>
               </div>
             </div>

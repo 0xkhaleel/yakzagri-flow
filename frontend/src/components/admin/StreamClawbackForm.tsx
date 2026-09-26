@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useMemo, useState } from "react";
 import { FormField } from "@/components/ui/FormField";
@@ -101,7 +103,7 @@ export function StreamClawbackForm({
       </FormField>
 
       <Button variant="primary" onClick={handleReviewClick} disabled={!validation.valid}>
-        Preview clawback
+        {translateCopy("ui.review_clawback_043eda9")}
       </Button>
 
       {previewResult && (

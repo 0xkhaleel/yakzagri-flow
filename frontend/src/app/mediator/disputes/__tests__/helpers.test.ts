@@ -46,7 +46,7 @@ describe("isMediatorAddress", () => {
 
 describe("formatDate", () => {
   it("formats an ISO string as 'Mon D, YYYY'", () => {
-    expect(formatDate("2026-01-05T00:00:00Z")).toBe("Jan 5, 2026");
+    expect(formatDate("2026-01-05T00:00:00Z")).toBe("5 Jan 2026");
   });
 });
 

@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import * as React from "react";
 import { clsx } from "clsx";
@@ -62,9 +64,9 @@ export function ErrorState({
           <button
             onClick={onRetry}
             className="font-medium hover:underline"
-            aria-label="Retry"
+            aria-label={translateCopy("common.retry")}
           >
-            Try again
+            {translateCopy("wallet.rejectedCta")}
           </button>
         )}
       </div>
@@ -94,7 +96,7 @@ export function ErrorState({
               "transition-colors focus:outline-none focus:ring-2 focus:ring-danger focus:ring-offset-2",
             )}
           >
-            Try again
+            {translateCopy("wallet.rejectedCta")}
           </button>
         )}
       </div>
@@ -114,7 +116,7 @@ export function ErrorState({
             "transition-colors focus:outline-none focus:ring-2 focus:ring-danger focus:ring-offset-2",
           )}
         >
-          Try again
+          {translateCopy("wallet.rejectedCta")}
         </button>
       )}
     </div>
