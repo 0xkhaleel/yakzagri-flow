@@ -162,7 +162,7 @@ export default function VaultPage() {
         manifestTrade.eta ?? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       const response = await api.trades.submitManifest(token, manifestTrade.tradeId, {
         driverName: data.driverName,
-        driverIdNumber: data.driverPhone,
+        driverPhone: data.driverPhone,
         vehicleRegistration: data.licensePlate,
         routeDescription: "Driver manifest submitted from vault.",
         expectedDeliveryAt,

@@ -119,7 +119,8 @@ export interface DepositResponse {
 
 export interface SubmitManifestRequest {
   driverName: string;
-  driverIdNumber: string;
+  driverPhone: string;
+  driverIdNumber?: string;
   vehicleRegistration: string;
   routeDescription: string;
   expectedDeliveryAt: string;
