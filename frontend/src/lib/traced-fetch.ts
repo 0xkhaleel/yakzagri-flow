@@ -8,6 +8,8 @@
  * - Tracks request timing and metadata
  */
 
+import { generateCorrelationId } from "./correlationId";
+
 export interface TracedRequestOptions extends RequestInit {
   correlationId?: string;
   timeout?: number;
@@ -75,7 +77,7 @@ export class TracedHttpClient {
     // Try to get from session storage for cross-request correlation
     let correlationId = sessionStorage.getItem('amana-correlation-id');
     if (!correlationId) {
-      correlationId = this.generateUUID();
+      correlationId = generateCorrelationId();
       sessionStorage.setItem('amana-correlation-id', correlationId);
     }
     return correlationId;
@@ -350,8 +352,7 @@ export function initializeHttpClient(baseURL: string = 'http://localhost:4000'):
  * Utility to create a new correlation ID for a specific user flow
  */
 export function createCorrelationId(): string {
-  const client = TracedHttpClient.getInstance();
-  return client['generateUUID']();
+  return generateCorrelationId();
 }
 
 /**

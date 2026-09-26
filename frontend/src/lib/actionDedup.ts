@@ -4,6 +4,8 @@
  * Correlation IDs tie toast pending/success/error for unified contract.
  */
 
+import { generateCorrelationId } from "./correlationId";
+
 export interface DedupEntry {
   key: string;
   correlationId: string;
@@ -13,11 +15,9 @@ export interface DedupEntry {
 
 const DEDUP_WINDOW_MS = 3000; // 3s window — matches idempotency lock TTL (30s) but shorter for UX
 const dedupMap = new Map<string, DedupEntry>();
-let correlationCounter = 0;
 
 export function getCorrelationId(): string {
-  correlationCounter += 1;
-  return `corr-${correlationCounter}-${Date.now()}`;
+  return generateCorrelationId();
 }
 
 export function shouldDedup(actionKey: string): { dedup: boolean; entry?: DedupEntry } {
@@ -45,7 +45,6 @@ export function clearDedup(actionKey: string): void {
 
 export function _clearAllForTests(): void {
   dedupMap.clear();
-  correlationCounter = 0;
 }
 
 export const DEDUP_WINDOW = DEDUP_WINDOW_MS;
