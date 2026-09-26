@@ -1,214 +1,142 @@
-import {
-  ArrowRight,
-  CircleDollarSign,
-  Scale,
-  ShieldCheck,
-  Truck,
-  Lock,
-  CheckCircle2,
-  Star,
-  Gavel,
-} from "lucide-react";
-import Link from "next/link";
-import { LandingCtaButtons } from "@/components/landing/LandingCtaButtons";
+'use client';
 
-// ─── Data ────────────────────────────────────────────────────────────────────
+import Link from 'next/link';
+import { useWalletStore } from '@/store/wallet';
+import { WalletConnectButton } from '@/components/wallet/WalletConnectButton';
 
-const stats = [
-  { label: "Trades settled", value: "2,400+" },
-  { label: "Total escrow value", value: "$1.2M" },
-  { label: "Dispute resolution rate", value: "98%" },
-  { label: "Network", value: "Stellar" },
-];
+export default function LandingPage() {
+  const { isConnected } = useWalletStore();
 
-const steps = [
-  {
-    step: "01",
-    title: "Create a trade",
-    description:
-      "Define counterparties, commodity, amount, and settlement terms. Funds are locked in escrow on the Stellar network before any goods move.",
-    icon: CircleDollarSign,
-  },
-  {
-    step: "02",
-    title: "Track delivery",
-    description:
-      "Driver manifests, GPS checkpoints, and video evidence are attached on-chain as the shipment moves from farm to buyer.",
-    icon: Truck,
-  },
-  {
-    step: "03",
-    title: "Confirm receipt",
-    description:
-      "Buyer inspects the delivered goods and confirms receipt on-chain, triggering the release of funds from escrow.",
-    icon: CheckCircle2,
-  },
-  {
-    step: "04",
-    title: "Resolve disputes",
-    description:
-      "If either party contests the delivery, certified mediators review the on-chain evidence and issue a binding ruling.",
-    icon: Gavel,
-  },
-];
-
-const features = [
-  {
-    icon: Lock,
-    title: "Non-custodial escrow",
-    description:
-      "Funds are held in a Soroban smart contract — no intermediary can move them without both parties' agreement or a mediator ruling.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Evidence-backed disputes",
-    description:
-      "Every dispute is anchored to verifiable on-chain evidence: manifests, video proof, and signed delivery confirmations.",
-  },
-  {
-    icon: Star,
-    title: "Reputation scoring",
-    description:
-      "Each completed trade builds a trust score for buyers, sellers, and drivers — making future trades faster and lower-risk.",
-  },
-  {
-    icon: Scale,
-    title: "Impartial mediation",
-    description:
-      "Certified mediators review evidence and issue rulings with full audit trails, ensuring fair outcomes for all parties.",
-  },
-];
-
-// ─── Page ────────────────────────────────────────────────────────────────────
-
-/*
- * Typography hierarchy (Figma token scale):
- *   h1  → text-4xl / md:text-5xl   (hero heading)
- *   h2  → text-2xl / md:text-3xl   (section heading)
- *   h3  → text-xl                  (card heading)
- *   p   → text-base / text-lg      (body)
- *   small metadata → text-sm with text-text-secondary / text-text-muted
- */
-export default function Home() {
   return (
-    <div className="min-h-screen bg-bg-primary text-text-primary">
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-hero px-6 py-20 md:py-32 lg:px-10">
-        {/* Subtle radial glow behind the headline */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 flex items-center justify-center"
-        >
-          <div className="h-[480px] w-[480px] rounded-full bg-gold opacity-[0.04] blur-3xl" />
-        </div>
-
-        <div className="relative mx-auto max-w-4xl text-center">
-          {/* Eyebrow */}
-          <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold-muted px-4 py-1.5 text-sm font-medium text-gold">
-            Built on Stellar · Soroban smart contracts
-          </span>
-
-          {/* Headline */}
-          <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-text-primary md:text-5xl">
-            Agricultural trade you can{" "}
-            <span className="bg-gradient-gold-cta bg-clip-text text-transparent">
-              trust
-            </span>
-          </h1>
-
-          {/* Sub-headline */}
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-text-secondary">
-            Amana is a blockchain-powered escrow platform for agricultural
-            commodities. Lock funds, track delivery, resolve disputes — all
-            with verifiable on-chain evidence.
-          </p>
-
-          {/* CTAs */}
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+      <section className="mx-auto max-w-5xl px-6 py-20 text-center">
+        <h1 className="text-4xl font-bold tracking-tight text-green-900 sm:text-5xl">
+          Trade farm goods safely, even with strangers
+        </h1>
+        <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-700">
+          Amana holds the buyer&apos;s money in a secure vault until the goods
+          arrive. No more sending first and hoping. No more chasing payments.
+        </p>
+        <div className="mt-10 flex items-center justify-center gap-4">
+          {isConnected ? (
             <Link
-              href="/trades/create"
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-gold-cta px-6 py-3 text-base font-semibold text-text-inverse shadow-glow-gold transition-shadow hover:shadow-glow-gold/60 focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
+              href="/trades"
+              className="rounded-lg bg-green-700 px-6 py-3 font-semibold text-white hover:bg-green-800"
             >
-              Start a trade
-              <ArrowRight className="h-4 w-4" />
+              Go to my trades
             </Link>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-lg border border-border-default px-6 py-3 text-base font-semibold text-text-primary transition-colors hover:border-border-hover hover:bg-bg-card focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
-            >
-              Open dashboard
-            </Link>
-          </div>
+          ) : (
+            <WalletConnectButton />
+          )}
+          <Link
+            href="/trades/new"
+            className="rounded-lg border border-green-700 px-6 py-3 font-semibold text-green-800 hover:bg-green-50"
+          >
+            Start a trade
+          </Link>
         </div>
       </section>
 
-      {/* ── Stats bar ────────────────────────────────────────────────────── */}
-      <section
-        aria-label="Platform statistics"
-        className="border-y border-border-default bg-bg-card px-6 py-8 lg:px-10"
-      >
-        <dl className="mx-auto grid max-w-5xl grid-cols-2 gap-6 md:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <dt className="text-sm text-text-muted">{stat.label}</dt>
-              <dd className="mt-1 text-2xl font-bold text-text-primary">
-                {stat.value}
+      <section className="mx-auto max-w-5xl px-6 pb-20">
+        <h2 className="text-center text-3xl font-bold text-green-900">
+          How it works
+        </h2>
+        <p className="mx-auto mt-4 max-w-2xl text-center text-gray-700">
+          A trade moves through five simple steps. The money is only released
+          when both sides agree the goods arrived as promised.
+        </p>
+
+        <ol className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+          {[
+            {
+              step: '1',
+              title: 'Buyer pays in',
+              body: 'The buyer pays in their local money. It is instantly converted to cNGN — a digital naira that always holds its value — and locked in a secure vault.',
+            },
+            {
+              step: '2',
+              title: 'Funds are locked',
+              body: 'The vault holds the money safely. Both sides agree on a loss-ratio: the split if goods are lost or damaged on the road (for example 50/50 or 70/30).',
+            },
+            {
+              step: '3',
+              title: 'Seller dispatches',
+              body: 'The seller sends the goods and records the driver, phone number, and vehicle so everyone knows what is on the way.',
+            },
+            {
+              step: '4',
+              title: 'Delivery is confirmed',
+              body: 'The buyer confirms the goods arrived with a short video. If something is wrong, the buyer and driver record the damage instead.',
+            },
+            {
+              step: '5',
+              title: 'Money is released',
+              body: 'On a good delivery the seller is paid in full. On a loss, the agreed loss-ratio decides how the money is split fairly.',
+            },
+          ].map(({ step, title, body }) => (
+            <li
+              key={step}
+              className="rounded-xl border border-green-100 bg-white p-5 shadow-sm"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-700 font-bold text-white">
+                {step}
+              </span>
+              <h3 className="mt-4 font-semibold text-green-900">{title}</h3>
+              <p className="mt-2 text-sm text-gray-600">{body}</p>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-12 grid gap-6 sm:grid-cols-2">
+          <div className="rounded-xl border border-green-100 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-green-900">
+              For farmers &amp; sellers
+            </h3>
+            <ul className="mt-3 space-y-2 text-sm text-gray-600">
+              <li>• Ship knowing the buyer&apos;s money is already locked in.</li>
+              <li>• Get paid the moment delivery is confirmed.</li>
+              <li>• If goods are lost, the agreed loss-ratio protects you too.</li>
+            </ul>
+          </div>
+          <div className="rounded-xl border border-green-100 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-green-900">
+              For buyers
+            </h3>
+            <ul className="mt-3 space-y-2 text-sm text-gray-600">
+              <li>• Your money stays in the vault until goods arrive.</li>
+              <li>• Pay in naira; value is held safely as cNGN.</li>
+              <li>• A neutral mediator settles any dispute fairly.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-12 rounded-xl bg-green-900 p-6 text-white">
+          <h3 className="text-lg font-semibold">Plain-language glossary</h3>
+          <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div>
+              <dt className="font-semibold">Escrow</dt>
+              <dd className="mt-1 text-sm text-green-100">
+                A neutral vault that holds the buyer&apos;s money until both
+                sides are happy.
               </dd>
             </div>
-          ))}
-        </dl>
-      </section>
-
-      {/* ── How it works ─────────────────────────────────────────────────── */}
-      <section className="px-6 py-20 lg:px-10">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-2xl font-bold md:text-3xl">
-            How it works
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-base text-text-secondary">
-            Four steps from agreement to settlement — fully on-chain, fully
-            auditable.
-          </p>
-
-          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {steps.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.step}
-                  className="relative rounded-xl border border-border-default bg-bg-card p-6 shadow-card"
-                >
-                  {/* Step number */}
-                  <span className="text-xs font-bold tracking-widest text-text-muted">
-                    {item.step}
-                  </span>
-                  {/* Icon */}
-                  <div className="mt-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gold-muted">
-                    <Icon className="h-5 w-5 text-gold" />
-                  </div>
-                  {/* Content */}
-                  <h3 className="mt-4 text-xl font-semibold">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-                    {item.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+            <div>
+              <dt className="font-semibold">Loss-ratio</dt>
+              <dd className="mt-1 text-sm text-green-100">
+                The agreed split of money if goods are lost or damaged on the
+                road.
+              </dd>
+            </div>
+            <div>
+              <dt className="font-semibold">cNGN</dt>
+              <dd className="mt-1 text-sm text-green-100">
+                A digital naira that keeps its value, so trade is not affected
+                by price swings.
+              </dd>
+            </div>
+          </dl>
         </div>
       </section>
-
-      {/* ── Features ─────────────────────────────────────────────────────── */}
-      <section className="bg-bg-card px-6 py-20 lg:px-10">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-2xl font-bold md:text-3xl">
-            Why Amana
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-base text-text-secondary">
-            Purpose-built for agricultural supply chains where trust, evidence,
-            and fair resolution matter most.
-          </p>
-
-          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {features.map((feature) => {
-              const I
+    </main>
+  );
+}
