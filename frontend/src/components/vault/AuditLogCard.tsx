@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { Shield, Fingerprint, Database } from "lucide-react";
 import type { ReactNode } from "react";
@@ -19,7 +21,7 @@ interface AuditLogCardProps {
 
 const logIcons: Record<LogType, ReactNode> = {
   biometric: <Fingerprint className="w-4 h-4 text-emerald" />,
-  "multi-sig": <Image src={RequestIcon} alt="multisig icon" />,
+  "multi-sig": <Image src={RequestIcon} alt={translateCopy("ui.multisig_icon_c59f159")} />,
   ledger: <Database className="w-4 h-4 text-text-secondary" />,
 };
 
@@ -32,7 +34,7 @@ const logBgColors: Record<LogType, string> = {
 export function AuditLogCard({ entries, isLiveSync = true }: AuditLogCardProps) {
   return (
     <BentoCard
-      title="Audit Log"
+      title={translateCopy("ui.audit_log_28dd753")}
       icon={<Shield className="w-5 h-5" />}
       glowVariant="emerald"
       className="h-full"
@@ -41,7 +43,7 @@ export function AuditLogCard({ entries, isLiveSync = true }: AuditLogCardProps) 
         {isLiveSync && (
           <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald bg-emerald-muted px-3 py-1 rounded-full">
             <span className="w-2 h-2 rounded-full bg-emerald animate-pulse" />
-            Live Sync
+            {translateCopy("ui.live_sync_5f44c91")}
           </span>
         )}
       </div>

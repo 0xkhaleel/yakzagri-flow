@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import { useParams } from "next/navigation";
 import StreamDetailPage from "../[id]/page";
+import StreamsPage from "../page";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { api } from "@/lib/api";
@@ -22,6 +23,9 @@ jest.mock("@/lib/api", () => ({
     streams: {
       getRemaining: jest.fn(),
     },
+    adminStreams: {
+      list: jest.fn(),
+    },
   },
   ApiError: class ApiError extends Error {
     constructor(message: string) {
@@ -34,6 +38,54 @@ jest.mock("@/lib/api", () => ({
 const mockUseParams = useParams as jest.MockedFunction<typeof useParams>;
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 const mockUseAdmin = useAdmin as jest.MockedFunction<typeof useAdmin>;
+
+describe("StreamsPage", () => {
+  it("lists real stream records and links to their detail pages", async () => {
+    mockUseAuth.mockReturnValue({
+      token: "mock-token",
+      isAuthenticated: true,
+      isLoading: false,
+      address: "GADMIN123",
+      shortAddress: "GADMIN...123",
+      isWalletConnected: true,
+      isWalletDetected: true,
+      error: null,
+      connectWallet: jest.fn(),
+      authenticate: jest.fn(),
+      logout: jest.fn(),
+      refreshAuth: jest.fn(),
+    });
+    mockUseAdmin.mockReturnValue({
+      isAdmin: true,
+      isAdminUIEnabled: true,
+      canAccessAdmin: true,
+      adminAddresses: ["GADMIN123"],
+    });
+    (api.adminStreams.list as jest.Mock).mockResolvedValue({
+      items: [{
+        streamId: "stream-real-42",
+        recipient: "GRECIPIENT42",
+        status: "ACTIVE",
+        vestingState: "vesting",
+        totalVested: "1000",
+        claimed: "250",
+        unclaimed: "750",
+        pendingClawback: "0",
+        adminTags: [],
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-02T00:00:00.000Z",
+      }],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+
+    render(<StreamsPage />);
+
+    const detailLink = await screen.findByRole("link", { name: /stream-real-42/i });
+    expect(detailLink).toHaveAttribute("href", "/streams/stream-real-42");
+    expect(screen.getByText("25% claimed")).toBeInTheDocument();
+    expect(screen.queryByText("View Example Stream")).not.toBeInTheDocument();
+  });
+});
 
 describe("StreamDetailPage", () => {
   const mockStreamId = "stream-123";

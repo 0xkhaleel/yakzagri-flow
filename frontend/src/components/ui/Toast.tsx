@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CheckCircle, AlertTriangle, XCircle, Info, X } from "lucide-react";
 import { ToastMessage } from "@/types/toast";
 import { clsx } from "clsx";
+import { t } from "@/lib/i18n";
 
 interface ToastProps extends ToastMessage {
   onClose: (id: string) => void;
@@ -76,7 +77,7 @@ export function Toast({
         animationClasses,
         typeClasses[type]
       )}
-      role="alert"
+      role="group"
     >
       <Icon className={clsx("h-6 w-6 shrink-0", iconColors[type])} />
       <div className="flex-1 pt-0.5">
@@ -86,30 +87,21 @@ export function Toast({
       <button
         onClick={handleClose}
         className="shrink-0 ml-4 rounded-md p-1.5 inline-flex text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-border-focus"
-        aria-label="Close"
+        aria-label={t("common.close")}
       >
-        <span className="sr-only">Close</span>
+        <span className="sr-only">{t("common.close")}</span>
         <X className="h-4 w-4" />
       </button>
       
       {/* Optional: subtle progress bar for auto-dismiss */}
       {duration > 0 && (
         <div 
-          className={clsx(
-            "absolute bottom-0 left-0 h-1 bg-current opacity-20",
-          )}
+          className="toast-progress absolute bottom-0 left-0 h-1 w-full bg-current opacity-20"
           style={{
-            width: "100%",
-            animation: `shrink ${duration}ms linear forwards`,
+            animationDuration: `${duration}ms`,
           }}
         />
       )}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}} />
     </div>
   );
 }

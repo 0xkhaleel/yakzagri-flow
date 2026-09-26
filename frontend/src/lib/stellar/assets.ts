@@ -1,3 +1,5 @@
+import { formatNumber } from "@/lib/i18n/format";
+
 /**
  * Asset configuration for Stellar-based tokens
  * Handles different asset types with their decimal precision and formatting
@@ -171,8 +173,8 @@ export function stroopsToAmount(stroops: string | bigint, decimals: number): str
   const fracStr = frac.toString().padStart(decimals, "0").replace(/0+$/, "");
 
   return fracStr.length > 0
-    ? `${whole.toLocaleString()}.${fracStr}`
-    : whole.toLocaleString();
+    ? `${formatNumber(whole)}.${fracStr}`
+    : formatNumber(whole);
 }
 
 /**

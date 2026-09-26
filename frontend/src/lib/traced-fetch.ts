@@ -8,6 +8,8 @@
  * - Tracks request timing and metadata
  */
 
+import { generateCorrelationId } from "./correlationId";
+
 export interface TracedRequestOptions extends RequestInit {
   correlationId?: string;
   timeout?: number;
@@ -75,7 +77,7 @@ export class TracedHttpClient {
     // Try to get from session storage for cross-request correlation
     let correlationId = sessionStorage.getItem('amana-correlation-id');
     if (!correlationId) {
-      correlationId = this.generateUUID();
+      correlationId = generateCorrelationId();
       sessionStorage.setItem('amana-correlation-id', correlationId);
     }
     return correlationId;
@@ -320,3 +322,38 @@ export class TracedHttpClient {
  * Default traced HTTP client instance
  */
 export const tracedHttpClient = TracedHttpClient.getInstance();
+
+/**
+ * Initialize the HTTP client with default settings
+ */
+export function initializeHttpClient(baseURL: string = 'http://localhost:4000'): void {
+  tracedHttpClient.setBaseURL(baseURL);
+  
+  // Set user agent for better debugging
+  tracedHttpClient.setDefaultHeaders({
+    'User-Agent': `Amana-Frontend/${navigator.userAgent}`,
+    'X-Client-Version': '1.0.0',
+    'X-Client-Platform': navigator.platform,
+  });
+}
+
+/**
+ * Utility to create a new correlation ID for a specific user flow
+ */
+export function createCorrelationId(): string {
+  return generateCorrelationId();
+}
+
+/**
+ * Utility to set correlation ID for the current session
+ */
+export function setSessionCorrelationId(correlationId: string): void {
+  sessionStorage.setItem('amana-correlation-id', correlationId);
+}
+
+/**
+ * Utility to get current session correlation ID
+ */
+export function getSessionCorrelationId(): string | null {
+  return sessionStorage.getItem('amana-correlation-id');
+}

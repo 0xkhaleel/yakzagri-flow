@@ -1,0 +1,84 @@
+name: Bug report
+about: Report a reproducible problem so we can fix it
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! Please fill out the
+        sections below so we can reproduce and fix the issue quickly.
+
+        Before submitting, please review [CONTRIBUTING.md](../../CONTRIBUTING.md)
+        for setup, test, and lint commands.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is.
+      placeholder: When I do X, Y happens instead of Z.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal, deterministic steps to reproduce the behavior.
+      placeholder: |
+        1. Run `...`
+        2. Open `...`
+        3. Observe `...`
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened. Include full error output or logs if available.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: The release version or commit SHA where you observed the bug.
+      placeholder: e.g. v1.2.3 or 0a1b2c3
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where did you run the project?
+      options:
+        - Local development
+        - CI
+        - Production
+        - Other (describe below)
+    validations:
+      required: true
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Anything else that might help (screenshots, related issues, workarounds).
+    validations:
+      required: false
+  - type: checkboxes
+    id: gates
+    attributes:
+      label: Pre-submission checklist
+      description: These mirror the required CI gates described in CONTRIBUTING.md.
+      options:
+        - label: I have searched existing issues to avoid duplicates.
+          required: true
+        - label: I have read CONTRIBUTING.md and can reproduce this on the latest commit.
+          required: true
+        - label: I have included the version/commit and environment above.
+          required: true

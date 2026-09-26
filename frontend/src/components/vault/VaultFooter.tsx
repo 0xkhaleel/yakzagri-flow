@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { Check } from "lucide-react";
 import {
@@ -38,7 +40,7 @@ export function VaultFooter({ version, links, socialLinks }: VaultFooterProps) {
         <div>
           <div className="flex items-center gap-2 text-xs text-text-secondary mb-2">
             <Check className="w-4 h-4" />
-            <span>Amana Digital Custody Systems {version}</span>
+            <span>{translateCopy("ui.amana_digital_custody_systems_f954688")}{" "}{version}</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-text-secondary">
             {links.map((link) => (
@@ -46,6 +48,7 @@ export function VaultFooter({ version, links, socialLinks }: VaultFooterProps) {
                 key={link.label}
                 href={link.href}
                 className="hover:text-text-primary transition-colors"
+                aria-label={link.label}
               >
                 {link.label}
               </a>
@@ -54,7 +57,7 @@ export function VaultFooter({ version, links, socialLinks }: VaultFooterProps) {
         </div>
         <div>
           <p className="text-xs text-gold uppercase tracking-widest mb-3">
-            Connect With Us
+            {translateCopy("ui.connect_with_us_27d57e6")}
           </p>
           <div className="flex items-center gap-3">
             {socialLinks.map((social) => {
@@ -63,6 +66,9 @@ export function VaultFooter({ version, links, socialLinks }: VaultFooterProps) {
                 <a
                   key={social.platform}
                   href={social.href}
+                  target={social.href.startsWith("http") ? "_blank" : undefined}
+                  rel={social.href.startsWith("http") ? "noreferrer" : undefined}
+                  aria-label={`Visit ${social.platform} page`}
                   className="w-10 h-10 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center hover:border-border-hover transition-colors"
                 >
                   <Icon className="w-4 h-4 text-text-primary" />

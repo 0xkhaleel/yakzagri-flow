@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 // Custom SVG Icons
 export function SettingsIcon({ className }: { className?: string }) {
   return (
@@ -37,7 +39,7 @@ export function StellarLogo({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 200 40" fill="currentColor">
       <path d="M45 20c0-8.284 6.716-15 15-15 6.213 0 11.544 3.78 13.816 9.167l-4.472 2.236A10.003 10.003 0 0060 10c-5.523 0-10 4.477-10 10s4.477 10 10 10a10.003 10.003 0 009.344-6.403l4.472 2.236C71.544 31.22 66.213 35 60 35c-8.284 0-15-6.716-15-15z" />
       <text x="80" y="27" fontSize="20" fontWeight="600" fill="currentColor">
-        Stellar
+        {translateCopy("ui.stellar_756b00b")}
       </text>
     </svg>
   );

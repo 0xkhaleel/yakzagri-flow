@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import { FileText } from "lucide-react";
@@ -6,6 +8,8 @@ import type { TradeDetail } from "@/types/trade";
 
 interface TradeHeaderProps {
   trade: TradeDetail;
+  onConfirmDelivery?: () => void;
+  confirmingDelivery?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -21,7 +25,7 @@ const STATUS_STYLES: Record<string, string> = {
     "bg-status-draft/10 text-status-draft border border-status-draft/30",
 };
 
-export function TradeHeader({ trade }: TradeHeaderProps) {
+export function TradeHeader({ trade, onConfirmDelivery, confirmingDelivery = false }: TradeHeaderProps) {
   const statusStyle =
     STATUS_STYLES[trade.status] ?? STATUS_STYLES["DRAFT"];
 
@@ -30,7 +34,7 @@ export function TradeHeader({ trade }: TradeHeaderProps) {
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-text-muted mb-4">
         <span className="hover:text-text-secondary cursor-pointer transition-colors">
-          Trades
+          {translateCopy("ui.trades_597b109")}
         </span>
         <span>/</span>
         <span className="text-text-secondary">{trade.id}</span>
@@ -63,7 +67,7 @@ export function TradeHeader({ trade }: TradeHeaderProps) {
                 <rect x="1" y="2" width="14" height="13" rx="2" />
                 <path d="M1 6h14M5 1v2M11 1v2" />
               </svg>
-              Initiated {trade.initiatedAt}
+              {translateCopy("ui.initiated_87c5ebd")}{" "}{trade.initiatedAt}
             </span>
 
             {/* Commodity category tag */}
@@ -75,9 +79,9 @@ export function TradeHeader({ trade }: TradeHeaderProps) {
 
         {/* Action buttons */}
         <div className="flex gap-3 flex-shrink-0">
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:border-border-hover hover:text-text-primary transition-all">
+          <a href="#trade-contract" className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:border-border-hover hover:text-text-primary transition-all">
             <FileText className="w-4 h-4" />
-            View Contract
+            {translateCopy("ui.view_contract_809ec07")}
           </button>
           <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-gold-cta text-text-inverse text-sm font-semibold hover:shadow-glow-gold transition-all">
             <svg
@@ -90,7 +94,7 @@ export function TradeHeader({ trade }: TradeHeaderProps) {
               <circle cx="8" cy="8" r="7" />
               <path d="M5 8l2.5 2.5L11 5.5" />
             </svg>
-            Confirm Delivery
+            {translateCopy("ui.confirm_delivery_e6dee98")}
           </button>
         </div>
       </div>

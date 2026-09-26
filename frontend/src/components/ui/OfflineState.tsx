@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import * as React from "react";
 import { clsx } from "clsx";
@@ -37,9 +39,9 @@ export function OfflineState({
         </svg>
       </div>
       <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold text-content">You&apos;re offline</h2>
+        <h2 className="text-lg font-semibold text-content">{translateCopy("ui.you_re_offline_f4d9cea")}</h2>
         <p className="text-sm text-muted">
-          Please check your internet connection and try again.
+          {translateCopy("ui.please_check_your_internet_conne_10cd84f")}
         </p>
       </div>
       {onRetry && (
@@ -51,7 +53,7 @@ export function OfflineState({
             "transition-colors focus:outline-none focus:ring-2 focus:ring-warning focus:ring-offset-2",
           )}
         >
-          Retry connection
+          {translateCopy("ui.retry_connection_a351235")}
         </button>
       )}
     </div>

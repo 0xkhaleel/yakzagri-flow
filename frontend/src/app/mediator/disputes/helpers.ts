@@ -1,4 +1,6 @@
-const DEV_MEDIATOR_ADDRESSES = ["GEXAMPLEMEDIATORPUBLICKEY1"];
+import { formatDate as formatLocalizedDate } from "@/lib/i18n";
+
+const DEFAULT_MEDIATOR_ADDRESSES = ["GEXAMPLEMEDIATORPUBLICKEY1"];
 
 /**
  * True when the app is running in a non-production environment.
@@ -33,13 +35,9 @@ export function isMediatorAddress(
   return Boolean(address && mediatorAddresses.includes(address));
 }
 
-/** Formats an ISO date string as "Mon D, YYYY" for dispute list rows. */
+/** Formats an ISO date string using the active locale for dispute list rows. */
 export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatLocalizedDate(dateString);
 }
 
 /** Truncates a Stellar wallet address to "GABC...WXYZ"; short strings pass through untouched. */
