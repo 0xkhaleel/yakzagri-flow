@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiBaseUrl } from "@/lib/api/env";
 
 export interface UseOfflineReturn {
@@ -12,7 +12,10 @@ export interface UseOfflineReturn {
 
 // Use same-origin /api health probe instead of google (CSP connect-src blocks external)
 // Falls back to navigator.onLine if fetch probe fails due to CORS
-const ONLINE_CHECK_INTERVAL_MS = 5000;
+const BASE_PROBE_INTERVAL_MS = 5000;
+const MAX_PROBE_INTERVAL_MS = 60000;
+const BACKOFF_FACTOR = 2;
+const BROADCAST_CHANNEL_NAME = "offline-status";
 
 function getProbeUrl(): string {
   try {
@@ -27,6 +30,11 @@ function getProbeUrl(): string {
 export function useOffline(): UseOfflineReturn {
   const [isOffline, setIsOffline] = useState(false);
   const [wasOffline, setWasOffline] = useState(false);
+
+  // Adaptive cadence: interval grows while the connection stays stable.
+  const intervalRef = useRef(BASE_PROBE_INTERVAL_MS);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const channelRef = useRef<BroadcastChannel | null>(null);
 
   const checkOnlineStatus = useCallback(async () => {
     // Fast path: navigator.onLine false => offline
@@ -44,7 +52,6 @@ export function useOffline(): UseOfflineReturn {
         method: "GET",
         cache: "no-cache",
         signal: controller.signal,
-        headers: { "X-Offline-Probe": "1" },
       });
 
       clearTimeout(timeoutId);
@@ -73,6 +80,8 @@ export function useOffline(): UseOfflineReturn {
   }, [wasOffline]);
 
   const retryOnline = useCallback(async () => {
+    // A manual retry resets the cadence so we probe eagerly again.
+    intervalRef.current = BASE_PROBE_INTERVAL_MS;
     const online = await checkOnlineStatus();
     if (online) {
       setWasOffline(false);
@@ -92,15 +101,59 @@ export function useOffline(): UseOfflineReturn {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    const interval = setInterval(checkOnlineStatus, ONLINE_CHECK_INTERVAL_MS);
+    // Share offline/online state across tabs so only one tab drives the cadence.
+    let channel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== "undefined") {
+      channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+      channelRef.current = channel;
+      channel.onmessage = (event: MessageEvent) => {
+        const data = event.data as { type?: string; isOffline?: boolean } | null;
+        if (!data || data.type !== "offline-status") return;
+        if (typeof data.isOffline === "boolean") {
+          setIsOffline(data.isOffline);
+          if (data.isOffline) {
+            setWasOffline(true);
+          }
+        }
+      };
+    }
+
+    const scheduleNext = () => {
+      timerRef.current = setTimeout(async () => {
+        const online = await checkOnlineStatus();
+        if (online) {
+          // Connection stable: back off the probe frequency.
+          intervalRef.current = Math.min(
+            intervalRef.current * BACKOFF_FACTOR,
+            MAX_PROBE_INTERVAL_MS,
+          );
+        } else {
+          // Connection unstable: probe eagerly again.
+          intervalRef.current = BASE_PROBE_INTERVAL_MS;
+        }
+        channelRef.current?.postMessage({
+          type: "offline-status",
+          isOffline: !online,
+        });
+        scheduleNext();
+      }, intervalRef.current);
+    };
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     checkOnlineStatus();
+    scheduleNext();
 
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
-      clearInterval(interval);
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      if (channel) {
+        channel.close();
+        channelRef.current = null;
+      }
     };
   }, [checkOnlineStatus]);
 
