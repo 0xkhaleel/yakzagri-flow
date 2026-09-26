@@ -76,6 +76,8 @@ export function AppTopNav({
 
       {/* Right side */}
       <div className="ml-auto flex items-center gap-3">
+        <GlobalSearch />
+
         {/* Admin role indicator */}
         {isAdmin && (
           <Badge variant="locked" size="sm">
