@@ -80,6 +80,35 @@ describe("API Client", () => {
         "Network error",
       );
     });
+
+    it("should validate live responses with a provided Zod schema", async () => {
+      const schema = z.object({ data: z.string() });
+
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({ data: "test" }),
+        } as Response),
+      );
+
+      const result = await request<{ data: string }>("/test", undefined, schema);
+      expect(result).toEqual({ data: "test" });
+    });
+
+    it("should reject when a live response fails schema validation", async () => {
+      const schema = z.object({ data: z.string() });
+
+      global.fetch = jest.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({ invalid: "data" }),
+        } as Response),
+      );
+
+      await expect(
+        request<{ data: string }>("/test", undefined, schema),
+      ).rejects.toBeInstanceOf(ApiError);
+    });
   });
 
   describe("requestWithResult", () => {
