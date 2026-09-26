@@ -62,7 +62,7 @@ self.addEventListener("fetch", (event) => {
   // external images) bypass the SW cache and go straight to the network.
 });
 
-async function staleWhileRevalidate(request: Request): Promise<Response> {
+async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
   const network = fetch(request)
@@ -76,7 +76,7 @@ async function staleWhileRevalidate(request: Request): Promise<Response> {
   return cached || network;
 }
 
-async function networkFirstWithCache(request: Request): Promise<Response> {
+async function networkFirstWithCache(request) {
   try {
     const response = await fetch(request);
     if (response.ok) {
