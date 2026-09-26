@@ -7,6 +7,17 @@ export type TradeStatus =
   | "DISPUTED"
   | "DRAFT";
 
+/**
+ * Canonical money amount, expressed in USDC.
+ *
+ * The API boundary uses two different field names for the same underlying
+ * value: requests send `amountUsdc` while responses return `amountCngn`.
+ * Both are USDC-denominated amounts; the naming drift is historical. All
+ * internal/UI shapes should use `amountUsdc` and rely on the transform
+ * mappers in `lib/domain-schemas/trade.ts` to cross the boundary.
+ */
+export type UsdcAmount = number;
+
 export interface TradeParty {
   name: string;
   walletAddress: string;
@@ -57,10 +68,10 @@ export interface TradeDetail {
   seller: TradeParty;
 
   // Financials
-  vaultAmountLocked: number;
-  assetValue: number;
+  vaultAmountLocked: UsdcAmount;
+  assetValue: UsdcAmount;
   platformFeePercent: number;
-  platformFee: number;
+  platformFee: UsdcAmount;
   networkGasEst: string;
 
   // Contract

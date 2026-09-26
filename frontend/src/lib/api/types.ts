@@ -6,11 +6,27 @@ export interface VerifyResponse {
   token: string;
 }
 
+// Canonical trade model lives in the shared domain schema so API and UI
+// shapes cannot drift. See docs/shared-schemas.md.
+export type {
+  Trade,
+  TradeStatus,
+  TradeMoneyAmount,
+  CreateTradeInput,
+} from "@/lib/domain-schemas/trade";
+
+import type { Trade, TradeMoneyAmount } from "@/lib/domain-schemas/trade";
+
+/**
+ * API response shape for a trade. Money is expressed as `amountCngn` on the
+ * wire; the canonical `Trade` model normalizes it to `amount`. Use
+ * `mapTradeResponseToTrade` to cross the boundary.
+ */
 export interface TradeResponse {
   tradeId: string;
   buyerAddress: string;
   sellerAddress: string;
-  amountCngn: string;
+  amountCngn: TradeMoneyAmount;
   buyerLossBps: number;
   sellerLossBps: number;
   status: string;
@@ -65,7 +81,7 @@ export type { CreateTradeInput } from "@/lib/domain-schemas/trade";
 
 export interface CreateTradeRequest {
   sellerAddress: string;
-  amountUsdc: string;
+  amountUsdc: TradeMoneyAmount;
   buyerLossBps: number;
   sellerLossBps: number;
 }
@@ -73,6 +89,28 @@ export interface CreateTradeRequest {
 export interface CreateTradeResponse {
   tradeId: string;
   unsignedXdr: string;
+}
+
+/**
+ * Explicit transform between the API response shape (`amountCngn`) and the
+ * canonical domain `Trade` shape (`amount`). This is the single mapping layer
+ * that prevents silent semantic drift between request and response money
+ * fields.
+ */
+export function mapTradeResponseToTrade(response: TradeResponse): Trade {
+  return {
+    tradeId: response.tradeId,
+    buyerAddress: response.buyerAddress,
+    sellerAddress: response.sellerAddress,
+    amount: response.amountCngn,
+    buyerLossBps: response.buyerLossBps,
+    sellerLossBps: response.sellerLossBps,
+    status: response.status,
+    createdAt: response.createdAt,
+    updatedAt: response.updatedAt,
+    eta: response.eta,
+    carrier: response.carrier,
+  };
 }
 
 export interface DepositResponse {
@@ -185,7 +223,7 @@ export interface DisputeResponse {
   trade: {
     buyerAddress: string;
     sellerAddress: string;
-    amountUsdc: string;
+    amountUsdc: TradeMoneyAmount;
   };
 }
 
