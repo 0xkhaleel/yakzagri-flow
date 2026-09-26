@@ -13,7 +13,45 @@ export interface AssetInfo {
 }
 
 /**
- * Common Stellar assets used in the application
+ * Resolve the current application environment.
+ *
+ * Dev/test defaults (placeholder issuers, fake addresses) are only allowed
+ * when the app is explicitly running outside production. In production we
+ * fail closed: any placeholder credential is rejected rather than silently
+ * shipped to users.
+ */
+function resolveAppEnv(): string {
+  const env =
+    (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_APP_ENV) ||
+    (typeof process !== "undefined" && process.env?.NODE_ENV) ||
+    "development";
+  return String(env).toLowerCase();
+}
+
+/**
+ * True when placeholder/test credentials may be used (non-production only).
+ */
+export const IS_NON_PRODUCTION_ENV: boolean = resolveAppEnv() !== "production";
+
+/**
+ * Placeholder issuer values that must never reach production paths.
+ */
+const PLACEHOLDER_ISSUER_PATTERN = /^(EXAMPLE_ISSUER_ADDRESS|GEXAMPLEMEDIATORPUBLICKEY1|EXAMPLE.*|.*EXAMPLE.*)$/i;
+
+/**
+ * Detect whether an issuer string is a known placeholder/test credential.
+ */
+export function isPlaceholderIssuer(issuer: string | undefined | null): boolean {
+  if (!issuer) return false;
+  return PLACEHOLDER_ISSUER_PATTERN.test(issuer.trim());
+}
+
+/**
+ * Common Stellar assets used in the application.
+ *
+ * The NGN entry is a dev/test placeholder. It is only registered when the
+ * app is running outside production; in production the placeholder issuer is
+ * omitted so it cannot be used as a real credential.
  */
 export const STELLAR_ASSETS: Record<string, AssetInfo> = {
   XLM: {
@@ -39,15 +77,19 @@ export const STELLAR_ASSETS: Record<string, AssetInfo> = {
     name: "Euro Coin",
     type: "credit_alphanum4",
   },
-  // Nigerian Naira token (example - replace with actual issuer if different)
-  NGN: {
-    code: "NGN",
-    issuer: "EXAMPLE_ISSUER_ADDRESS", // Replace with actual issuer
-    decimals: 7,
-    symbol: "NGN",
-    name: "Nigerian Naira",
-    type: "credit_alphanum4",
-  },
+  // Nigerian Naira token (dev/test placeholder - replace with actual issuer)
+  ...(IS_NON_PRODUCTION_ENV
+    ? {
+        NGN: {
+          code: "NGN",
+          issuer: "EXAMPLE_ISSUER_ADDRESS", // Replace with actual issuer
+          decimals: 7,
+          symbol: "NGN",
+          name: "Nigerian Naira",
+          type: "credit_alphanum4" as const,
+        },
+      }
+    : {}),
 };
 
 /**
@@ -56,11 +98,22 @@ export const STELLAR_ASSETS: Record<string, AssetInfo> = {
 export const DEFAULT_ASSET: AssetInfo = STELLAR_ASSETS.XLM;
 
 /**
- * Get asset info by code, with fallback to default
+ * Get asset info by code, with fallback to default.
+ *
+ * In production, placeholder issuers are stripped so they cannot be used as
+ * real credentials. If a known asset resolves to a placeholder issuer in
+ * production, the issuer is dropped (fail closed).
  */
 export function getAssetInfo(code: string | null | undefined): AssetInfo {
   if (!code) return DEFAULT_ASSET;
-  return STELLAR_ASSETS[code.toUpperCase()] || {
+  const asset = STELLAR_ASSETS[code.toUpperCase()];
+  if (asset) {
+    if (!IS_NON_PRODUCTION_ENV && isPlaceholderIssuer(asset.issuer)) {
+      return { ...asset, issuer: undefined };
+    }
+    return asset;
+  }
+  return {
     code: code.toUpperCase(),
     decimals: 7, // Default to 7 decimals for Stellar assets
     symbol: code.toUpperCase(),

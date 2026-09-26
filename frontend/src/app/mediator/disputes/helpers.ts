@@ -1,15 +1,29 @@
-const DEFAULT_MEDIATOR_ADDRESSES = ["GEXAMPLEMEDIATORPUBLICKEY1"];
+const DEV_MEDIATOR_ADDRESSES = ["GEXAMPLEMEDIATORPUBLICKEY1"];
 
-/** Reads the mediator wallet allowlist from env, falling back to a dev default. */
+/**
+ * True when the app is running in a non-production environment.
+ * Production builds must never fall back to placeholder credentials.
+ */
+export function isNonProductionEnv(
+  appEnv: string | undefined = process.env.NEXT_PUBLIC_APP_ENV,
+): boolean {
+  return (appEnv ?? "").trim().toLowerCase() !== "production";
+}
+
+/** Reads the mediator wallet allowlist from env, falling back to a dev default only outside production. */
 export function getMediatorAddresses(
   envValue: string | undefined = process.env.NEXT_PUBLIC_MEDIATOR_WALLETS,
+  appEnv: string | undefined = process.env.NEXT_PUBLIC_APP_ENV,
 ): string[] {
   const fromEnv = (envValue ?? "")
     .split(",")
     .map((entry) => entry.trim())
     .filter(Boolean);
 
-  return fromEnv.length > 0 ? fromEnv : DEFAULT_MEDIATOR_ADDRESSES;
+  if (fromEnv.length > 0) return fromEnv;
+
+  // Fail closed in production: no placeholder mediator addresses.
+  return isNonProductionEnv(appEnv) ? DEV_MEDIATOR_ADDRESSES : [];
 }
 
 export function isMediatorAddress(
