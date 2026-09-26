@@ -466,7 +466,7 @@ export function VideoUploadCard({
             {ipfsHash}
           </span>
           <a
-            href={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}
+            href={`${IPFS_GATEWAY}/ipfs/${ipfsHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 text-gold hover:text-gold-hover transition-colors"
