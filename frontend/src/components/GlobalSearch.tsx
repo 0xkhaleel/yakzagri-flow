@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -151,16 +153,16 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
     return (
       <button
         onClick={open}
-        aria-label="Open global search"
+        aria-label={translateCopy("ui.open_global_search_489a247")}
         className="flex items-center gap-2 rounded-lg border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-muted hover:border-border-hover hover:text-text-secondary transition-colors"
       >
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
           <circle cx="6.5" cy="6.5" r="4.5" />
           <path d="M10 10l3 3" strokeLinecap="round" />
         </svg>
-        <span>Search</span>
+        <span>{translateCopy("ui.search_bce0641")}</span>
         <kbd className="ml-1 hidden sm:inline-flex items-center gap-0.5 rounded border border-border-default px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
-          <span>⌘</span>K
+          <span>⌘</span>{translateCopy("ui.k_a7ee38b")}
         </kbd>
       </button>
     );
@@ -170,7 +172,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Global search"
+      aria-label={translateCopy("ui.global_search_a2b8a16")}
       className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] bg-overlay backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) close(); }}
     >
@@ -185,8 +187,8 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
             ref={inputRef}
             type="text"
             role="searchbox"
-            aria-label="Search trades, users, and contracts"
-            placeholder="Search trades, users, contracts…"
+            aria-label={translateCopy("ui.search_trades_users_and_contract_3948f3a")}
+            placeholder={translateCopy("ui.search_trades_users_contracts_204acaf")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyNavigation}
@@ -200,25 +202,25 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
           )}
           <button
             onClick={close}
-            aria-label="Close search"
+            aria-label={translateCopy("ui.close_search_0906f92")}
             className="rounded px-1.5 py-0.5 text-xs text-text-muted border border-border-default hover:border-border-hover transition-colors"
           >
-            Esc
+            {translateCopy("ui.esc_1f7a4f9")}
           </button>
         </div>
 
         {/* Results */}
-        <div className="max-h-[60vh] overflow-y-auto p-2" role="listbox" aria-label="Search results">
+        <div className="max-h-[60vh] overflow-y-auto p-2" role="listbox" aria-label={translateCopy("ui.search_results_0144dae")}>
           {error && (
             <p className="px-3 py-4 text-center text-sm text-status-danger">{error}</p>
           )}
 
           {!error && query && !loading && !hasResults && (
-            <p className="px-3 py-4 text-center text-sm text-text-muted">No results for &ldquo;{query}&rdquo;</p>
+            <p className="px-3 py-4 text-center text-sm text-text-muted">{translateCopy("ui.no_results_for_2a5f91d")}{query}&rdquo;</p>
           )}
 
           {!error && !query && (
-            <p className="px-3 py-4 text-center text-sm text-text-muted">Type to search trades, users, and contracts</p>
+            <p className="px-3 py-4 text-center text-sm text-text-muted">{translateCopy("ui.type_to_search_trades_users_and__6fdf7a0")}</p>
           )}
 
           {hasResults &&

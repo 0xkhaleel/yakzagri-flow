@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import type { TradeDetail } from "@/types/trade";
@@ -33,7 +35,7 @@ export function ActionBar({
             <path d="M8 2v6M8 11v1" strokeLinecap="round" />
             <path d="M2 14L8 2l6 12H2z" />
           </svg>
-          Raise Dispute
+          {translateCopy("ui.raise_dispute_448d5e7")}
         </button>
       )}
 
@@ -49,7 +51,7 @@ export function ActionBar({
             <path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" />
             <path d="M5 8l2.5 2.5L11 5.5" />
           </svg>
-          PoD Verification
+          {translateCopy("ui.pod_verification_aac5dd6")}
         </button>
       )}
 
@@ -70,7 +72,7 @@ export function ActionBar({
               >
                 <path d="M8 2a6 6 0 016 6" />
               </svg>
-              Confirming…
+              {translateCopy("ui.confirming_0c2708b")}
             </>
           ) : (
             <>
@@ -84,7 +86,7 @@ export function ActionBar({
                 <circle cx="8" cy="8" r="7" />
                 <path d="M5 8l2.5 2.5L11 5.5" />
               </svg>
-              Confirm Delivery
+              {translateCopy("ui.confirm_delivery_e6dee98")}
             </>
           )}
         </button>
@@ -102,7 +104,7 @@ export function ActionBar({
             <path d="M8 1v8M5 6l3 3 3-3" />
             <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" />
           </svg>
-          Release Funds
+          {translateCopy("ui.release_funds_2f565c4")}
         </button>
       )}
     </div>

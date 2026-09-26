@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React, { useRef, useState } from "react";
 import { Video } from "lucide-react";
@@ -77,7 +79,7 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
 
   return (
     <BentoCard
-      title="Evidence Upload"
+      title={translateCopy("ui.evidence_upload_e144a6f")}
       icon={<Video className="w-5 h-5" />}
       glowVariant="gold"
       className="h-full"
@@ -86,7 +88,7 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
       <div
         role="button"
         tabIndex={0}
-        aria-label="Upload delivery proof video — drag and drop or press Enter to browse"
+        aria-label={translateCopy("ui.upload_delivery_proof_video_drag_2758b39")}
         aria-disabled={uploading}
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
@@ -117,10 +119,10 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
           <>
             <Video className="w-8 h-8 text-text-muted" />
             <p className="text-text-muted text-sm text-center">
-              Upload delivery proof video for verification
+              {translateCopy("ui.upload_delivery_proof_video_for__680e193")}
             </p>
             <span className="text-xs text-text-muted">
-              Drag &amp; drop or click to browse
+              {translateCopy("ui.drag_drop_or_click_to_browse_a964e34")}
             </span>
           </>
         )}
@@ -130,7 +132,7 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
         ref={inputRef}
         type="file"
         accept="video/mp4,video/webm"
-        aria-label="Choose proof video file"
+        aria-label={translateCopy("ui.choose_proof_video_file_6e791c5")}
         aria-hidden={false}
         tabIndex={-1}
         className="hidden file:rounded-full file:bg-elevated file:text-gold"
@@ -141,7 +143,7 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
       {uploading && (
         <div className="mt-4 space-y-1">
           <div className="flex justify-between text-xs text-text-muted">
-            <span>Uploading to IPFS…</span>
+            <span>{translateCopy("ui.uploading_to_ipfs_436f33a")}</span>
             <span>{progress}%</span>
           </div>
           <div className="w-full bg-bg-elevated rounded-full h-1.5 overflow-hidden">
@@ -169,7 +171,7 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 text-gold hover:text-gold-hover transition-colors"
-            aria-label="View on IPFS"
+            aria-label={translateCopy("ui.view_on_ipfs_488ca35")}
           >
             <Icon name="external-link" size="sm" className="text-gold" />
           </a>
@@ -190,9 +192,9 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
           transition-colors duration-200
         "
       >
-        Submit Proof
+        {translateCopy("ui.submit_proof_7a3580b")}
       </button>
-      {!ipfsHash && <p id="video-upload-hint" className="sr-only">Upload video evidence before submitting proof</p>}
+      {!ipfsHash && <p id="video-upload-hint" className="sr-only">{translateCopy("ui.upload_video_evidence_before_sub_821f5ce")}</p>}
     </BentoCard>
   );
 }

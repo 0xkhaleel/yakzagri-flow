@@ -1,5 +1,7 @@
 "use client";
 
+import { formatNumber, t } from "@/lib/i18n";
+
 interface TradeAmountRowProps {
   amountCngn: string | number;
   amountLocal?: string | number;
@@ -10,7 +12,7 @@ interface TradeAmountRowProps {
 
 function formatValue(value: string | number): string {
   if (typeof value === "number") {
-    return value.toLocaleString("en-US");
+    return formatNumber(value);
   }
 
   return value;
@@ -33,13 +35,13 @@ export function TradeAmountRow({
   amountCngn,
   amountLocal,
   currencyLocal = "NGN",
-  label = "Total Trade Value",
+  label,
   highlighted = false,
 }: TradeAmountRowProps) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border border-border-default bg-elevated p-4">
       <div className="min-w-0">
-        <p className="text-xs text-text-muted mb-1">{label}</p>
+        <p className="text-xs text-text-muted mb-1">{label ?? t("trade.totalTradeValue")}</p>
         <div className="flex items-end gap-2 flex-wrap">
           <p
             className={`font-mono text-3xl font-bold ${
@@ -67,7 +69,7 @@ export function TradeAmountRow({
         >
           <path d="M2 5h9M11 3l2 2-2 2M14 11H5M5 9l-2 2 2 2" />
         </svg>
-        <span className="whitespace-nowrap">Stellar Path Payment</span>
+        <span className="whitespace-nowrap">{t("trade.stellarPathPayment")}</span>
       </div>
     </div>
   );

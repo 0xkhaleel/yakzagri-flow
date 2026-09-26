@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { Check, Shield } from "lucide-react";
 
@@ -19,10 +21,10 @@ export function VaultHero({
     <header className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-10">
       <div>
         <p className="text-xs font-semibold tracking-widest text-gold uppercase mb-2">
-          Vault System Active
+          {translateCopy("ui.vault_system_active_de26716")}
         </p>
         <h1 className="text-4xl md:text-5xl font-bold text-text-primary">
-          Escrow #{escrowId}
+          {translateCopy("ui.escrow_44ce837")}{escrowId}
         </h1>
         <p className="text-3xl md:text-4xl font-light text-text-muted">
           {custodyType}
@@ -35,14 +37,14 @@ export function VaultHero({
         </div>
         <div>
           <p className="text-xs font-medium tracking-widest text-text-secondary uppercase">
-            Vault Status
+            {translateCopy("ui.vault_status_25fb1df")}
           </p>
           <p className="text-xl font-bold text-emerald">{status}</p>
           {isSecured && (
             <div className="flex items-center gap-1.5 mt-1">
               <Check className="w-4 h-4 text-emerald" />
               <span className="text-xs font-medium text-emerald">
-                Secured On-Chain
+                {translateCopy("ui.secured_on_chain_595d959")}
               </span>
             </div>
           )}

@@ -1,10 +1,13 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { TradeDetailPanel } from "@/components/trade/TradeDetailPanel";
 import { useAuth } from "@/hooks/useAuth";
 import { api, ApiError, type TradeResponse, type TradeHistoryEvent } from "@/lib/api";
+import { formatDate } from "@/lib/i18n";
 import type { TradeDetail, TimelineEvent, TransactionEvent } from "@/types/trade";
 
 function mapStatusToDisplay(status: string): TradeDetail["status"] {
@@ -55,7 +58,7 @@ function buildTradeDetail(
     quantity: `${trade.amountCngn} cNGN`,
     category: "Escrow Trade",
     status: mapStatusToDisplay(trade.status),
-    initiatedAt: new Date(trade.createdAt).toLocaleDateString("en-US"),
+    initiatedAt: formatDate(trade.createdAt),
     buyer: {
       name: "Buyer",
       walletAddress: `${trade.buyerAddress.slice(0, 6)}...${trade.buyerAddress.slice(-4)}`,
@@ -101,7 +104,7 @@ function LoadingState() {
     <div className="min-h-screen bg-primary flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin w-8 h-8 border-2 border-gold border-t-transparent rounded-full mx-auto mb-4" />
-        <p className="text-text-secondary">Loading trade details...</p>
+        <p className="text-text-secondary">{translateCopy("ui.loading_trade_details_3bf9a13")}</p>
       </div>
     </div>
   );
@@ -116,14 +119,14 @@ function ErrorState({ message, onRetry }: { message: string; onRetry?: () => voi
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-text-primary mb-2">Error</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-2">{translateCopy("ui.error_7f2f6a1")}</h2>
         <p className="text-text-secondary mb-4">{message}</p>
         {onRetry && (
           <button
             onClick={onRetry}
             className="px-4 py-2 bg-gold text-text-inverse rounded-lg font-medium hover:bg-gold-hover"
           >
-            Try Again
+            {translateCopy("ui.try_again_cef2fe0")}
           </button>
         )}
       </div>
@@ -145,7 +148,7 @@ function AuthRequired({ onConnect, onAuthenticate, isConnected, isLoading }: {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-text-primary mb-2">Authentication Required</h2>
+        <h2 className="text-lg font-semibold text-text-primary mb-2">{translateCopy("ui.authentication_required_fbbe499")}</h2>
         <p className="text-text-secondary mb-4">
           {isConnected
             ? "Please sign in with your wallet to view trade details."
