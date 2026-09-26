@@ -27,7 +27,7 @@ const LINE_ITEMS: CostLineItem[] = [
         : `${formatNumber(total)} cNGN`,
   },
   {
-    label: "Amana Platform Fee (1%)",
+    label: "EziAgric Platform Fee (1%)",
     getValue: (total, currency, rate) => {
       const fee = parseFloat((total * 0.01).toFixed(2));
       return currency === "NGN"

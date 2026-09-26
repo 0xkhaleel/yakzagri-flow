@@ -141,33 +141,35 @@ export default function LandingPage() {
               return (
                 <div
                   key={feature.title}
-                  className="flex gap-4 rounded-xl border border-border-default bg-bg-elevated p-6 transition-colors hover:border-border-hover"
+                  className="rounded-xl border border-border-default bg-bg-primary p-6 shadow-card"
                 >
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gold-muted">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gold-muted">
                     <Icon className="h-5 w-5 text-gold" />
                   </div>
-                  <div>
-                    <h3 className="text-base font-semibold">{feature.title}</h3>
-                    <p className="mt-1 text-sm leading-relaxed text-text-secondary">
-                      {feature.description}
-                    </p>
-                  </div>
+                  <h3 className="mt-4 text-xl font-semibold">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                    {feature.description}
+                  </p>
                 </div>
               );
             })}
           </div>
         </div>
 
-      {/* ── Bottom CTA ───────────────────────────────────────────────────── */}
+      {/* ── CTA ──────────────────────────────────────────────────────────── */}
       <section className="px-6 py-20 lg:px-10">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-gold/20 bg-gradient-card-glow p-10 text-center shadow-glow-gold">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-gold/20 bg-gradient-hero p-10 text-center shadow-card">
           <h2 className="text-2xl font-bold md:text-3xl">
             {translateCopy("ui.ready_to_settle_your_first_trade_a627297")}
           </h2>
           <p className="mx-auto mt-4 max-w-md text-base text-text-secondary">
             {translateCopy("ui.connect_your_freighter_wallet_an_d3b64b6")}
           </p>
-          <LandingCtaButtons />
+          <div className="mt-8 flex justify-center">
+            <LandingCtaButtons />
+          </div>
         </div>
       </section>
 

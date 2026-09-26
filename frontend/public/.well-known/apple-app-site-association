@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appIDs": ["TEAMID.com.amana.mobile"],
+        "appIDs": ["9ABCDE1234.com.amana.mobile"],
         "components": [
           { "/": "/trades/*", "comment": "Trade detail deep link" },
           { "/": "/trades", "comment": "Trade list" },
@@ -14,6 +14,6 @@
     ]
   },
   "webcredentials": {
-    "apps": ["TEAMID.com.amana.mobile"]
+    "apps": ["9ABCDE1234.com.amana.mobile"]
   }
 }
