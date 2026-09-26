@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Video, Circle, Square, RotateCcw } from "lucide-react";
@@ -111,11 +113,7 @@ export function VideoUploadCard({
   maxDurationSeconds = DEFAULT_MAX_DURATION,
 }: VideoUploadCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
+  const uploadRequestRef = useRef<XMLHttpRequest | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [ipfsHash, setIpfsHash] = useState<string | null>(null);
   const [localHash, setLocalHash] = useState<string | null>(null);
@@ -126,9 +124,22 @@ export function VideoUploadCard({
   const [elapsed, setElapsed] = useState(0);
   const [queued, setQueued] = useState(0);
 
-  useEffect(() => {
-    setQueued(readQueue().length);
-  }, []);
+  const cancelUpload = () => {
+    uploadRequestRef.current?.abort();
+    uploadRequestRef.current = null;
+    setUploading(false);
+    setProgress(0);
+    setError(null);
+  };
+
+  const handleFile = async (file: File) => {
+    if (!file) return;
+
+    uploadRequestRef.current?.abort();
+    setPreview(URL.createObjectURL(file));
+    setError(null);
+    setUploading(true);
+    setProgress(0);
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -137,20 +148,45 @@ export function VideoUploadCard({
     }
   }, []);
 
-  const stopRecording = useCallback(() => {
-    stopTimer();
-    recorderRef.current?.state === "recording" && recorderRef.current.stop();
-    setRecording(false);
-  }, [stopTimer]);
+      const xhr = new XMLHttpRequest();
+      uploadRequestRef.current = xhr;
+      xhr.timeout = 30000;
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          setProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
 
-  const startRecording = useCallback(async () => {
-    setError(null);
-    setIpfsHash(null);
-    setLocalHash(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
+      const hash = await new Promise<string>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const res = JSON.parse(xhr.responseText);
+              const result = res.IpfsHash ?? res.cid ?? res.hash;
+              if (!result) {
+                reject(new Error("Upload response did not include an IPFS hash"));
+                return;
+              }
+              resolve(result);
+            } catch {
+              reject(new Error("Upload response was not valid JSON"));
+            }
+          } else {
+            reject(new Error(`Upload failed: ${xhr.statusText || "Request failed"}`));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Network error during upload"));
+        xhr.ontimeout = () => reject(new Error("Upload timed out after 30 seconds"));
+        xhr.onabort = () => reject(new DOMException("Upload cancelled", "AbortError"));
+
+        const uploadUrl =
+          process.env.NEXT_PUBLIC_PINATA_API_URL?.trim() ||
+          "https://api.pinata.cloud/pinning/pinFileToIPFS";
+
+        xhr.open("POST", uploadUrl);
+        const jwt = process.env.NEXT_PUBLIC_PINATA_JWT;
+        if (jwt) xhr.setRequestHeader("Authorization", `Bearer ${jwt}`);
+        xhr.send(data);
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -189,17 +225,15 @@ export function VideoUploadCard({
         });
       }, 1000);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? `Camera unavailable: ${err.message}`
-          : "Camera unavailable"
-      );
-    }
-  }, [maxDurationSeconds, stopRecording]);
-
-  const handleBlob = useCallback(
-    async (blob: Blob, hash: string, name: string) => {
-      setUploading(true);
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      if (uploadRequestRef.current === null || uploadRequestRef.current.readyState === XMLHttpRequest.DONE) {
+        uploadRequestRef.current = null;
+      }
+      setUploading(false);
       setProgress(0);
       try {
         const cid = await uploadToIpfs(blob, name, setProgress);
@@ -276,7 +310,7 @@ export function VideoUploadCard({
 
   return (
     <BentoCard
-      title="Evidence Upload"
+      title={translateCopy("ui.evidence_upload_e144a6f")}
       icon={<Video className="w-5 h-5" />}
       glowVariant="gold"
       className="h-full"
@@ -295,8 +329,8 @@ export function VideoUploadCard({
       <div
         role="button"
         tabIndex={0}
-        aria-label="Upload delivery proof video — drag and drop or press Enter to browse"
-        aria-disabled={uploading || recording}
+        aria-label={translateCopy("ui.upload_delivery_proof_video_drag_2758b39")}
+        aria-disabled={uploading}
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
         onClick={() => { if (!uploading && !recording) inputRef.current?.click(); }}
@@ -326,10 +360,10 @@ export function VideoUploadCard({
           <>
             <Video className="w-8 h-8 text-text-muted" />
             <p className="text-text-muted text-sm text-center">
-              Record or upload delivery proof video for verification
+              {translateCopy("ui.upload_delivery_proof_video_for__680e193")}
             </p>
             <span className="text-xs text-text-muted">
-              Drag &amp; drop or click to browse
+              {translateCopy("ui.drag_drop_or_click_to_browse_a964e34")}
             </span>
           </>
         ) : null}
@@ -339,7 +373,7 @@ export function VideoUploadCard({
         ref={inputRef}
         type="file"
         accept="video/mp4,video/webm"
-        aria-label="Choose proof video file"
+        aria-label={translateCopy("ui.choose_proof_video_file_6e791c5")}
         aria-hidden={false}
         tabIndex={-1}
         className="hidden file:rounded-full file:bg-elevated file:text-gold"
@@ -408,7 +442,7 @@ export function VideoUploadCard({
       {uploading && (
         <div className="mt-4 space-y-1">
           <div className="flex justify-between text-xs text-text-muted">
-            <span>Uploading to IPFS…</span>
+            <span>{translateCopy("ui.uploading_to_ipfs_436f33a")}</span>
             <span>{progress}%</span>
           </div>
           <div className="w-full bg-bg-elevated rounded-full h-1.5 overflow-hidden">
@@ -436,7 +470,7 @@ export function VideoUploadCard({
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 text-gold hover:text-gold-hover transition-colors"
-            aria-label="View on IPFS"
+            aria-label={translateCopy("ui.view_on_ipfs_488ca35")}
           >
             <Icon name="external-link" size="sm" className="text-gold" />
           </a>
@@ -445,6 +479,11 @@ export function VideoUploadCard({
 
       {/* Submit button — disabled state communicated via aria */}
       <button
+        type="button"
+        onClick={() => {
+          if (!ipfsHash || uploading) return;
+          onUpload?.(ipfsHash);
+        }}
         disabled={!ipfsHash || uploading}
         aria-disabled={!ipfsHash || uploading}
         aria-describedby={!ipfsHash ? "video-upload-hint" : undefined}
@@ -457,9 +496,18 @@ export function VideoUploadCard({
           transition-colors duration-200
         "
       >
-        Submit Proof
+        {translateCopy("ui.submit_proof_7a3580b")}
       </button>
-      {!ipfsHash && <p id="video-upload-hint" className="sr-only">Record or upload video evidence before submitting proof</p>}
+      {!ipfsHash && <p id="video-upload-hint" className="sr-only">Upload video evidence before submitting proof</p>}
+      {uploading && (
+        <button
+          type="button"
+          onClick={cancelUpload}
+          className="mt-3 w-full rounded-lg border border-border-default bg-bg-elevated px-3 py-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
+        >
+          Cancel upload
+        </button>
+      )}
     </BentoCard>
   );
 }

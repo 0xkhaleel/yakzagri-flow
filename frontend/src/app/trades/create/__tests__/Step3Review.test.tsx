@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import Step3Review from '../steps/Step3Review';
 import { TradeProvider, useTrade, TradeData } from '../TradeContext';
 import { api } from '@/lib/api';
 import { signTransaction } from '@stellar/freighter-api';
+import { _clearAllForTests } from '@/lib/actionDedup';
 
 // Mock @stellar/stellar-sdk to simplify address validation in tests
 jest.mock('@stellar/stellar-sdk', () => ({
@@ -16,7 +17,13 @@ jest.mock('@stellar/stellar-sdk', () => ({
 }));
 
 // Mutable mock object for useAuth
-const mockUseAuth = {
+const mockUseAuth: {
+    token: string | null;
+    isAuthenticated: boolean;
+    connectWallet: jest.Mock;
+    authenticate: jest.Mock;
+    isWalletConnected: boolean;
+} = {
     token: 'mock-token',
     isAuthenticated: true,
     connectWallet: jest.fn(),
@@ -27,6 +34,18 @@ const mockUseAuth = {
 // Mock the hooks and modules
 jest.mock('@/hooks/useAuth', () => ({
     useAuth: () => mockUseAuth,
+}));
+
+jest.mock('@/hooks/useToast', () => ({
+    useToast: () => ({
+        addToast: jest.fn(),
+        addToastWithCorrelation: jest.fn(),
+        updateToast: jest.fn(),
+    }),
+}));
+
+jest.mock('@/hooks/useOffline', () => ({
+    useOffline: () => ({ isOffline: false, wasOffline: false, retryOnline: jest.fn() }),
 }));
 
 jest.mock('@radix-ui/react-dialog', () => {
@@ -92,6 +111,8 @@ const renderWithProvider = (initialData?: Partial<TradeData>) => {
 
 describe('Step3Review', () => {
     beforeEach(() => {
+        _clearAllForTests();
+        localStorage.clear();
         mockUseAuth.token = 'mock-token';
         mockUseAuth.isAuthenticated = true;
         mockUseAuth.isWalletConnected = true;
@@ -104,6 +125,7 @@ describe('Step3Review', () => {
             signedTxXdr: 'signed-xdr',
         });
         global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
             json: jest.fn().mockResolvedValue({
                 result: { hash: 'tx-hash-123' },
             }),
@@ -360,6 +382,18 @@ describe('Step3Review', () => {
 
             await user.click(screen.getByRole('button', { name: /lock funds & create trade/i }));
             await user.click(screen.getByRole('button', { name: /accept/i }));
+
+            expect(api.trades.create).toHaveBeenCalled();
+            await waitFor(() => expect(signTransaction).toHaveBeenCalledWith(
+                'mock-xdr',
+                { networkPassphrase: 'Test SDF Network ; September 2015' },
+            ));
+            expect(global.fetch).toHaveBeenCalledWith(
+                'https://soroban-testnet.stellar.org',
+                expect.objectContaining({
+                    body: expect.stringContaining('signed-xdr'),
+                }),
+            );
         });
 
         it('should display trade ID after successful submission', async () => {

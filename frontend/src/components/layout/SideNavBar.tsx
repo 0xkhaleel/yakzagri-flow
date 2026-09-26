@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -122,7 +124,7 @@ export function SideNavBar({
       className={`${
         collapsed ? "w-20" : "w-64"
       } flex-shrink-0 bg-surface-1 border-r border-border-default shadow-elev-1 flex flex-col min-h-screen`}
-      aria-label="Primary sidebar"
+      aria-label={translateCopy("ui.primary_sidebar_6fdc4af")}
     >
       <div className="h-16 px-4 border-b border-border-default flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-3">
@@ -138,7 +140,7 @@ export function SideNavBar({
             </svg>
           </span>
           {!collapsed && (
-            <span className="text-text-primary text-lg font-semibold">Amana</span>
+            <span className="text-text-primary text-lg font-semibold">{translateCopy("ui.amana_545d363")}</span>
           )}
         </Link>
         {onClose && (
@@ -146,7 +148,7 @@ export function SideNavBar({
             type="button"
             onClick={onClose}
             className="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-all"
-            aria-label="Close menu"
+            aria-label={translateCopy("ui.close_menu_6c9fc99")}
           >
             <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
               <path
@@ -162,7 +164,7 @@ export function SideNavBar({
       <nav
         className="flex-1 py-4"
         role="navigation"
-        aria-label="Main navigation"
+        aria-label={translateCopy("ui.main_navigation_efd197f")}
       >
         <ul className="space-y-1 px-2">
           {NAV_ITEMS.map((item) => {
@@ -196,7 +198,7 @@ export function SideNavBar({
             }`}
           >
             <p className="text-[11px] uppercase tracking-widest text-text-muted">
-              Wallet
+              {translateCopy("ui.wallet_b60862f")}
             </p>
             <p className="text-sm text-text-primary mt-1">
               {walletAddress ? truncateAddress(walletAddress) : "Connected"}

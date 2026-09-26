@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import type { TimelineEvent } from "@/types/trade";
@@ -191,7 +193,7 @@ export function TradeTimeline({ events }: TradeTimelineProps) {
           <path d="M8 2v12M2 4l6 2 6-2" />
         </svg>
         <h2 className="text-sm font-semibold text-text-secondary tracking-wide uppercase">
-          Trade Lifecycle
+          {translateCopy("ui.trade_lifecycle_43c99d5")}
         </h2>
       </div>
 
@@ -200,55 +202,77 @@ export function TradeTimeline({ events }: TradeTimelineProps) {
         <div className="absolute left-5 top-5 bottom-5 w-px bg-border-default" />
 
         <div className="flex flex-col gap-0">
-          {mergedEvents.map((event, index) => {
-            const meta = resolveEventMeta(event);
-            return (
-              <div key={event.id} className="relative flex gap-4">
-                {/* Icon node */}
-                <div
-                  className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    EVENT_STATUS_STYLES[event.status]
-                  }`}
-                >
-                  {EVENT_ICONS[event.type]}
+          {events.map((event, index) => (
+            <div key={event.id} className="relative flex gap-4">
+              {/* Icon node */}
+              <div
+                className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  EVENT_STATUS_STYLES[event.status]
+                }`}
+              >
+                {EVENT_ICONS[event.type]}
+              </div>
+
+              {/* Content */}
+              <div
+                className={`flex-1 pb-6 ${
+                  index === events.length - 1 ? "pb-0" : ""
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p
+                    className={`text-sm font-semibold ${
+                      event.status === "pending"
+                        ? "text-text-muted"
+                        : "text-text-primary"
+                    }`}
+                  >
+                    {event.title}
+                  </p>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {event.status === "current" && (
+                      <span className="text-xs px-2 py-0.5 rounded bg-status-warning/10 text-status-warning border border-status-warning/20 font-medium">
+                        {translateCopy("ui.current_state_ab46d02")}
+                      </span>
+                    )}
+                    {event.timestamp && (
+                      <span className="text-xs text-text-muted whitespace-nowrap">
+                        {event.timestamp}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                {/* Content */}
-                <div
-                  className={`flex-1 pb-6 ${
-                    index === mergedEvents.length - 1 ? "pb-0" : ""
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <p
-                      className={`text-sm font-semibold ${
-                        event.status === "pending"
-                          ? "text-text-muted"
-                          : "text-text-primary"
-                      }`}
-                    >
-                      {meta.title}
-                    </p>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded border font-medium ${
-                          meta.source === "on-chain"
-                            ? "bg-teal/10 text-teal border-teal/20"
-                            : "bg-elevated text-text-muted border-border-default"
-                        }`}
-                      >
-                        {meta.source === "on-chain" ? "ON-CHAIN" : "OFF-CHAIN"}
-                      </span>
-                      {event.status === "current" && (
-                        <span className="text-xs px-2 py-0.5 rounded bg-status-warning/10 text-status-warning border border-status-warning/20 font-medium">
-                          CURRENT STATE
-                        </span>
+                {event.description && (
+                  <p className="text-xs text-text-secondary leading-relaxed">
+                    {event.description}
+                  </p>
+                )}
+
+                {/* Live tracking card */}
+                {event.tracking && (
+                  <div className="mt-3 flex items-center gap-3 bg-elevated rounded-lg p-3 border border-border-default">
+                    <div className="w-12 h-12 rounded-md bg-teal/10 border border-teal/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {event.tracking.imageUrl ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={event.tracking.imageUrl}
+                          alt={translateCopy("ui.vessel_9037007")}
+                          className="w-full h-full object-cover rounded-md"
+                        />
+                      ) : (
+                        <svg className="w-6 h-6 text-teal" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M2 20h20M4 20V10l8-7 8 7v10" />
+                        </svg>
                       )}
-                      {event.timestamp && (
-                        <span className="text-xs text-text-muted whitespace-nowrap">
-                          {event.timestamp}
-                        </span>
-                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-text-muted mb-0.5">
+                        {translateCopy("ui.live_tracking_ced273c")}
+                      </p>
+                      <p className="text-sm font-semibold text-text-primary">
+                        {translateCopy("ui.tracking_ef32e08")}{" "}{event.tracking.trackingNumber}
+                      </p>
                     </div>
                   </div>
 

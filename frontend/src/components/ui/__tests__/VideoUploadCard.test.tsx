@@ -199,6 +199,33 @@ describe('VideoUploadCard Component', () => {
         });
     });
 
+    it('submits the ready proof when the Submit Proof button is clicked', async () => {
+        const onUpload = jest.fn();
+        render(<VideoUploadCard onUpload={onUpload} />);
+
+        const file = new File(['test'], 'test.mp4', { type: 'video/mp4' });
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+        Object.defineProperty(fileInput, 'files', {
+            value: [file],
+        });
+
+        fireEvent.change(fileInput);
+
+        await waitFor(() => {
+            if (mockXhr.onload) {
+                (mockXhr.onload as () => void)();
+            }
+        });
+
+        await waitFor(() => {
+            const submitButton = screen.getByRole('button', { name: /submit proof/i });
+            expect(submitButton).not.toBeDisabled();
+            fireEvent.click(submitButton);
+            expect(onUpload).toHaveBeenLastCalledWith('QmTest123');
+        });
+    });
+
     it('displays error message on upload failure', async () => {
         mockXhr.status = 500;
         mockXhr.statusText = 'Internal Server Error';

@@ -1,6 +1,8 @@
 import { render, screen, act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useEffect } from "react";
 import { Toast } from "@/components/ui/Toast";
+import { ToastContainer } from "@/components/ui/ToastContainer";
 import { ToastProvider, useToast } from "@/hooks/useToast";
 import { renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -101,5 +103,28 @@ describe("Toast component", () => {
       <Toast id="1" type={type} message="msg" onClose={onClose} />
     );
     expect(container.firstChild).toBeInTheDocument();
+  });
+});
+
+describe("ToastContainer announcements", () => {
+  function Harness({ type, message }: { type?: "success" | "error"; message?: string }) {
+    const { addToast } = useToast();
+    useEffect(() => {
+      if (type && message) addToast({ type, message, duration: 0 });
+    }, [addToast, message, type]);
+    return <ToastContainer />;
+  }
+
+  it("keeps live regions mounted when there are no toasts", () => {
+    render(<ToastProvider><ToastContainer /></ToastProvider>);
+    expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
+    expect(screen.getByRole("alert")).toHaveAttribute("aria-live", "assertive");
+  });
+
+  it("announces errors assertively and other toasts politely", () => {
+    const { rerender } = render(<ToastProvider><Harness type="success" message="Saved" /></ToastProvider>);
+    expect(screen.getByRole("status")).toHaveTextContent("Saved");
+    rerender(<ToastProvider><Harness type="error" message="Could not save" /></ToastProvider>);
+    expect(screen.getByRole("alert")).toHaveTextContent("Could not save");
   });
 });

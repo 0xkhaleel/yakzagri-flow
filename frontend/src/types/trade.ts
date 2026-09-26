@@ -27,7 +27,7 @@ export interface TimelineEvent {
   };
 }
 
-export type TransactionEventStatus = "completed" | "active" | "pending";
+export type TransactionEventStatus = "completed" | "active" | "pending" | "failed";
 
 export type TransactionEventActor = "system" | "buyer" | "seller" | "driver";
 

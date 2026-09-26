@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import { Icon } from "./Icon";
@@ -23,7 +25,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
 }) => {
   return (
     <nav 
-      aria-label="Progress"
+      aria-label={translateCopy("ui.progress_1b90271")}
       className={`flex w-full items-start justify-between ${className}`}
     >
       {steps.map((step, index) => {

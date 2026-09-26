@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import type { TransactionEvent, TransactionEventStatus } from "@/types/trade";
@@ -90,7 +92,7 @@ export function TransactionTimeline({
           <path d="M8 5v3l2 1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <h2 className="text-sm font-semibold text-text-secondary tracking-wide uppercase">
-          Transaction Timeline
+          {translateCopy("ui.transaction_timeline_da01b35")}
         </h2>
       </div>
 
@@ -98,13 +100,9 @@ export function TransactionTimeline({
         {mergedEvents.map((event, index) => (
           <TimelineEventItem
             key={event.id}
-            event={{
-              ...event,
-              description: describeEvent(event),
-              source: isOnChainEvent(event) ? "on-chain" : "off-chain",
-            }}
-            status={resolveStatus(index, currentEventIndex)}
-            isLast={index === mergedEvents.length - 1}
+            event={event}
+            status={event.status ?? resolveStatus(index, currentEventIndex)}
+            isLast={index === events.length - 1}
           />
         ))}
       </div>
