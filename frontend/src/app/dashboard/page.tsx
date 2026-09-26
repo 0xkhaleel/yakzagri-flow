@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const { token, isAuthenticated } = useAuth();
   
   const [stats, setStats] = useState<TradeStatsResponse | null>(null);
+  const [completedTrades, setCompletedTrades] = useState(0);
   const [recentTrades, setRecentTrades] = useState<TradeResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,11 +32,23 @@ export default function DashboardPage() {
       try {
         const [statsData, tradesData] = await Promise.all([
           api.trades.getStats(token),
-          api.trades.list(token, { limit: 5 }),
+          api.trades.list(token, { page: 1, limit: 100 }),
         ]);
 
         setStats(statsData);
-        setRecentTrades(tradesData.items);
+        setRecentTrades(tradesData.items.slice(0, 5));
+
+        const allTrades = [...tradesData.items];
+        for (let page = 2; page <= tradesData.pagination.totalPages; page += 1) {
+          const pageData = await api.trades.list(token, { page, limit: 100 });
+          allTrades.push(...pageData.items);
+        }
+        setCompletedTrades(
+          allTrades.filter((trade) => {
+            const status = trade.status.toUpperCase();
+            return status === "SETTLED" || status === "COMPLETED";
+          }).length,
+        );
       } catch (err) {
         if (err instanceof ApiError) {
           setError(err.message);
@@ -159,7 +172,7 @@ export default function DashboardPage() {
           icon={<CheckCircle2 className="w-5 h-5" />}
         >
           <div className="text-3xl font-bold text-text-primary mt-2">
-            {(stats?.totalTrades || 0) - (stats?.openTrades || 0)}
+            {completedTrades}
           </div>
           <div className="text-sm text-text-secondary mt-1">
             Successfully settled

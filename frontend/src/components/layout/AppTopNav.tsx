@@ -1,11 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NavLink } from "@/components/ui/Navigation";
 import { Badge } from "@/components/ui/Badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import {
+  PREFERENCES_CHANGED_EVENT,
+  readPreferences,
+} from "@/lib/preferences";
 
 interface AppTopNavProps {
   onToggleSidebar?: () => void;
@@ -28,6 +32,22 @@ export function AppTopNav({
 }: AppTopNavProps) {
   const pathname = usePathname();
   const isAdmin = useIsAdmin();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  useEffect(() => {
+    const updateNotificationState = () => {
+      setNotificationsEnabled(
+        Object.values(readPreferences().notifications).some(Boolean),
+      );
+    };
+    updateNotificationState();
+    window.addEventListener(PREFERENCES_CHANGED_EVENT, updateNotificationState);
+    window.addEventListener("storage", updateNotificationState);
+    return () => {
+      window.removeEventListener(PREFERENCES_CHANGED_EVENT, updateNotificationState);
+      window.removeEventListener("storage", updateNotificationState);
+    };
+  }, []);
 
   return (
     <header className="h-14 bg-card border-b border-border-default flex items-center px-4 lg:px-6 gap-4 lg:gap-8 flex-shrink-0">
@@ -82,7 +102,12 @@ export function AppTopNav({
         )}
 
         {/* Notification bell */}
-        <button className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-elevated transition-all">
+        <button
+          type="button"
+          aria-label={notificationsEnabled ? "Notifications enabled" : "Notifications disabled"}
+          title={notificationsEnabled ? "Notifications enabled" : "Notifications disabled"}
+          className={`w-8 h-8 rounded-full flex items-center justify-center hover:bg-elevated transition-all ${notificationsEnabled ? "text-text-secondary hover:text-text-primary" : "text-text-muted opacity-50"}`}
+        >
           <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M8 1a5 5 0 015 5v3l1.5 2.5H1.5L3 9V6a5 5 0 015-5z" />
             <path d="M6.5 13.5a1.5 1.5 0 003 0" />

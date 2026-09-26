@@ -9,6 +9,15 @@ import { useTradeDetail } from "@/hooks/useTradeDetail";
 import { useWallet } from "@/hooks/useWallet";
 import { api, ApiError } from "@/lib/api";
 import { apiConfig } from "@/lib/api";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/Modal";
 
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleString("en-US", {
@@ -59,7 +68,8 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-type UserRole = "buyer" | "seller" | "mediator" | "observer";
+type UserRole = "buyer" | "seller" | "observer";
+type DisputeCategory = "quality" | "delivery" | "payment" | "fraud" | "other";
 
 function deriveRole(
   walletAddress: string | null,
@@ -84,6 +94,10 @@ export default function TradeDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [disputeCategory, setDisputeCategory] = useState<DisputeCategory>("delivery");
+  const [disputeError, setDisputeError] = useState<string | null>(null);
 
   const role: UserRole = trade
     ? deriveRole(address, trade.buyerAddress, trade.sellerAddress)
@@ -115,6 +129,7 @@ export default function TradeDetailPage() {
       }
 
       setActionSuccess(`${label} signed successfully. Submit the transaction to Stellar to finalize.`);
+      if (label === "Initiate Dispute") setDisputeOpen(false);
       void refetch();
     } catch (err) {
       const message =
@@ -142,13 +157,14 @@ export default function TradeDetailPage() {
   }
 
   function handleInitiateDispute() {
-    const reason = window.prompt("Enter dispute reason (min 10 characters):");
-    if (!reason || reason.length < 10) {
-      setActionError("Dispute reason must be at least 10 characters.");
+    const reason = disputeReason.trim();
+    if (reason.length < 10 || reason.length > 500) {
+      setDisputeError("Enter a reason between 10 and 500 characters.");
       return;
     }
+    setDisputeError(null);
     void runAction("Initiate Dispute", () =>
-      api.trades.initiateDispute(token!, tradeId, reason, "other"),
+      api.trades.initiateDispute(token!, tradeId, reason, disputeCategory),
     );
   }
 
@@ -304,23 +320,18 @@ export default function TradeDetailPage() {
 
                 {(role === "buyer" || role === "seller") && status === "FUNDED" && (
                   <button
-                    onClick={handleInitiateDispute}
+                    onClick={() => {
+                      setDisputeReason("");
+                      setDisputeCategory("delivery");
+                      setDisputeError(null);
+                      setDisputeOpen(true);
+                    }}
                     disabled={actionLoading}
                     data-testid="action-dispute"
                     className="rounded-lg border border-red-500/50 px-4 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Initiate Dispute
                   </button>
-                )}
-
-                {role === "mediator" && status === "DISPUTED" && (
-                  <p className="text-sm text-text-secondary">
-                    Mediation controls are available in the{" "}
-                    <Link href="/mediator/disputes" className="underline text-gold hover:text-gold-hover">
-                      Mediator Panel
-                    </Link>
-                    .
-                  </p>
                 )}
 
                 {role === "observer" && (
@@ -342,6 +353,84 @@ export default function TradeDetailPage() {
           <p className="text-text-muted">Trade not found</p>
         </div>
       )}
+
+      <Modal open={disputeOpen} onOpenChange={setDisputeOpen}>
+        <ModalContent mobileFullScreen={false}>
+          <ModalHeader>
+            <ModalTitle>Initiate dispute</ModalTitle>
+            <ModalDescription>
+              Choose a category and explain the issue. The reason must be 10 to 500 characters.
+            </ModalDescription>
+          </ModalHeader>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleInitiateDispute();
+            }}
+          >
+            <ModalBody className="space-y-4">
+              <div>
+                <label htmlFor="dispute-category" className="mb-1 block text-sm font-medium text-text-primary">
+                  Category
+                </label>
+                <select
+                  id="dispute-category"
+                  value={disputeCategory}
+                  onChange={(event) => setDisputeCategory(event.target.value as DisputeCategory)}
+                  className="w-full rounded-lg border border-border-default bg-bg-input px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-border-focus"
+                >
+                  <option value="quality">Quality</option>
+                  <option value="delivery">Delivery</option>
+                  <option value="payment">Payment</option>
+                  <option value="fraud">Fraud</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="dispute-reason" className="mb-1 block text-sm font-medium text-text-primary">
+                  Reason
+                </label>
+                <textarea
+                  id="dispute-reason"
+                  value={disputeReason}
+                  onChange={(event) => {
+                    setDisputeReason(event.target.value);
+                    setDisputeError(null);
+                  }}
+                  minLength={10}
+                  maxLength={500}
+                  required
+                  aria-invalid={Boolean(disputeError)}
+                  aria-describedby={disputeError ? "dispute-reason-error" : undefined}
+                  rows={4}
+                  className="w-full resize-y rounded-lg border border-border-default bg-bg-input px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-border-focus"
+                />
+                {disputeError && (
+                  <p id="dispute-reason-error" role="alert" className="mt-1 text-sm text-status-danger">
+                    {disputeError}
+                  </p>
+                )}
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <button
+                type="button"
+                onClick={() => setDisputeOpen(false)}
+                className="rounded-lg border border-border-default px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={actionLoading}
+                className="rounded-lg bg-status-danger px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {actionLoading ? "Processing..." : "Submit dispute"}
+              </button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
