@@ -14,6 +14,7 @@ import {
 import { DriverManifestForm, LoadingState, type DriverManifestData } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
 import { useWallet } from "@/hooks/useWallet";
+import { formatDateTime, formatNumber } from "@/lib/i18n/format";
 import {
   api,
   apiConfig,
@@ -118,7 +119,7 @@ export default function VaultPage() {
             ? ("multi-sig" as const)
             : ("ledger" as const),
       title: `Trade ${trade.status.toLowerCase().replace(/_/g, " ")}`,
-      metadata: `${new Date(trade.updatedAt).toLocaleString()} - ${trade.tradeId}`,
+      metadata: `${formatDateTime(trade.updatedAt)} - ${trade.tradeId}`,
     })) ?? [
       {
         type: "ledger" as const,
@@ -356,7 +357,7 @@ export default function VaultPage() {
                     },
                     {
                       label: "Total Volume",
-                      date: `$${vaultValue.toLocaleString()}`,
+                      date: `$${formatNumber(vaultValue)}`,
                       status: "pending",
                     },
                   ]}

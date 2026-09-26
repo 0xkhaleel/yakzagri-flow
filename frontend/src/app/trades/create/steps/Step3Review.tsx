@@ -46,7 +46,7 @@ export default function Step3Review() {
   const price = parseFloat(data.pricePerUnit);
   const rawAmount = !isNaN(qty) && !isNaN(price) ? qty * price : NaN;
 
-  const total = !isNaN(rawAmount) && rawAmount > 0 ? rawAmount.toLocaleString("en-NG") : "—";
+  const total = !isNaN(rawAmount) && rawAmount > 0 ? formatNumber(rawAmount) : "—";
 
   const amountUsdc = !isNaN(rawAmount) && rawAmount > 0 ? rawAmount.toFixed(7) : "0";
 

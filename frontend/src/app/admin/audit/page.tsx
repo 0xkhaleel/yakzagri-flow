@@ -14,18 +14,13 @@ import { ForbiddenState } from "@/components/ui/ForbiddenState";
 import { SkeletonList } from "@/components/ui/SkeletonList";
 import { Button } from "@/components/ui/Button";
 import { VirtualizedList } from "@/components/ui/VirtualizedList";
+import { formatDateTime } from "@/lib/i18n/format";
 
 const PAGE_SIZE = 20;
 const AUDIT_ROW_HEIGHT = 120;
 
 function formatTimestamp(dateString: string): string {
-  return new Date(dateString).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return formatDateTime(dateString);
 }
 
 function formatAction(action: string): string {
