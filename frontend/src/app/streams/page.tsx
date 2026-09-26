@@ -60,17 +60,14 @@ export default function StreamsPage() {
             Quick Access
           </p>
           <p className="text-sm text-text-muted mb-4">
-            To view a specific stream, navigate to:{" "}
-            <code className="rounded bg-bg-elevated px-2 py-1 text-xs text-text-primary font-mono">
-              /streams/[streamId]
-            </code>
+            Use a real stream ID from your connected wallet or the stream overview to open a detail page.
           </p>
           <div className="flex gap-3">
             <Link
-              href="/streams/example-stream-123"
+              href="/admin/streams"
               className="rounded-lg border border-border-default bg-bg-elevated px-4 py-2 text-sm font-medium text-text-secondary hover:border-border-hover hover:bg-card hover:text-text-primary transition-colors"
             >
-              View Example Stream
+              View Stream Ledger
             </Link>
           </div>
         </div>

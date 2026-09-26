@@ -59,7 +59,7 @@ describe('Notification Store', () => {
       expect(state.unreadCount).toBe(1);
     });
 
-    it('should fallback to mock data on fetch failure', async () => {
+    it('should leave notifications empty when the API is unavailable', async () => {
       global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
 
       const store = useNotificationStore.getState();
@@ -67,8 +67,8 @@ describe('Notification Store', () => {
 
       const state = useNotificationStore.getState();
       expect(state.isLoading).toBe(false);
-      expect(state.notifications.length).toBe(3);
-      expect(state.unreadCount).toBe(2);
+      expect(state.notifications).toEqual([]);
+      expect(state.unreadCount).toBe(0);
     });
   });
 
