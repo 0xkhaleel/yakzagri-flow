@@ -28,6 +28,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+
+  // Only handle GET requests; let the browser handle everything else.
+  if (request.method !== "GET") return;
+
   const url = new URL(request.url);
 
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/trades/")) {
@@ -35,12 +39,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (
-    request.method === "GET" &&
-    (url.pathname.startsWith("/_next/") ||
-      url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?)$/))
-  ) {
-    event.respondWith(cacheFirst(request));
+  // Same-origin static assets: stale-while-revalidate.
+  if (url.origin === self.location.origin &&
+      (url.pathname.startsWith("/_next/") || STATIC_ASSET_PATTERN.test(url.pathname))) {
+    event.respondWith(staleWhileRevalidate(request));
     return;
   }
 
