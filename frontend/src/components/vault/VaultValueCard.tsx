@@ -70,7 +70,9 @@ export function VaultValueCard({
 
         <button
           onClick={() => setShowDisclaimer(true)}
-          className="mt-auto w-full flex items-center justify-center gap-2 bg-gold hover:bg-gold-hover text-text-inverse font-semibold py-3 px-6 rounded-xl transition-colors"
+          disabled={!onReleaseFunds}
+          title={!onReleaseFunds ? "No active trade is available for fund release." : undefined}
+          className="mt-auto w-full flex items-center justify-center gap-2 bg-gold hover:bg-gold-hover text-text-inverse font-semibold py-3 px-6 rounded-xl transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Key className="w-5 h-5" />
           {translateCopy("ui.release_funds_2f565c4")}

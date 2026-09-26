@@ -8,6 +8,8 @@ import type { TradeDetail } from "@/types/trade";
 
 interface TradeHeaderProps {
   trade: TradeDetail;
+  onConfirmDelivery?: () => void;
+  confirmingDelivery?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -23,7 +25,7 @@ const STATUS_STYLES: Record<string, string> = {
     "bg-status-draft/10 text-status-draft border border-status-draft/30",
 };
 
-export function TradeHeader({ trade }: TradeHeaderProps) {
+export function TradeHeader({ trade, onConfirmDelivery, confirmingDelivery = false }: TradeHeaderProps) {
   const statusStyle =
     STATUS_STYLES[trade.status] ?? STATUS_STYLES["DRAFT"];
 
@@ -77,7 +79,7 @@ export function TradeHeader({ trade }: TradeHeaderProps) {
 
         {/* Action buttons */}
         <div className="flex gap-3 flex-shrink-0">
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:border-border-hover hover:text-text-primary transition-all">
+          <a href="#trade-contract" className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:border-border-hover hover:text-text-primary transition-all">
             <FileText className="w-4 h-4" />
             {translateCopy("ui.view_contract_809ec07")}
           </button>

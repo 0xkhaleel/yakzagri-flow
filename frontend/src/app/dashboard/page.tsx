@@ -14,7 +14,14 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { formatNumber } from "@/lib/i18n/format";
 
 export default function DashboardPage() {
-  const { token, isAuthenticated } = useAuth();
+  const {
+    token,
+    isAuthenticated,
+    isWalletConnected,
+    isLoading: authLoading,
+    connectWallet,
+    authenticate,
+  } = useAuth();
   
   const [stats, setStats] = useState<TradeStatsResponse | null>(null);
   const [completedTrades, setCompletedTrades] = useState(0);
@@ -76,6 +83,13 @@ export default function DashboardPage() {
         <p className="text-text-secondary max-w-md">
           {translateCopy("ui.please_connect_your_wallet_to_ac_5e32708")}
         </p>
+        <button
+          onClick={() => (isWalletConnected ? authenticate() : connectWallet())}
+          disabled={authLoading}
+          className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-text-inverse transition-colors hover:bg-gold-hover disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {authLoading ? "Connecting..." : isWalletConnected ? "Sign In" : "Connect Freighter"}
+        </button>
       </div>
     );
   }

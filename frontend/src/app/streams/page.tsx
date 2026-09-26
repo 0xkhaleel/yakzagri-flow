@@ -2,10 +2,47 @@
 import { t as translateCopy } from "@/lib/i18n";
 
 
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
+import { api, ApiError, type AdminStreamSummary } from "@/lib/api";
 import { Breadcrumb } from "@/components/ui";
 
 export default function StreamsPage() {
+  const { token, isAuthenticated, isWalletConnected, isLoading: authLoading, connectWallet, authenticate } = useAuth();
+  const { canAccessAdmin } = useAdmin();
+  const [streams, setStreams] = useState<AdminStreamSummary[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStreams = useCallback(async () => {
+    if (!token || !canAccessAdmin) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.adminStreams.list(token, { page, limit: 20 });
+      setStreams(response.items);
+      setTotalPages(response.pagination.totalPages);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Unable to load streams. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [token, canAccessAdmin, page]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (isAuthenticated && canAccessAdmin) void fetchStreams();
+    else setLoading(false);
+  }, [authLoading, isAuthenticated, canAccessAdmin, fetchStreams]);
+
   const breadcrumbItems = [
     { label: "Home", path: "/" },
     { label: "Streams" },
@@ -72,7 +109,46 @@ export default function StreamsPage() {
               View Stream Ledger
             </Link>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="overflow-hidden rounded-lg border border-border-default bg-card">
+              <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_auto] gap-4 border-b border-border-default px-5 py-3 text-xs font-semibold uppercase text-text-muted">
+                <span>Stream</span><span>Vesting progress</span><span>Status</span>
+              </div>
+              {streams.map((stream) => {
+                const total = Number(stream.totalVested);
+                const claimed = Number(stream.claimed);
+                const progress = total > 0 ? Math.min(100, Math.round((claimed / total) * 100)) : 0;
+                return (
+                  <Link
+                    key={stream.streamId}
+                    href={`/streams/${encodeURIComponent(stream.streamId)}`}
+                    className="grid grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_auto] items-center gap-4 border-b border-border-default px-5 py-4 last:border-b-0 hover:bg-bg-elevated"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-mono text-sm text-text-primary">{stream.streamId}</span>
+                      <span className="mt-1 block truncate text-xs text-text-muted">Recipient {stream.recipient}</span>
+                    </span>
+                    <span>
+                      <span className="block text-sm text-text-primary">{progress}% claimed</span>
+                      <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-bg-elevated">
+                        <span className="block h-full bg-status-success" style={{ width: `${progress}%` }} />
+                      </span>
+                    </span>
+                    <span className="rounded-full border border-border-default px-2.5 py-1 text-xs text-text-secondary">{stream.status}</span>
+                  </Link>
+                );
+              })}
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 text-sm text-text-secondary">
+                <button onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1} className="rounded-md border border-border-default px-3 py-1.5 disabled:opacity-50">Previous</button>
+                <span>Page {page} of {totalPages}</span>
+                <button onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages} className="rounded-md border border-border-default px-3 py-1.5 disabled:opacity-50">Next</button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </section>
   );

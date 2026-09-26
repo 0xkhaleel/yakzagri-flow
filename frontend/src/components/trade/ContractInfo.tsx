@@ -41,7 +41,7 @@ function LossRatioBar({
 
 export function ContractInfo({ trade }: ContractInfoProps) {
   return (
-    <div className="bg-card rounded-xl border border-border-default p-6 shadow-card">
+    <div id="trade-contract" className="bg-card rounded-xl border border-border-default p-6 shadow-card">
       <h2 className="text-sm font-semibold text-text-secondary tracking-wide uppercase mb-4">
         {translateCopy("ui.contract_details_130859d")}
       </h2>
