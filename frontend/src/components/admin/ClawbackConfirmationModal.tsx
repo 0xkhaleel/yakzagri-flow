@@ -16,26 +16,24 @@ export interface ClawbackConfirmationModalProps {
   streamId: string;
   amount: string;
   remainingVested: string;
-  onConfirm: () => void;
+  onPreview: () => void;
   onCancel: () => void;
-  /** true while the confirmed clawback request is in flight. */
-  confirming?: boolean;
+  /** true while the read-only preview request is in flight. */
+  previewing?: boolean;
 }
 
 /**
- * Confirmation gate for admin clawback submissions (#56). Requires an
- * explicit "Confirm clawback" click before anything is sent — dismissing the
- * modal (Cancel, overlay click, Escape) always routes through `onCancel`,
- * never submits.
+ * Review gate for the read-only clawback preview. Dismissing the modal never
+ * sends a request.
  */
 export function ClawbackConfirmationModal({
   open,
   streamId,
   amount,
   remainingVested,
-  onConfirm,
+  onPreview,
   onCancel,
-  confirming = false,
+  previewing = false,
 }: ClawbackConfirmationModalProps) {
   return (
     <Modal
@@ -46,10 +44,9 @@ export function ClawbackConfirmationModal({
     >
       <ModalContent mobileFullScreen={false}>
         <ModalHeader>
-          <ModalTitle>Confirm clawback</ModalTitle>
+          <ModalTitle>Preview clawback</ModalTitle>
           <ModalDescription>
-            This immediately reduces the stream&apos;s vested balance and cannot be undone.
-            Review the details before confirming.
+            This is a read-only preview. It does not move tokens or change the stream balance.
           </ModalDescription>
         </ModalHeader>
 
@@ -71,11 +68,11 @@ export function ClawbackConfirmationModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="secondary" onClick={onCancel} disabled={confirming}>
+          <Button variant="secondary" onClick={onCancel} disabled={previewing}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={onConfirm} disabled={confirming}>
-            {confirming ? "Confirming…" : "Confirm clawback"}
+          <Button variant="primary" onClick={onPreview} disabled={previewing}>
+            {previewing ? "Loading preview…" : "Run preview"}
           </Button>
         </ModalFooter>
       </ModalContent>

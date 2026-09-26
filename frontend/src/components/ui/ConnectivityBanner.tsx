@@ -5,12 +5,16 @@ import { useOffline } from "@/hooks/useOffline";
 import { useOfflineQueueStore } from "@/stores/offlineQueueStore";
 import { useToast } from "@/hooks/useToast";
 import { request } from "@/lib/api/client";
+import { useAuth } from "@/hooks/useAuth";
+import { submitTradeCreation } from "@/lib/trades/submitTradeCreation";
+import type { CreateTradeRequest } from "@/lib/api";
 
 export function ConnectivityBanner() {
   const { isOffline, wasOffline, retryOnline } = useOffline();
   const queue = useOfflineQueueStore((s) => s.queue);
   const replay = useOfflineQueueStore((s) => s.replay);
   const setOnline = useOfflineQueueStore((s) => s.setOnline);
+  const { token } = useAuth();
   const { addToast, addToastWithCorrelation } = useToast();
 
   // Sync online state to queue store
@@ -31,6 +35,17 @@ export function ConnectivityBanner() {
       });
 
       void replay(async (action) => {
+        if (action.type === "create-trade") {
+          if (!token) {
+            throw new Error("Authenticate your wallet before syncing this trade.");
+          }
+          await submitTradeCreation(token, action.body as CreateTradeRequest, {
+            idempotencyKey: action.idempotencyKey,
+            correlationId: action.correlationId,
+          });
+          return;
+        }
+
         // Reuse same idempotency key — backend #3 honors key reuse → duplicate-send prevented
         await request(action.endpoint, {
           method: action.method,
@@ -42,14 +57,14 @@ export function ConnectivityBanner() {
         });
       }).then(({ succeeded, failed }) => {
         if (failed.length === 0) {
-          addToast({ type: "success", title: "Synced", message: `${succeeded.length} queued action(s) sent.` });
+          addToast({ type: "success", title: "Synced", message: `${succeeded.length} queued action(s) completed.` });
         } else {
           addToast({ type: "warning", title: "Partial sync", message: `${succeeded.length} sent, ${failed.length} failed — will retry.` });
         }
         void retryOnline();
       });
     }
-  }, [isOffline, wasOffline, queue.length, replay, retryOnline, addToast, addToastWithCorrelation]);
+  }, [isOffline, wasOffline, queue.length, replay, retryOnline, addToast, addToastWithCorrelation, token]);
 
   // Accurate banner states during transition windows
   if (isOffline) {

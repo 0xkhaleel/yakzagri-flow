@@ -66,11 +66,6 @@ export default function AdminStreamsPage() {
     fetchStreams();
   }, [fetchStreams]);
 
-  const handleClawbackSuccess = useCallback(() => {
-    setActiveStreamId(null);
-    fetchStreams();
-  }, [fetchStreams]);
-
   if (!isAdmin) {
     return (
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="admin-streams-page">
@@ -159,7 +154,7 @@ export default function AdminStreamsPage() {
                       size="sm"
                       onClick={() => setActiveStreamId(isOpen ? null : stream.streamId)}
                     >
-                      {isOpen ? "Cancel" : "Clawback"}
+                      {isOpen ? "Cancel" : "Preview clawback"}
                     </Button>
                   ) : (
                     <span className="text-xs text-text-secondary">No clawback available</span>
@@ -173,7 +168,6 @@ export default function AdminStreamsPage() {
                     token={token}
                     streamId={stream.streamId}
                     remainingVested={stream.unclaimed}
-                    onSuccess={handleClawbackSuccess}
                   />
                 </div>
               )}
