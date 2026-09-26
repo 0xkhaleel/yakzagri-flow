@@ -15,8 +15,9 @@ import { useOffline } from "@/hooks/useOffline";
 import { useOfflineQueueStore } from "@/stores/offlineQueueStore";
 import { useToast } from "@/hooks/useToast";
 import { shouldDedup, registerAction } from "@/lib/actionDedup";
-import { generateIdempotencyKey } from "@/lib/idempotency";
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/idempotency";
 import { generateCorrelationId } from "@/lib/correlationId";
+import { formatNumber } from "@/lib/i18n/format";
 
 type Row = { label: string; value: string };
 
@@ -32,7 +33,7 @@ function ReviewRow({ label, value }: Row) {
 export default function Step3Review() {
   const router = useRouter();
   const { data, setStep } = useTrade();
-  const { token, isAuthenticated, connectWallet, authenticate, isWalletConnected } = useAuth();
+  const { token, address, isAuthenticated, connectWallet, authenticate, isWalletConnected } = useAuth();
   const { isOffline } = useOffline();
   const enqueue = useOfflineQueueStore((s) => s.enqueue);
   const pendingCount = useOfflineQueueStore((s) => s.queue.length);
@@ -102,7 +103,7 @@ export default function Step3Review() {
     }
 
     const correlationId = generateCorrelationId();
-    const idempotencyKey = generateIdempotencyKey();
+    const idempotencyKey = getOrCreateIdempotencyKey(address, dedupKey);
     registerAction(dedupKey, correlationId, idempotencyKey);
 
     // Offline queue: queue idempotent action locally while offline (draft trades survive refresh)
@@ -140,21 +141,39 @@ export default function Step3Review() {
         correlationId,
       });
 
+      clearIdempotencyKey(address, dedupKey);
       setTradeId(submission.tradeId);
       setTxHash(submission.transactionHash);
       updateToast(correlationId, { type: "success", title: "Success", message: "Trade created — funds locked.", duration: 5000 });
       // Clear draft on success
       try { localStorage.removeItem("amana:draft-trade"); } catch {}
     } catch (err) {
-      let errorMessage = "Transaction failed. Please try again.";
-      if (err instanceof ApiError) {
-        errorMessage = err.message;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
+      const isConflict =
+        (err instanceof ApiError && err.status === 409) ||
+        (typeof err === "object" && err !== null && ("status" in err && (err as { status: unknown }).status === 409)) ||
+        (err instanceof Error && /409|conflict|already[- ]processed/i.test(err.message));
+
+      if (isConflict) {
+        // Handle 409 by de-duplicating rather than looping
+        clearIdempotencyKey(address, dedupKey);
+        updateToast(correlationId, {
+          type: "info",
+          title: "Already submitted",
+          message: "This trade was already submitted and is being processed.",
+          duration: 6000,
+        });
+        setError("This trade was already submitted. Please check your trades list.");
+      } else {
+        let errorMessage = "Transaction failed. Please try again.";
+        if (err instanceof ApiError) {
+          errorMessage = err.message;
+        } else if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+        setError(errorMessage);
+        // Snapshot-based rollback for store/state is not needed here (no optimistic patch yet), but ensure toast reflects error with correlation
+        updateToast(correlationId, { type: "error", title: "Error", message: errorMessage, duration: 6000 });
       }
-      setError(errorMessage);
-      // Snapshot-based rollback for store/state is not needed here (no optimistic patch yet), but ensure toast reflects error with correlation
-      updateToast(correlationId, { type: "error", title: "Error", message: errorMessage, duration: 6000 });
     } finally {
       submittingRef.current = false;
       setLoading(false);

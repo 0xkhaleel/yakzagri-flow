@@ -1,66 +1,163 @@
 const CACHE_NAME = "amana-cache-v1";
+const API_CACHE_NAME = "amana-api-cache-v1";
+const API_CACHE_TTL_MS = 5 * 60 * 1000;
+const STATIC_ASSET_PATTERN = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|otf|webp|avif)$/;
+
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
 ];
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
-  self.skipWaiting();
-});
+const swScope = typeof self !== "undefined" ? self : globalThis;
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      );
-    })
-  );
-  self.clients.claim();
-});
+if (typeof swScope.addEventListener === "function") {
+  swScope.addEventListener("install", (event) => {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.addAll(STATIC_ASSETS);
+      })
+    );
+    if (typeof swScope.skipWaiting === "function") {
+      swScope.skipWaiting();
+    }
+  });
 
-self.addEventListener("fetch", (event) => {
+  swScope.addEventListener("activate", (event) => {
+    event.waitUntil(
+      caches.keys().then((keys) => {
+        return Promise.all(
+          keys
+            .filter((key) => key !== CACHE_NAME && key !== API_CACHE_NAME)
+            .map((key) => caches.delete(key))
+        );
+      })
+    );
+    if (swScope.clients && typeof swScope.clients.claim === "function") {
+      swScope.clients.claim();
+    }
+  });
+
+  swScope.addEventListener("fetch", handleFetch);
+}
+
+function handleFetch(event) {
   const { request } = event;
 
-  // Only handle GET requests; let the browser handle everything else.
-  if (request.method !== "GET") return;
+  // Never cache streaming/video/audio or range requests.
+  if (request.headers && typeof request.headers.has === "function" && request.headers.has("range")) {
+    return;
+  }
+  const destination = request.destination;
+  if (destination === "video" || destination === "audio") {
+    return;
+  }
 
   const url = new URL(request.url);
 
+  // App data routes (API & trades): network-first with cache fallback for GET,
+  // while non-GET mutations (POST, OPTIONS, etc.) bypass caching and succeed online.
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/trades/")) {
-    event.respondWith(networkOnly(request));
+    event.respondWith(networkFirstWithCache(request));
     return;
   }
 
-  // Same-origin static assets: stale-while-revalidate.
-  if (url.origin === self.location.origin &&
-      (url.pathname.startsWith("/_next/") || STATIC_ASSET_PATTERN.test(url.pathname))) {
-    event.respondWith(staleWhileRevalidate(request));
-    return;
+  // Same-origin static assets: stale-while-revalidate for GET.
+  if (
+    typeof swScope.location !== "undefined" &&
+    url.origin === swScope.location.origin &&
+    (url.pathname.startsWith("/_next/") || STATIC_ASSET_PATTERN.test(url.pathname))
+  ) {
+    if (request.method === "GET") {
+      event.respondWith(staleWhileRevalidate(request));
+      return;
+    }
   }
 
-  event.respondWith(networkOnly(request));
-});
+  event.respondWith(networkFirstWithCache(request));
+}
 
 async function cacheFirst(request) {
+  if (request.method !== "GET") {
+    return fetch(request);
+  }
   const cached = await caches.match(request);
   if (cached) return cached;
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    if (response.ok && request.method === "GET") {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
     return response;
   } catch {
     return new Response("Offline", { status: 503 });
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  if (request.method !== "GET") {
+    return fetch(request);
+  }
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  const network = fetch(request)
+    .then((response) => {
+      if (response.ok && request.method === "GET") {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => cached || new Response("Offline", { status: 503 }));
+  return cached || network;
+}
+
+async function networkFirstWithCache(request) {
+  // Non-GET requests (e.g. POST mutations, CORS preflight OPTIONS, PUT, DELETE):
+  // The Cache API only supports GET requests. Calling cache.put with non-GET throws TypeError.
+  // Branch on request.method === "GET" before any cache.put so mutations always reach the network
+  // and successful responses are returned without throwing TypeError or falling back to 503 offline JSON.
+  if (request.method !== "GET") {
+    try {
+      return await fetch(request);
+    } catch {
+      return new Response(JSON.stringify({ offline: true, error: "You are offline" }), {
+        status: 503,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response.ok && request.method === "GET") {
+      const cache = await caches.open(API_CACHE_NAME);
+      const cloned = response.clone();
+      const body = await cloned.text();
+      cache.put(
+        request,
+        new Response(body, {
+          headers: {
+            ...Object.fromEntries(cloned.headers.entries()),
+            "x-amana-cache-time": String(Date.now()),
+          },
+        })
+      );
+    }
+    return response;
+  } catch {
+    if (request.method === "GET") {
+      const cached = await caches.match(request);
+      if (cached) {
+        const cacheTime = cached.headers.get("x-amana-cache-time");
+        if (cacheTime && Date.now() - parseInt(cacheTime) < API_CACHE_TTL_MS) {
+          return cached;
+        }
+      }
+    }
+    return new Response(JSON.stringify({ offline: true, error: "You are offline" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -73,4 +170,16 @@ async function networkOnly(request) {
       headers: { "Content-Type": "application/json" },
     });
   }
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    handleFetch,
+    networkFirstWithCache,
+    cacheFirst,
+    staleWhileRevalidate,
+    networkOnly,
+    CACHE_NAME,
+    API_CACHE_NAME,
+  };
 }

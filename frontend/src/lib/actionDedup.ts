@@ -13,7 +13,7 @@ export interface DedupEntry {
   timestamp: number;
 }
 
-const DEDUP_WINDOW_MS = 3000; // 3s window — matches idempotency lock TTL (30s) but shorter for UX
+const DEDUP_WINDOW_MS = 30000; // 30s window — matches backend idempotency lock TTL (30s)
 const dedupMap = new Map<string, DedupEntry>();
 
 export function getCorrelationId(): string {

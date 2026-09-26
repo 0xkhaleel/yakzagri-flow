@@ -15,3 +15,19 @@ if (typeof globalThis.TextEncoder === 'undefined') {
   globalThis.TextDecoder = util.TextDecoder;
 }
 
+if (typeof global.ReadableStream === 'undefined') {
+  try {
+    const { ReadableStream } = require('stream/web');
+    global.ReadableStream = ReadableStream;
+  } catch {}
+}
+
+try {
+  const { Response, Request, Headers } = require('undici');
+  if (typeof global.Response === 'undefined') global.Response = Response;
+  if (typeof global.Request === 'undefined') global.Request = Request;
+  if (typeof global.Headers === 'undefined') global.Headers = Headers;
+} catch {
+  // fallback if undici is not available
+}
+

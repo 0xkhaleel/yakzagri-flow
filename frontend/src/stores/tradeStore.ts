@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { tradesApi } from "@/lib/api/trades";
 import type { TradeResponse } from "@/lib/api/types";
 import { getCorrelationId, shouldDedup, registerAction } from "@/lib/actionDedup";
-import { generateIdempotencyKey } from "@/lib/idempotency";
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/idempotency";
 
 interface Filters {
   status?: string;
@@ -76,7 +76,7 @@ export const useTradeStore = create<TradeState>((set, get) => ({
     if (dedup.dedup) return;
 
     const correlationId = getCorrelationId();
-    const idempotencyKey = generateIdempotencyKey();
+    const idempotencyKey = getOrCreateIdempotencyKey(actionKey);
     registerAction(actionKey, correlationId, idempotencyKey);
 
     // Snapshot for rollback — deep clone relevant slice
@@ -93,6 +93,7 @@ export const useTradeStore = create<TradeState>((set, get) => ({
     if (serverFn) {
       try {
         await serverFn();
+        clearIdempotencyKey(actionKey);
         // Success — clear pending
         set((s) => {
           const next = { ...s.pendingActions };
@@ -115,6 +116,7 @@ export const useTradeStore = create<TradeState>((set, get) => ({
         throw err;
       }
     } else {
+      clearIdempotencyKey(actionKey);
       // No serverFn — just clear pending after tick (optimistic local update)
       set((s) => {
         const next = { ...s.pendingActions };
@@ -126,8 +128,8 @@ export const useTradeStore = create<TradeState>((set, get) => ({
 
   updateTradeOptimistic: async (tradeId, patch, serverFn, opts) => {
     const correlationId = opts?.correlationId ?? getCorrelationId();
-    const idempotencyKey = opts?.idempotencyKey ?? generateIdempotencyKey();
     const actionKey = `update:${tradeId}:${JSON.stringify(patch)}`;
+    const idempotencyKey = opts?.idempotencyKey ?? getOrCreateIdempotencyKey(actionKey);
     const dedup = shouldDedup(actionKey);
     if (dedup.dedup) {
       return { correlationId: dedup.entry!.correlationId, idempotencyKey: dedup.entry!.idempotencyKey };
@@ -145,6 +147,7 @@ export const useTradeStore = create<TradeState>((set, get) => ({
 
     try {
       await serverFn();
+      clearIdempotencyKey(actionKey);
       set((s) => {
         const next = { ...s.pendingActions };
         delete next[actionKey];
@@ -167,7 +170,7 @@ export const useTradeStore = create<TradeState>((set, get) => ({
     const dedup = shouldDedup(actionKey);
     if (dedup.dedup) return;
     const correlationId = getCorrelationId();
-    const idempotencyKey = generateIdempotencyKey();
+    const idempotencyKey = getOrCreateIdempotencyKey(actionKey);
     registerAction(actionKey, correlationId, idempotencyKey);
 
     const prevTrades = get().trades;
@@ -180,6 +183,7 @@ export const useTradeStore = create<TradeState>((set, get) => ({
     if (serverFn) {
       try {
         await serverFn();
+        clearIdempotencyKey(actionKey);
         set((s) => {
           const next = { ...s.pendingActions };
           delete next[actionKey];
@@ -190,6 +194,7 @@ export const useTradeStore = create<TradeState>((set, get) => ({
         throw err;
       }
     } else {
+      clearIdempotencyKey(actionKey);
       set((s) => {
         const n = { ...s.pendingActions };
         delete n[actionKey];
@@ -202,10 +207,11 @@ export const useTradeStore = create<TradeState>((set, get) => ({
     const dedup = shouldDedup(actionKey);
     if (dedup.dedup) return null;
     const correlationId = getCorrelationId();
-    const idempotencyKey = generateIdempotencyKey();
+    const idempotencyKey = getOrCreateIdempotencyKey(actionKey);
     registerAction(actionKey, correlationId, idempotencyKey);
     try {
       const result = await fn({ correlationId, idempotencyKey });
+      clearIdempotencyKey(actionKey);
       return result;
     } catch (e) {
       throw e;

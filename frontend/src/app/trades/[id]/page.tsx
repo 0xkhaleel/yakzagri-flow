@@ -12,6 +12,17 @@ import { useWallet } from "@/hooks/useWallet";
 import { api, ApiError } from "@/lib/api";
 import { apiConfig } from "@/lib/api";
 import { formatDateTime } from "@/lib/i18n/format";
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/idempotency";
+import { broadcastTransaction } from "@/lib/stellar/broadcast";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/Modal";
 
 function formatDate(dateString: string) {
   return formatDateTime(dateString);
@@ -82,6 +93,7 @@ export default function TradeDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [actionTxHash, setActionTxHash] = useState<string | null>(null);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
   const [disputeCategory, setDisputeCategory] = useState<DisputeCategory>("delivery");
@@ -95,16 +107,22 @@ export default function TradeDetailPage() {
 
   async function runAction(
     label: string,
-    apiCall: () => Promise<{ unsignedXdr: string }>,
+    apiCall: (opts?: { idempotencyKey?: string }) => Promise<{ unsignedXdr: string }>,
+    scopeKey?: string,
   ) {
-    if (!token) return;
+    if (!token || actionLoading) return;
 
     setActionLoading(true);
     setActionError(null);
     setActionSuccess(null);
+    setActionTxHash(null);
+
+    const idempotencyKey = scopeKey
+      ? getOrCreateIdempotencyKey(address, scopeKey)
+      : undefined;
 
     try {
-      const { unsignedXdr } = await apiCall();
+      const { unsignedXdr } = await apiCall(idempotencyKey ? { idempotencyKey } : undefined);
       const networkPassphrase = apiConfig.getStellarNetworkPassphrase();
 
       const result = await signTransaction(unsignedXdr, {
@@ -116,32 +134,74 @@ export default function TradeDetailPage() {
         throw new Error((result.error as { message?: string }).message ?? "Signing failed");
       }
 
-      setActionSuccess(`${label} signed successfully. Submit the transaction to Stellar to finalize.`);
+      const signedTxXdr =
+        typeof result === "string"
+          ? result
+          : (result as { signedTxXdr?: string })?.signedTxXdr;
+
+      if (!signedTxXdr) {
+        throw new Error("No signed transaction returned");
+      }
+
+      const { hash: txHash } = await broadcastTransaction(signedTxXdr);
+
+      if (scopeKey) clearIdempotencyKey(address, scopeKey);
+      if (txHash) setActionTxHash(txHash);
+      setActionSuccess(
+        txHash
+          ? `${label} completed successfully. Transaction: ${txHash}`
+          : `${label} completed successfully.`,
+      );
       if (label === "Initiate Dispute") setDisputeOpen(false);
       void refetch();
     } catch (err) {
-      const message =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
+      const isConflict =
+        (err instanceof ApiError && err.status === 409) ||
+        (typeof err === "object" && err !== null && ("status" in err && (err as { status: unknown }).status === 409)) ||
+        (err instanceof Error && /409|conflict|already[- ]processed/i.test(err.message));
+
+      if (isConflict) {
+        // Handle 409 by de-duplicating rather than looping
+        if (scopeKey) clearIdempotencyKey(address, scopeKey);
+        setActionSuccess(`${label} was already processed.`);
+        if (label === "Initiate Dispute") setDisputeOpen(false);
+        void refetch();
+      } else {
+        const message =
+          err instanceof ApiError
             ? err.message
-            : `${label} failed`;
-      setActionError(message);
+            : err instanceof Error
+              ? err.message
+              : `${label} failed`;
+        setActionError(message);
+      }
     } finally {
       setActionLoading(false);
     }
   }
 
   function handleDeposit() {
-    void runAction("Deposit", () => api.trades.deposit(token!, tradeId));
+    void runAction(
+      "Deposit",
+      (opts) => api.trades.deposit(token!, tradeId, opts),
+      `trade:${tradeId}:deposit`,
+    );
   }
 
   function handleConfirmDelivery() {
-    void runAction("Confirm Delivery", () => api.trades.confirmDelivery(token!, tradeId));
+    void runAction(
+      "Confirm Delivery",
+      (opts) => api.trades.confirmDelivery(token!, tradeId, opts),
+      `trade:${tradeId}:confirmDelivery`,
+    );
   }
 
   function handleReleaseFunds() {
-    void runAction("Release Funds", () => api.trades.releaseFunds(token!, tradeId));
+    void runAction(
+      "Release Funds",
+      (opts) => api.trades.releaseFunds(token!, tradeId, opts),
+      `trade:${tradeId}:releaseFunds`,
+    );
   }
 
   function handleInitiateDispute() {
@@ -151,8 +211,10 @@ export default function TradeDetailPage() {
       return;
     }
     setDisputeError(null);
-    void runAction("Initiate Dispute", () =>
-      api.trades.initiateDispute(token!, tradeId, reason, disputeCategory),
+    void runAction(
+      "Initiate Dispute",
+      (opts) => api.trades.initiateDispute(token!, tradeId, reason, disputeCategory, opts),
+      `trade:${tradeId}:dispute`,
     );
   }
 

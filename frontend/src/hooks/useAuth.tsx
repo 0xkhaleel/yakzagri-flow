@@ -1,7 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { cacheClearAll } from '../lib/offlineCache';
-
-import {
+import React, {
   createContext,
   useCallback,
   useContext,
@@ -10,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { cacheClearAll } from "../lib/offlineCache";
 import {
   signMessage,
 } from "@stellar/freighter-api";
@@ -45,8 +43,10 @@ function getStoredToken(): string | null {
   return sessionStorage.getItem(TOKEN_STORAGE_KEY);
 }
 
-const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'auth_user';
+function setStoredToken(token: string): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+}
 
 function clearStoredToken(): void {
   if (typeof window === "undefined") return;
@@ -233,12 +233,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }));
       return;
     }
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    // Flush cached trades so offline data is not readable after logout.
-    await cacheClearAll();
-    setUser(null);
-  }, []);
 
     try {
       const payload = JSON.parse(atob(state.token.split(".")[1]));
@@ -297,9 +291,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }),
     [state, identity, authenticate, logout, refreshAuth]
   );
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-export function useAuth(): AuthContextValue {
+export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
   if (!ctx) {
     throw new Error('useAuth must be used within an AuthProvider');

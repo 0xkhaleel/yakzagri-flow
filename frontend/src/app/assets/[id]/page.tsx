@@ -7,7 +7,9 @@ import { useParams } from "next/navigation";
 import { signTransaction } from "@stellar/freighter-api";
 import { TradeDetailPanel } from "@/components/trade/TradeDetailPanel";
 import { useAuth } from "@/hooks/useAuth";
-import { api, ApiError, type TradeResponse, type TradeHistoryEvent } from "@/lib/api";
+import { api, apiConfig, ApiError, type TradeResponse, type TradeHistoryEvent } from "@/lib/api";
+import { broadcastTransaction } from "@/lib/stellar/broadcast";
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/idempotency";
 import { formatDate } from "@/lib/i18n";
 import type { TradeDetail, TimelineEvent, TransactionEvent } from "@/types/trade";
 
@@ -268,8 +270,11 @@ export default function TradeDetailPage() {
     setActionLoading(true);
     setActionError(null);
     setActionSuccess(null);
+
+    const idempotencyKey = getOrCreateIdempotencyKey(address, scopeKey);
+
     try {
-      const { unsignedXdr } = await action();
+      const { unsignedXdr } = await action({ idempotencyKey });
       const result = await signTransaction(unsignedXdr, {
         networkPassphrase: apiConfig.getStellarNetworkPassphrase(),
         address: address ?? undefined,
@@ -277,21 +282,52 @@ export default function TradeDetailPage() {
       if (result.error) {
         throw new Error(result.error.message || "Transaction signing failed");
       }
-      setActionSuccess(`${label} transaction signed. Submit it to Stellar to finalize.`);
+      const signedTxXdr =
+        typeof result === "string" ? result : result?.signedTxXdr;
+      if (!signedTxXdr) {
+        throw new Error("No signed transaction returned from Freighter");
+      }
+
+      const { hash } = await broadcastTransaction(signedTxXdr);
+      clearIdempotencyKey(address, scopeKey);
+      setActionSuccess(
+        hash
+          ? `${label} submitted to Stellar! Hash: ${hash}`
+          : `${label} submitted to Stellar successfully.`
+      );
       void fetchTrade();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : `${label} failed.`);
+      const isConflict =
+        (err instanceof ApiError && err.status === 409) ||
+        (typeof err === "object" && err !== null && ("status" in err && (err as { status: unknown }).status === 409)) ||
+        (err instanceof Error && /409|conflict|already[- ]processed/i.test(err.message));
+
+      if (isConflict) {
+        clearIdempotencyKey(address, scopeKey);
+        setActionSuccess(`${label} was already processed.`);
+        void fetchTrade();
+      } else {
+        setActionError(err instanceof Error ? err.message : `${label} failed.`);
+      }
     } finally {
       setActionLoading(false);
     }
   }
 
   function handleConfirmDelivery() {
-    void runSignedAction("Delivery confirmation", () => api.trades.confirmDelivery(token!, tradeId));
+    void runSignedAction(
+      "Delivery confirmation",
+      (opts) => api.trades.confirmDelivery(token!, tradeId, opts),
+      `trade:${tradeId}:confirmDelivery`,
+    );
   }
 
   function handleReleaseFunds() {
-    void runSignedAction("Funds release", () => api.trades.releaseFunds(token!, tradeId));
+    void runSignedAction(
+      "Funds release",
+      (opts) => api.trades.releaseFunds(token!, tradeId, opts),
+      `trade:${tradeId}:releaseFunds`,
+    );
   }
 
   function handleRaiseDispute() {
@@ -300,7 +336,11 @@ export default function TradeDetailPage() {
       setActionError("Dispute reason must be at least 10 characters.");
       return;
     }
-    void runSignedAction("Dispute", () => api.trades.initiateDispute(token!, tradeId, reason.trim(), "other"));
+    void runSignedAction(
+      "Dispute",
+      (opts) => api.trades.initiateDispute(token!, tradeId, reason.trim(), "other", opts),
+      `trade:${tradeId}:dispute`,
+    );
   }
 
   useEffect(() => {
