@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { generateIdempotencyKey } from "@/lib/idempotency";
+import { generateCorrelationId } from "@/lib/correlationId";
 
 export type QueuedActionType = "create-trade" | "deposit" | "release" | "dispute" | "manifest";
 
@@ -40,7 +41,7 @@ export const useOfflineQueueStore = create<OfflineQueueState>()(
           createdAt: new Date().toISOString(),
           attempts: 0,
           idempotencyKey: action.idempotencyKey ?? generateIdempotencyKey(),
-          correlationId: action.correlationId ?? `corr-${Date.now()}`,
+          correlationId: action.correlationId ?? generateCorrelationId(),
           ...action,
         } as QueuedAction;
         set((s) => ({ queue: [...s.queue, entry] }));
