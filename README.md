@@ -97,3 +97,8 @@ yakzagri-flow is an open-source project aimed at improving food security and tra
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
+
+## Handsoff notes
+
+<!-- handsoff-issue-95 -->
+- #95: [docs] Fix README duplicated CI section and stray text
