@@ -1,11 +1,26 @@
 // src/types/trade.ts
 
-export type TradeStatus =
-  | "IN TRANSIT"
-  | "PENDING"
-  | "SETTLED"
-  | "DISPUTED"
-  | "DRAFT";
+export const TRADE_STATUSES = [
+  "IN TRANSIT",
+  "PENDING",
+  "SETTLED",
+  "DISPUTED",
+  "DRAFT",
+] as const;
+
+export type TradeStatus = (typeof TRADE_STATUSES)[number];
+
+/**
+ * Runtime guard that narrows an arbitrary value to the canonical
+ * `TradeStatus` union. Use this at the API boundary so raw strings are
+ * validated instead of trusted.
+ */
+export function isTradeStatus(value: unknown): value is TradeStatus {
+  return (
+    typeof value === "string" &&
+    (TRADE_STATUSES as readonly string[]).includes(value)
+  );
+}
 
 /**
  * Canonical money amount, expressed in USDC.

@@ -15,7 +15,7 @@ export type {
   CreateTradeInput,
 } from "@/lib/domain-schemas/trade";
 
-import type { Trade, TradeMoneyAmount } from "@/lib/domain-schemas/trade";
+import type { Trade, TradeStatus, TradeMoneyAmount } from "@/lib/domain-schemas/trade";
 
 /**
  * API response shape for a trade. Money is expressed as `amountCngn` on the
@@ -29,7 +29,7 @@ export interface TradeResponse {
   amountCngn: TradeMoneyAmount;
   buyerLossBps: number;
   sellerLossBps: number;
-  status: string;
+  status: TradeStatus;
   createdAt: string;
   updatedAt: string;
   eta?: string;
