@@ -6,6 +6,8 @@ import type { TradeDetail } from "@/types/trade";
 
 interface TradeHeaderProps {
   trade: TradeDetail;
+  onConfirmDelivery?: () => void;
+  confirmingDelivery?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -21,7 +23,7 @@ const STATUS_STYLES: Record<string, string> = {
     "bg-status-draft/10 text-status-draft border border-status-draft/30",
 };
 
-export function TradeHeader({ trade }: TradeHeaderProps) {
+export function TradeHeader({ trade, onConfirmDelivery, confirmingDelivery = false }: TradeHeaderProps) {
   const statusStyle =
     STATUS_STYLES[trade.status] ?? STATUS_STYLES["DRAFT"];
 
@@ -75,11 +77,16 @@ export function TradeHeader({ trade }: TradeHeaderProps) {
 
         {/* Action buttons */}
         <div className="flex gap-3 flex-shrink-0">
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:border-border-hover hover:text-text-primary transition-all">
+          <a href="#trade-contract" className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:border-border-hover hover:text-text-primary transition-all">
             <FileText className="w-4 h-4" />
             View Contract
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-gold-cta text-text-inverse text-sm font-semibold hover:shadow-glow-gold transition-all">
+          </a>
+          <button
+            onClick={onConfirmDelivery}
+            disabled={!onConfirmDelivery || confirmingDelivery}
+            title={!onConfirmDelivery ? "Only the authenticated buyer can confirm delivery for an in-transit trade." : undefined}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-gold-cta text-text-inverse text-sm font-semibold hover:shadow-glow-gold transition-all disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <svg
               className="w-4 h-4"
               viewBox="0 0 16 16"
@@ -90,7 +97,7 @@ export function TradeHeader({ trade }: TradeHeaderProps) {
               <circle cx="8" cy="8" r="7" />
               <path d="M5 8l2.5 2.5L11 5.5" />
             </svg>
-            Confirm Delivery
+            {confirmingDelivery ? "Confirming..." : "Confirm Delivery"}
           </button>
         </div>
       </div>

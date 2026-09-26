@@ -45,7 +45,7 @@ export function TransactionTimeline({
           <TimelineEventItem
             key={event.id}
             event={event}
-            status={resolveStatus(index, currentEventIndex)}
+            status={event.status ?? resolveStatus(index, currentEventIndex)}
             isLast={index === events.length - 1}
           />
         ))}

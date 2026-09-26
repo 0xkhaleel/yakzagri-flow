@@ -85,7 +85,11 @@ export function VaultSidebar({ trade }: VaultSidebarProps) {
           <span className="text-xs text-text-secondary">Need Help?</span>
           <span className="text-xs text-text-muted">Dispute Resolution</span>
         </div>
-        <button className="text-xs font-semibold text-gold hover:text-gold-hover transition-colors">
+        <button
+          disabled
+          title="Support ticket submission is not available yet."
+          className="text-xs font-semibold text-gold opacity-50 cursor-not-allowed"
+        >
           Open Ticket
         </button>
       </div>

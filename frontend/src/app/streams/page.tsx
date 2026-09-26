@@ -1,9 +1,46 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
+import { api, ApiError, type AdminStreamSummary } from "@/lib/api";
 import { Breadcrumb } from "@/components/ui";
 
 export default function StreamsPage() {
+  const { token, isAuthenticated, isWalletConnected, isLoading: authLoading, connectWallet, authenticate } = useAuth();
+  const { canAccessAdmin } = useAdmin();
+  const [streams, setStreams] = useState<AdminStreamSummary[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStreams = useCallback(async () => {
+    if (!token || !canAccessAdmin) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.adminStreams.list(token, { page, limit: 20 });
+      setStreams(response.items);
+      setTotalPages(response.pagination.totalPages);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Unable to load streams. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [token, canAccessAdmin, page]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (isAuthenticated && canAccessAdmin) void fetchStreams();
+    else setLoading(false);
+  }, [authLoading, isAuthenticated, canAccessAdmin, fetchStreams]);
+
   const breadcrumbItems = [
     { label: "Home", path: "/" },
     { label: "Streams" },
@@ -15,65 +52,82 @@ export default function StreamsPage() {
         {/* Breadcrumb */}
         <Breadcrumb items={breadcrumbItems} />
 
-        {/* Page header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-text-primary">Vested Token Streams</h1>
-            <p className="mt-0.5 text-xs text-text-secondary">
-              View and manage your vested token streams
+        {authLoading || loading ? (
+          <div className="rounded-lg border border-border-default bg-card px-5 py-10 text-center text-sm text-text-secondary" aria-live="polite">
+            Loading streams...
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="rounded-lg border border-border-default bg-card px-6 py-10 text-center">
+            <h2 className="text-lg font-semibold text-text-primary">Connect to view streams</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-text-secondary">
+              Sign in with your Freighter wallet to access stream records.
+            </p>
+            <button
+              onClick={() => (isWalletConnected ? authenticate() : connectWallet())}
+              className="mt-5 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-gold-hover"
+            >
+              {isWalletConnected ? "Sign In" : "Connect Freighter"}
+            </button>
+          </div>
+        ) : !canAccessAdmin ? (
+          <div className="rounded-lg border border-border-default bg-card px-6 py-10 text-center">
+            <h2 className="text-lg font-semibold text-text-primary">Stream list unavailable</h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-text-secondary">
+              The available stream listing is restricted to administrators. You can still open a stream directly when you have its ID.
             </p>
           </div>
-        </div>
-
-        {/* Coming soon placeholder */}
-        <div className="rounded-2xl border border-border-default bg-card p-8 text-center">
-          <svg
-            className="mx-auto h-12 w-12 text-text-muted"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <h2 className="mt-4 text-lg font-medium text-text-primary">Stream List Coming Soon</h2>
-          <p className="mt-2 text-sm text-text-secondary">
-            Stream listing and filtering features are under development.
-          </p>
-          <div className="mt-6">
-            <Link
-              href="/"
-              className="inline-flex rounded-lg border border-border-default bg-bg-elevated px-4 py-2 text-sm font-medium text-text-secondary hover:border-border-hover hover:bg-card hover:text-text-primary transition-colors"
-            >
-              Back to Home
-            </Link>
+        ) : error ? (
+          <div className="rounded-lg border border-status-danger/30 bg-status-danger/10 px-5 py-6 text-center">
+            <p className="text-sm text-status-danger">{error}</p>
+            <button onClick={() => void fetchStreams()} className="mt-4 rounded-md border border-border-default px-4 py-2 text-sm text-text-primary">
+              Try again
+            </button>
           </div>
-        </div>
-
-        {/* Example stream navigation */}
-        <div className="rounded-2xl border border-border-default bg-card p-5">
-          <p className="text-xs uppercase tracking-[0.22em] text-text-secondary mb-3">
-            Quick Access
-          </p>
-          <p className="text-sm text-text-muted mb-4">
-            To view a specific stream, navigate to:{" "}
-            <code className="rounded bg-bg-elevated px-2 py-1 text-xs text-text-primary font-mono">
-              /streams/[streamId]
-            </code>
-          </p>
-          <div className="flex gap-3">
-            <Link
-              href="/streams/example-stream-123"
-              className="rounded-lg border border-border-default bg-bg-elevated px-4 py-2 text-sm font-medium text-text-secondary hover:border-border-hover hover:bg-card hover:text-text-primary transition-colors"
-            >
-              View Example Stream
-            </Link>
+        ) : streams.length === 0 ? (
+          <div className="rounded-lg border border-border-default bg-card px-6 py-12 text-center">
+            <h2 className="text-lg font-semibold text-text-primary">No streams yet</h2>
+            <p className="mt-2 text-sm text-text-secondary">New vested token streams will appear here.</p>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="overflow-hidden rounded-lg border border-border-default bg-card">
+              <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_auto] gap-4 border-b border-border-default px-5 py-3 text-xs font-semibold uppercase text-text-muted">
+                <span>Stream</span><span>Vesting progress</span><span>Status</span>
+              </div>
+              {streams.map((stream) => {
+                const total = Number(stream.totalVested);
+                const claimed = Number(stream.claimed);
+                const progress = total > 0 ? Math.min(100, Math.round((claimed / total) * 100)) : 0;
+                return (
+                  <Link
+                    key={stream.streamId}
+                    href={`/streams/${encodeURIComponent(stream.streamId)}`}
+                    className="grid grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_auto] items-center gap-4 border-b border-border-default px-5 py-4 last:border-b-0 hover:bg-bg-elevated"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-mono text-sm text-text-primary">{stream.streamId}</span>
+                      <span className="mt-1 block truncate text-xs text-text-muted">Recipient {stream.recipient}</span>
+                    </span>
+                    <span>
+                      <span className="block text-sm text-text-primary">{progress}% claimed</span>
+                      <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-bg-elevated">
+                        <span className="block h-full bg-status-success" style={{ width: `${progress}%` }} />
+                      </span>
+                    </span>
+                    <span className="rounded-full border border-border-default px-2.5 py-1 text-xs text-text-secondary">{stream.status}</span>
+                  </Link>
+                );
+              })}
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 text-sm text-text-secondary">
+                <button onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1} className="rounded-md border border-border-default px-3 py-1.5 disabled:opacity-50">Previous</button>
+                <span>Page {page} of {totalPages}</span>
+                <button onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages} className="rounded-md border border-border-default px-3 py-1.5 disabled:opacity-50">Next</button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </section>
   );

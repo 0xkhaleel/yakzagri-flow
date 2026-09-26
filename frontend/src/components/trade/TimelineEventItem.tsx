@@ -44,6 +44,10 @@ function StatusIcon({ status }: { status: TransactionEventStatus }) {
     return <span className="w-2 h-2 rounded-full bg-current block" />;
   }
 
+  if (status === "failed") {
+    return <span className="text-xs font-bold leading-none">!</span>;
+  }
+
   return <span className="w-2 h-2 rounded-full bg-current/30 block" />;
 }
 
@@ -52,6 +56,7 @@ const NODE_STYLES: Record<TransactionEventStatus, string> = {
   active:
     "bg-status-warning text-text-inverse border-status-warning ring-4 ring-status-warning/20",
   pending: "bg-elevated text-text-muted border-border-default",
+  failed: "bg-status-danger/10 text-status-danger border-status-danger/40",
 };
 
 export function TimelineEventItem({

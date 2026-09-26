@@ -13,6 +13,12 @@ import { api } from "@/lib/api";
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
+const mockRouterPush = jest.fn();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockRouterPush }),
+}));
+
 jest.mock("next/link", () => {
   const MockLink = ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
@@ -36,7 +42,11 @@ jest.mock("@/lib/api", () => ({
 jest.mock("@/components/vault", () => ({
   VaultHero: ({ status }: { status: string }) => <div data-testid="vault-hero">{status}</div>,
   ReleaseSequenceCard: () => <div data-testid="release-sequence" />,
-  VaultValueCard: () => <div data-testid="vault-value" />,
+  VaultValueCard: ({ onReleaseFunds }: { onReleaseFunds?: () => void }) => (
+    <div data-testid="vault-value">
+      <button onClick={onReleaseFunds}>Release Funds</button>
+    </div>
+  ),
   ContractManifestCard: () => <div data-testid="contract-manifest" />,
   AuditLogCard: () => <div data-testid="audit-log" />,
   NetworkBackboneCard: () => <div data-testid="network-backbone" />,
@@ -149,6 +159,18 @@ describe("Vault Dashboard — data state", () => {
     await waitFor(() => expect(screen.getByTestId("vault-hero")).toBeInTheDocument());
     expect(screen.getByTestId("release-sequence")).toBeInTheDocument();
     expect(screen.getByTestId("vault-value")).toBeInTheDocument();
+  });
+
+  it("routes vault release review to an active trade", async () => {
+    const user = userEvent.setup();
+    mockUseAuth.mockReturnValue(AUTH_AUTHENTICATED);
+    mockGetStats.mockResolvedValue(MOCK_STATS);
+    mockList.mockResolvedValue(MOCK_TRADES);
+
+    render(<VaultPage />);
+    await user.click(await screen.findByRole("button", { name: "Release Funds" }));
+
+    expect(mockRouterPush).toHaveBeenCalledWith("/trades/trade-001");
   });
 
   it("displays wallet balance when authenticated", async () => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signTransaction } from "@stellar/freighter-api";
 import {
   AuditLogCard,
@@ -47,6 +48,7 @@ const PARTNERS = [
 ];
 
 export default function VaultPage() {
+  const router = useRouter();
   const {
     shortAddress,
     token,
@@ -133,6 +135,11 @@ export default function VaultPage() {
   const manifestTrade =
     recentTrades?.items.find((trade) => ["FUNDED", "DELIVERED"].includes(trade.status)) ??
     recentTrades?.items[0];
+  const releaseTrade = recentTrades?.items.find((trade) => ["FUNDED", "DELIVERED"].includes(trade.status));
+
+  const handleReviewRelease = () => {
+    if (releaseTrade) router.push(`/trades/${encodeURIComponent(releaseTrade.tradeId)}`);
+  };
 
   const manifestSubmittingRef = useRef(false);
 
@@ -368,7 +375,7 @@ export default function VaultPage() {
                   value={vaultValue}
                   currency="USD"
                   isInsured={isAuthenticated}
-                  onReleaseFunds={() => undefined}
+                  onReleaseFunds={releaseTrade ? handleReviewRelease : undefined}
                 />
               </div>
 
@@ -395,8 +402,7 @@ export default function VaultPage() {
                       : "Seller",
                     color: "emerald",
                   }}
-                  onExportPdf={() => undefined}
-                  onViewClauses={() => undefined}
+                  onExportPdf={() => window.print()}
                 />
               </div>
 

@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { signTransaction } from "@stellar/freighter-api";
 import { TradeDetailPanel } from "@/components/trade/TradeDetailPanel";
 import { useAuth } from "@/hooks/useAuth";
-import { api, ApiError, type TradeResponse, type TradeHistoryEvent } from "@/lib/api";
+import { api, apiConfig, ApiError, type TradeResponse, type TradeHistoryEvent } from "@/lib/api";
 import type { TradeDetail, TimelineEvent, TransactionEvent } from "@/types/trade";
 
 function mapStatusToDisplay(status: string): TradeDetail["status"] {
@@ -25,10 +26,59 @@ export function mapHistoryToTimeline(events: TradeHistoryEvent[]): TimelineEvent
     id: String(index + 1),
     type: event.eventType as TimelineEvent["type"],
     title: event.eventType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-    description: JSON.stringify(event.metadata),
+    description: describeHistoryEvent(event),
     timestamp: event.timestamp,
-    status: index === events.length - 1 ? "current" : "completed",
+    status: getHistoryEventStatus(event) === "pending" || getHistoryEventStatus(event) === "failed"
+      ? "pending"
+      : getHistoryEventStatus(event) === "active" || index === events.length - 1
+        ? "current"
+        : "completed",
   }));
+}
+
+const EVENT_DESCRIPTIONS: Record<string, string> = {
+  trade_created: "Trade was created and is awaiting funding.",
+  trade_funded: "Escrow funds were deposited and locked.",
+  delivery_confirmed: "Delivery was confirmed by the buyer.",
+  trade_delivered: "Delivery was recorded for this trade.",
+  funds_released: "Escrow funds were released to the seller.",
+  trade_settled: "The trade was settled.",
+  dispute_initiated: "A dispute was opened for this trade.",
+  dispute_resolved: "The dispute was resolved.",
+  manifest_submitted: "Shipment details were submitted.",
+  evidence_uploaded: "Trade evidence was uploaded.",
+  trade_cancelled: "The trade was cancelled.",
+};
+
+function describeHistoryEvent(event: TradeHistoryEvent): string {
+  const metadata = event.metadata ?? {};
+  const suppliedDescription = ["description", "message", "reason", "note"]
+    .map((key) => metadata[key])
+    .find((value): value is string => typeof value === "string" && value.trim().length > 0);
+  const description = suppliedDescription ?? EVENT_DESCRIPTIONS[event.eventType.toLowerCase()];
+  const amount = metadata.amountCngn ?? metadata.amount;
+  const amountDescription = typeof amount === "string" || typeof amount === "number"
+    ? ` Amount: ${amount}${typeof metadata.assetCode === "string" ? ` ${metadata.assetCode}` : ""}.`
+    : "";
+
+  return `${description ?? `${event.eventType.replace(/_/g, " ")} was recorded.`}${amountDescription}`;
+}
+
+function getHistoryEventStatus(event: TradeHistoryEvent): "completed" | "active" | "pending" | "failed" {
+  const metadataStatus = event.metadata?.status ?? event.metadata?.state;
+  if (typeof metadataStatus === "string") {
+    const normalizedStatus = metadataStatus.toLowerCase().replace(/[ -]/g, "_");
+    if (["pending", "awaiting", "queued"].includes(normalizedStatus)) return "pending";
+    if (["active", "in_progress", "started", "processing"].includes(normalizedStatus)) return "active";
+    if (["failed", "error", "rejected"].includes(normalizedStatus)) return "failed";
+    if (["completed", "complete", "success", "succeeded", "settled"].includes(normalizedStatus)) return "completed";
+  }
+
+  const eventType = event.eventType.toLowerCase();
+  if (eventType.includes("failed") || eventType.includes("rejected")) return "failed";
+  if (eventType.includes("pending") || eventType.includes("requested")) return "pending";
+  if (eventType.includes("started") || eventType.includes("processing")) return "active";
+  return "completed";
 }
 
 export function mapHistoryToTransactionTimeline(events: TradeHistoryEvent[]): TransactionEvent[] {
@@ -37,8 +87,8 @@ export function mapHistoryToTransactionTimeline(events: TradeHistoryEvent[]): Tr
     title: event.eventType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
     actor: (event.actor || "system") as TransactionEvent["actor"],
     timestamp: event.timestamp,
-    description: JSON.stringify(event.metadata),
-    status: "completed",
+    description: describeHistoryEvent(event),
+    status: getHistoryEventStatus(event),
   }));
 }
 
@@ -166,11 +216,14 @@ function AuthRequired({ onConnect, onAuthenticate, isConnected, isLoading }: {
 export default function TradeDetailPage() {
   const params = useParams();
   const tradeId = params.id as string;
-  const { token, isAuthenticated, isWalletConnected, isLoading: authLoading, connectWallet, authenticate } = useAuth();
+  const { token, address, isAuthenticated, isWalletConnected, isLoading: authLoading, connectWallet, authenticate } = useAuth();
 
   const [trade, setTrade] = useState<TradeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   const fetchTrade = useCallback(async () => {
     if (!token) return;
@@ -202,6 +255,50 @@ export default function TradeDetailPage() {
       setLoading(false);
     }
   }, [token, tradeId]);
+
+  async function runSignedAction(label: string, action: () => Promise<{ unsignedXdr: string }>) {
+    if (!token) {
+      setActionError("Sign in with your wallet to perform this action.");
+      return;
+    }
+
+    setActionLoading(true);
+    setActionError(null);
+    setActionSuccess(null);
+    try {
+      const { unsignedXdr } = await action();
+      const result = await signTransaction(unsignedXdr, {
+        networkPassphrase: apiConfig.getStellarNetworkPassphrase(),
+        address: address ?? undefined,
+      });
+      if (result.error) {
+        throw new Error(result.error.message || "Transaction signing failed");
+      }
+      setActionSuccess(`${label} transaction signed. Submit it to Stellar to finalize.`);
+      void fetchTrade();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : `${label} failed.`);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  function handleConfirmDelivery() {
+    void runSignedAction("Delivery confirmation", () => api.trades.confirmDelivery(token!, tradeId));
+  }
+
+  function handleReleaseFunds() {
+    void runSignedAction("Funds release", () => api.trades.releaseFunds(token!, tradeId));
+  }
+
+  function handleRaiseDispute() {
+    const reason = window.prompt("Enter dispute reason (at least 10 characters):");
+    if (!reason || reason.trim().length < 10) {
+      setActionError("Dispute reason must be at least 10 characters.");
+      return;
+    }
+    void runSignedAction("Dispute", () => api.trades.initiateDispute(token!, tradeId, reason.trim(), "other"));
+  }
 
   useEffect(() => {
     if (isAuthenticated && token) {
@@ -238,5 +335,19 @@ export default function TradeDetailPage() {
     return <ErrorState message="Trade not found." />;
   }
 
-  return <TradeDetailPanel trade={trade} />;
+  const isBuyer = Boolean(address) && address?.toLowerCase() === trade.buyer.walletAddress.toLowerCase();
+  const isSeller = Boolean(address) && address?.toLowerCase() === trade.seller.walletAddress.toLowerCase();
+  const isInTransit = trade.status === "IN TRANSIT";
+
+  return (
+    <TradeDetailPanel
+      trade={trade}
+      onConfirmDelivery={isBuyer && isInTransit ? handleConfirmDelivery : undefined}
+      onRaiseDispute={(isBuyer || isSeller) && isInTransit ? handleRaiseDispute : undefined}
+      onReleaseFunds={isSeller && isInTransit ? handleReleaseFunds : undefined}
+      actionLoading={actionLoading}
+      actionError={actionError}
+      actionSuccess={actionSuccess}
+    />
+  );
 }

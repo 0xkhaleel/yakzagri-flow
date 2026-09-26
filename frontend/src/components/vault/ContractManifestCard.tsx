@@ -92,7 +92,9 @@ export function ContractManifestCard({
       <div className="flex gap-3 mt-15">
         <button
           onClick={onExportPdf}
-          className="flex-1 flex items-center justify-center gap-2 bg-[#1E2D2666] hover:bg-bg-input text-text-primary font-medium py-2.5 px-4 rounded-xl transition-colors "
+          disabled={!onExportPdf}
+          title={!onExportPdf ? "A contract PDF is not available for this position." : undefined}
+          className="flex-1 flex items-center justify-center gap-2 bg-[#1E2D2666] hover:bg-bg-input text-text-primary font-medium py-2.5 px-4 rounded-xl transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
            <Image
               src={Download}
@@ -104,7 +106,9 @@ export function ContractManifestCard({
         </button>
         <button
           onClick={onViewClauses}
-          className="flex-1 flex items-center justify-center gap-2 bg-[#1E2D2666] hover:bg-bg-input text-text-primary font-medium py-2.5 px-4 rounded-xl transition-colors"
+          disabled={!onViewClauses}
+          title={!onViewClauses ? "Contract clauses are not available for this position." : undefined}
+          className="flex-1 flex items-center justify-center gap-2 bg-[#1E2D2666] hover:bg-bg-input text-text-primary font-medium py-2.5 px-4 rounded-xl transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Eye className="w-4 h-4" />
           View Clauses

@@ -89,7 +89,14 @@ function getEventIcon(type: string) {
 }
 
 export default function ReputationPage() {
-  const { token, isAuthenticated, isLoading: authLoading } = useAuth();
+  const {
+    token,
+    isAuthenticated,
+    isWalletConnected,
+    isLoading: authLoading,
+    connectWallet,
+    authenticate,
+  } = useAuth();
 
   const [data, setData] = useState<ReputationResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -133,6 +140,13 @@ export default function ReputationPage() {
         <p className="text-text-secondary max-w-md">
           Please connect your wallet to view your trust score and trading reputation on the Amana platform.
         </p>
+        <Button
+          variant="primary"
+          onClick={() => (isWalletConnected ? authenticate() : connectWallet())}
+          disabled={authLoading}
+        >
+          {authLoading ? "Connecting..." : isWalletConnected ? "Sign In" : "Connect Freighter"}
+        </Button>
       </div>
     );
   }
