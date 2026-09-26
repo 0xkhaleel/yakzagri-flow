@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import {
@@ -36,30 +38,28 @@ export function LegalDisclaimerModal({
         mobileFullScreen={false}
       >
         <ModalHeader>
-          <ModalTitle>Loss-Sharing Terms</ModalTitle>
+          <ModalTitle>{translateCopy("ui.loss_sharing_terms_4dec970")}</ModalTitle>
           <ModalDescription>
-            Please review the loss-sharing agreement before proceeding.
+            {translateCopy("ui.please_review_the_loss_sharing_a_ae16bb4")}
           </ModalDescription>
         </ModalHeader>
 
         <ModalBody className="scrollbar-thin scrollbar-thumb-white/10 flex-1">
           <div className="space-y-4">
             <p className="text-secondary text-sm">
-              By locking funds in this escrow, you acknowledge and agree to the
-              following loss-sharing terms in case of damage or interception
-              during transit:
+              {translateCopy("ui.by_locking_funds_in_this_escrow__1e76a82")}
             </p>
 
             <div className="bg-gold-muted/30 text-gold p-4 rounded-lg font-medium border border-gold/20">
-              <p className="text-sm mb-2">Loss Allocation:</p>
+              <p className="text-sm mb-2">{translateCopy("ui.loss_allocation_e9d3d74")}</p>
               <div className="flex justify-between items-center">
-                <span>Buyer bears:</span>
+                <span>{translateCopy("ui.buyer_bears_d389362")}</span>
                 <span className="font-bold">
                   {(buyerPercentage * 100).toFixed(0)}%
                 </span>
               </div>
               <div className="flex justify-between items-center mt-2">
-                <span>Seller bears:</span>
+                <span>{translateCopy("ui.seller_bears_62abdf0")}</span>
                 <span className="font-bold">
                   {(sellerPercentage * 100).toFixed(0)}%
                 </span>
@@ -68,24 +68,21 @@ export function LegalDisclaimerModal({
 
             <div className="text-xs text-muted space-y-2">
               <p>
-                <strong>Trade Value:</strong> {tradeValueCngn} cNGN
+                <strong>{translateCopy("ui.trade_value_3823b72")}</strong> {tradeValueCngn} cNGN
               </p>
               <p>
-                In the event of loss or damage during transit, the locked funds
-                will be distributed according to the ratios above. The buyer
-                will receive{" "}
+                {translateCopy("ui.in_the_event_of_loss_or_damage_d_b236614")}{" "}
                 {(buyerPercentage * parseFloat(tradeValueCngn || "0")).toFixed(
                   2,
                 )}{" "}
-                cNGN and the seller will receive{" "}
+                {translateCopy("ui.cngn_and_the_seller_will_receive_223d344")}{" "}
                 {(sellerPercentage * parseFloat(tradeValueCngn || "0")).toFixed(
                   2,
                 )}{" "}
-                cNGN after applicable fees.
+                {translateCopy("ui.cngn_after_applicable_fees_a9f273a")}
               </p>
               <p>
-                This agreement is final and cannot be modified after the trade
-                is created.
+                {translateCopy("ui.this_agreement_is_final_and_cann_602bd70")}
               </p>
             </div>
           </div>
@@ -96,13 +93,13 @@ export function LegalDisclaimerModal({
             onClick={onDecline}
             className="flex-1 px-4 py-2 rounded-lg border border-border-default text-secondary hover:bg-elevated transition-colors"
           >
-            Decline
+            {translateCopy("ui.decline_b59cf9e")}
           </button>
           <button
             onClick={onAccept}
             className="flex-1 px-4 py-2 rounded-lg bg-gold text-text-inverse font-medium hover:bg-gold-hover transition-colors"
           >
-            Accept & Proceed
+            {translateCopy("ui.accept_proceed_c4c3042")}
           </button>
         </ModalFooter>
       </ModalContent>

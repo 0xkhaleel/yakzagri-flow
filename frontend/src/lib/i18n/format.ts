@@ -9,6 +9,7 @@ import {
   resolveLocale,
   type Locale,
 } from "./config";
+import { readSavedCurrency } from "@/lib/preferences";
 
 type Numeric = number | string | bigint;
 
@@ -35,13 +36,19 @@ export interface MoneyOptions {
 /** Format a decimal amount as currency. Default: `₦1,234.56`. */
 export function formatMoney(amount: Numeric, options: MoneyOptions = {}): string {
   const {
-    currency = DEFAULT_CURRENCY,
     locale = resolveLocale(),
     compactFraction = false,
   } = options;
+  const currency = options.currency ?? readSavedCurrency() ?? DEFAULT_CURRENCY;
   const value = toNumber(amount);
   const fractionDigits =
     compactFraction && Number.isInteger(value) ? 0 : 2;
+  if (currency === "cNGN") {
+    return `${new Intl.NumberFormat(intlLocale(locale), {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: 2,
+    }).format(value)} cNGN`;
+  }
   return new Intl.NumberFormat(intlLocale(locale), {
     style: "currency",
     currency,
@@ -61,10 +68,19 @@ export function formatNaira(
 /** Plain grouped number — `1,234.5` — honouring the active locale. */
 export function formatNumber(
   value: Numeric,
-  options: { locale?: Locale; maximumFractionDigits?: number } = {},
+  options: {
+    locale?: Locale;
+    minimumFractionDigits?: number;
+    maximumFractionDigits?: number;
+  } = {},
 ): string {
-  const { locale = resolveLocale(), maximumFractionDigits = 7 } = options;
+  const {
+    locale = resolveLocale(),
+    minimumFractionDigits = 0,
+    maximumFractionDigits = 7,
+  } = options;
   return new Intl.NumberFormat(intlLocale(locale), {
+    minimumFractionDigits,
     maximumFractionDigits,
   }).format(toNumber(value));
 }
