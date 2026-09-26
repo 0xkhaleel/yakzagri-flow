@@ -13,77 +13,13 @@ import {
 import Link from "next/link";
 import { LandingCtaButtons } from "@/components/landing/LandingCtaButtons";
 
-// ─── Data ────────────────────────────────────────────────────────────────────
+import Link from 'next/link';
+import { useWalletStore } from '@/store/wallet';
+import { WalletConnectButton } from '@/components/wallet/WalletConnectButton';
 
-const stats = [
-  { label: "Trades settled", value: "2,400+" },
-  { label: "Total escrow value", value: "$1.2M" },
-  { label: "Dispute resolution rate", value: "98%" },
-  { label: "Network", value: "Stellar" },
-];
+export default function LandingPage() {
+  const { isConnected } = useWalletStore();
 
-const steps = [
-  {
-    step: "01",
-    title: "Create a trade",
-    description:
-      "Define counterparties, commodity, amount, and settlement terms. Funds are locked in escrow on the Stellar network before any goods move.",
-    icon: CircleDollarSign,
-  },
-  {
-    step: "02",
-    title: "Track delivery",
-    description:
-      "Driver manifests, GPS checkpoints, and video evidence are attached on-chain as the shipment moves from farm to buyer.",
-    icon: Truck,
-  },
-  {
-    step: "04",
-    title: "Verify & complete",
-    description:
-      "Seller delivers goods. Buyer confirms receipt on-chain. Funds release instantly from escrow to seller.",
-    icon: CheckCircle2,
-  },
-];
-
-const features = [
-  {
-    icon: Lock,
-    title: "Non-custodial escrow",
-    description:
-      "Funds are held in a Soroban smart contract — no intermediary can move them without both parties' agreement or a mediator ruling.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Evidence-backed disputes",
-    description:
-      "Every dispute is anchored to verifiable on-chain evidence: manifests, video proof, and signed delivery confirmations.",
-  },
-  {
-    icon: Star,
-    title: "Reputation scoring",
-    description:
-      "Each completed trade builds a trust score for buyers, sellers, and drivers — making future trades faster and lower-risk.",
-  },
-  {
-    icon: Scale,
-    title: "Impartial mediation",
-    description:
-      "Certified mediators review evidence and issue rulings with full audit trails, ensuring fair outcomes for all parties.",
-  },
-];
-
-// ─── Page ────────────────────────────────────────────────────────────────────
-
-/*
- * Typography hierarchy (Figma token scale):
- *   h1  → text-4xl / md:text-5xl   (hero heading)
- *   h2  → text-2xl / md:text-3xl   (section heading)
- *   h3  → text-xl                  (card heading)
- *   p   → text-base / text-lg      (body)
- *   small metadata → text-sm with text-text-secondary / text-text-muted
- */
-export default function Home() {
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
@@ -118,8 +54,8 @@ export default function Home() {
           {/* CTAs */}
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
-              href="/trades/create"
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-gold-cta px-6 py-3 text-base font-semibold text-text-inverse shadow-glow-gold transition-shadow hover:shadow-glow-gold/60 focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
+              href="/trades"
+              className="rounded-lg bg-green-700 px-6 py-3 font-semibold text-white hover:bg-green-800"
             >
               {translateCopy("ui.start_a_trade_3bd0ed4")}
               <ArrowRight className="h-4 w-4" />
@@ -221,7 +157,6 @@ export default function Home() {
             })}
           </div>
         </div>
-      </section>
 
       {/* ── Bottom CTA ───────────────────────────────────────────────────── */}
       <section className="px-6 py-20 lg:px-10">
