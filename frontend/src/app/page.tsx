@@ -110,7 +110,7 @@ export default function Home() {
 
           {/* Sub-headline */}
           <p className="mx-auto mt-6 max-w-2xl text-lg text-text-secondary">
-            Amana is a blockchain-powered escrow platform for agricultural
+            EziAgric is a blockchain-powered escrow platform for agricultural
             commodities. Lock funds, track delivery, resolve disputes — all
             with verifiable on-chain evidence.
           </p>
@@ -194,7 +194,7 @@ export default function Home() {
       <section className="bg-bg-card px-6 py-20 lg:px-10">
         <div className="mx-auto max-w-5xl">
           <h2 className="text-center text-2xl font-bold md:text-3xl">
-            Why Amana
+            Why EziAgric
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-base text-text-secondary">
             Purpose-built for agricultural supply chains where trust, evidence,
@@ -207,17 +207,17 @@ export default function Home() {
               return (
                 <div
                   key={feature.title}
-                  className="flex gap-4 rounded-xl border border-border-default bg-bg-elevated p-6 transition-colors hover:border-border-hover"
+                  className="rounded-xl border border-border-default bg-bg-primary p-6 shadow-card"
                 >
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gold-muted">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gold-muted">
                     <Icon className="h-5 w-5 text-gold" />
                   </div>
-                  <div>
-                    <h3 className="text-base font-semibold">{feature.title}</h3>
-                    <p className="mt-1 text-sm leading-relaxed text-text-secondary">
-                      {feature.description}
-                    </p>
-                  </div>
+                  <h3 className="mt-4 text-xl font-semibold">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+                    {feature.description}
+                  </p>
                 </div>
               );
             })}
@@ -225,37 +225,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Bottom CTA ───────────────────────────────────────────────────── */}
+      {/* ── CTA ──────────────────────────────────────────────────────────── */}
       <section className="px-6 py-20 lg:px-10">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-gold/20 bg-gradient-card-glow p-10 text-center shadow-glow-gold">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-gold/20 bg-gradient-hero p-10 text-center shadow-card">
           <h2 className="text-2xl font-bold md:text-3xl">
-            Ready to settle your first trade?
+            Ready to trade with confidence?
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-base text-text-secondary">
-            Connect your Freighter wallet and create a trade in under two
-            minutes.
+          <p className="mx-auto mt-3 max-w-xl text-base text-text-secondary">
+            Join buyers, sellers, and drivers using EziAgric to settle
+            agricultural trade securely on-chain.
           </p>
-          <LandingCtaButtons />
+          <div className="mt-8 flex justify-center">
+            <LandingCtaButtons />
+          </div>
         </div>
       </section>
-
-      {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-border-default px-6 py-8 lg:px-10">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 text-sm text-text-muted sm:flex-row">
-          <span>© {new Date().getFullYear()} Amana. Agricultural escrow on Stellar.</span>
-          <nav aria-label="Footer navigation" className="flex gap-6">
-            <Link href="/trades" className="hover:text-text-secondary transition-colors">
-              Trades
-            </Link>
-            <Link href="/vault" className="hover:text-text-secondary transition-colors">
-              Vault
-            </Link>
-            <Link href="/dashboard" className="hover:text-text-secondary transition-colors">
-              Dashboard
-            </Link>
-          </nav>
-        </div>
-      </footer>
     </div>
   );
 }
