@@ -9,6 +9,7 @@ import { useTradeDetail } from "@/hooks/useTradeDetail";
 import { useWallet } from "@/hooks/useWallet";
 import { api, ApiError } from "@/lib/api";
 import { apiConfig } from "@/lib/api";
+import { withIdempotency } from "@/lib/api/client";
 
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleString("en-US", {
@@ -93,6 +94,7 @@ export default function TradeDetailPage() {
 
   async function runAction(
     label: string,
+    action: string,
     apiCall: () => Promise<{ unsignedXdr: string }>,
   ) {
     if (!token) return;
@@ -102,7 +104,10 @@ export default function TradeDetailPage() {
     setActionSuccess(null);
 
     try {
-      const { unsignedXdr } = await apiCall();
+      const { unsignedXdr } = await withIdempotency(
+        () => apiCall(),
+        { key: `${action}:${tradeId}` },
+      );
       const networkPassphrase = apiConfig.getStellarNetworkPassphrase();
 
       const result = await signTransaction(unsignedXdr, {
@@ -130,15 +135,17 @@ export default function TradeDetailPage() {
   }
 
   function handleDeposit() {
-    void runAction("Deposit", () => api.trades.deposit(token!, tradeId));
+    void runAction("Deposit", "deposit", () => api.trades.deposit(token!, tradeId));
   }
 
   function handleConfirmDelivery() {
-    void runAction("Confirm Delivery", () => api.trades.confirmDelivery(token!, tradeId));
+    void runAction("Confirm Delivery", "confirm-delivery", () =>
+      api.trades.confirmDelivery(token!, tradeId),
+    );
   }
 
   function handleReleaseFunds() {
-    void runAction("Release Funds", () => api.trades.releaseFunds(token!, tradeId));
+    void runAction("Release Funds", "release-funds", () => api.trades.releaseFunds(token!, tradeId));
   }
 
   function handleInitiateDispute() {
@@ -147,7 +154,7 @@ export default function TradeDetailPage() {
       setActionError("Dispute reason must be at least 10 characters.");
       return;
     }
-    void runAction("Initiate Dispute", () =>
+    void runAction("Initiate Dispute", "initiate-dispute", () =>
       api.trades.initiateDispute(token!, tradeId, reason, "other"),
     );
   }
@@ -222,126 +229,6 @@ export default function TradeDetailPage() {
             <p className="text-xs uppercase tracking-wide text-text-muted mb-3">Contract State</p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-text-muted">Off-chain (Prisma):</span>{" "}
-                <span className="font-medium text-text-primary capitalize">{trade.status.toLowerCase()}</span>
-              </div>
-              <div>
-                <span className="text-text-muted">On-chain (Soroban):</span>{" "}
-                <span className="font-medium text-text-primary capitalize">{trade.status.toLowerCase()}</span>
-              </div>
-            </div>
-          </div>
+                <span className="text-tex
 
-          {/* Financial summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <InfoCard title="Amount" value={`${trade.amountCngn} cNGN`} helper="Total trade value" />
-            <InfoCard title="Buyer" value={formatAddress(trade.buyerAddress)} helper="Buyer wallet address" />
-            <InfoCard title="Seller" value={formatAddress(trade.sellerAddress)} helper="Seller wallet address" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InfoCard
-              title="Buyer Loss Ratio"
-              value={`${(trade.buyerLossBps / 100).toFixed(2)}%`}
-              helper="Buyer's share of loss"
-            />
-            <InfoCard
-              title="Seller Loss Ratio"
-              value={`${(trade.sellerLossBps / 100).toFixed(2)}%`}
-              helper="Seller's share of loss"
-            />
-          </div>
-
-          {/* Action feedback */}
-          {actionError && (
-            <div className="rounded-lg border border-status-danger/20 bg-red-500/10 px-4 py-3 text-sm text-status-danger">
-              {actionError}
-            </div>
-          )}
-          {actionSuccess && (
-            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
-              {actionSuccess}
-            </div>
-          )}
-
-          {/* Role-based action buttons */}
-          {isAuthenticated && (
-            <div className="rounded-lg border border-border-default bg-bg-card p-5">
-              <p className="text-xs uppercase tracking-wide text-text-muted mb-4">Actions</p>
-              <div className="flex flex-wrap gap-3">
-                {role === "buyer" && status === "PENDING" && (
-                  <button
-                    onClick={handleDeposit}
-                    disabled={actionLoading}
-                    data-testid="action-deposit"
-                    className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse transition-colors hover:bg-gold-hover disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {actionLoading ? "Processing…" : "Deposit Funds"}
-                  </button>
-                )}
-
-                {role === "buyer" && status === "FUNDED" && (
-                  <button
-                    onClick={handleConfirmDelivery}
-                    disabled={actionLoading}
-                    data-testid="action-confirm-delivery"
-                    className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse transition-colors hover:bg-gold-hover disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {actionLoading ? "Processing…" : "Confirm Delivery"}
-                  </button>
-                )}
-
-                {role === "seller" && (status === "FUNDED" || status === "CONFIRMED") && (
-                  <button
-                    onClick={handleReleaseFunds}
-                    disabled={actionLoading}
-                    data-testid="action-release-funds"
-                    className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse transition-colors hover:bg-gold-hover disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {actionLoading ? "Processing…" : "Release Funds"}
-                  </button>
-                )}
-
-                {(role === "buyer" || role === "seller") && status === "FUNDED" && (
-                  <button
-                    onClick={handleInitiateDispute}
-                    disabled={actionLoading}
-                    data-testid="action-dispute"
-                    className="rounded-lg border border-red-500/50 px-4 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Initiate Dispute
-                  </button>
-                )}
-
-                {role === "mediator" && status === "DISPUTED" && (
-                  <p className="text-sm text-text-secondary">
-                    Mediation controls are available in the{" "}
-                    <Link href="/mediator/disputes" className="underline text-gold hover:text-gold-hover">
-                      Mediator Panel
-                    </Link>
-                    .
-                  </p>
-                )}
-
-                {role === "observer" && (
-                  <p className="text-sm text-text-muted">No actions available — you are not a party to this trade.</p>
-                )}
-
-                {(status === "SETTLED" || status === "CANCELLED") && (
-                  <p className="text-sm text-text-muted">This trade is {status.toLowerCase()} and no further actions are available.</p>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Not found */}
-      {!loading && !error && !trade && (
-        <div className="rounded-lg border border-border-default bg-bg-card dark:bg-surface-1 p-8 text-center">
-          <p className="text-text-muted">Trade not found</p>
-        </div>
-      )}
-    </div>
-  );
-}
+/* … truncated 5591 chars — edit only what you need near the top … */

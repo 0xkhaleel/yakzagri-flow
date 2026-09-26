@@ -28,6 +28,20 @@ export class ApiError extends Error {
 
 const TOKEN_STORAGE_KEY = "amana_jwt";
 
+/**
+ * Backend idempotency lock TTL (seconds). The client dedup window must agree
+ * with this value so a double-submit cannot slip past client dedup while the
+ * backend key is still locked. Kept in sync with the server's lock TTL.
+ */
+export const IDEMPOTENCY_LOCK_TTL_SECONDS = 30;
+
+/**
+ * Backend idempotency lock TTL in milliseconds. Consumers (e.g. actionDedup)
+ * should derive their window from this so client dedup and the backend lock
+ * always agree.
+ */
+export const IDEMPOTENCY_LOCK_TTL_MS = IDEMPOTENCY_LOCK_TTL_SECONDS * 1000;
+
 function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
   return sessionStorage.getItem(TOKEN_STORAGE_KEY);
@@ -74,20 +88,68 @@ function createHeaders(
 /**
  * Helper to build headers with idempotency + correlation IDs (unified toast contract).
  * Use for mutations that require exactly-once semantics and toast correlation.
+ *
+ * When no explicit idempotencyKey is provided, a stable key is derived from the
+ * method + endpoint + body so repeated submissions of the same mutation within
+ * the backend lock TTL reuse the same key (and are deduped server-side).
  */
-export function withIdempotency(headers?: HeadersInit, opts?: { idempotencyKey?: string; correlationId?: string }): Record<string, string> {
+export function withIdempotency(
+  headers?: HeadersInit,
+  opts?: {
+    idempotencyKey?: string;
+    correlationId?: string;
+    method?: string;
+    endpoint?: string;
+    body?: unknown;
+  },
+): Record<string, string> {
   const out: Record<string, string> = {};
   if (headers instanceof Headers) {
     headers.forEach((v, k) => { out[k] = v; });
   } else if (Array.isArray(headers)) {
     for (const [k, v] of headers) out[k] = v;
   } else if (headers) Object.assign(out, headers as Record<string, string>);
-  if (opts?.idempotencyKey) out["Idempotency-Key"] = opts.idempotencyKey;
+
+  const idempotencyKey =
+    opts?.idempotencyKey ??
+    (opts?.method && opts?.endpoint
+      ? deriveIdempotencyKey(opts.method, opts.endpoint, opts.body)
+      : undefined);
+
+  if (idempotencyKey) out["Idempotency-Key"] = idempotencyKey;
   if (opts?.correlationId) {
     out["X-Correlation-Id"] = opts.correlationId;
     out["X-Request-Id"] = opts.correlationId;
   }
   return out;
+}
+
+/**
+ * Derive a stable idempotency key from a mutation's method, endpoint and body.
+ * Stable across retries/double-submits of the same logical action so the
+ * backend lock (IDEMPOTENCY_LOCK_TTL_MS) can dedupe them.
+ */
+export function deriveIdempotencyKey(
+  method: string,
+  endpoint: string,
+  body?: unknown,
+): string {
+  let bodyPart = "";
+  if (body !== undefined) {
+    try {
+      bodyPart = typeof body === "string" ? body : JSON.stringify(body);
+    } catch {
+      bodyPart = String(body);
+    }
+  }
+  const raw = `${method.toUpperCase()}:${endpoint}:${bodyPart}`;
+  // FNV-1a hash keeps the key short and deterministic without extra deps.
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < raw.length; i++) {
+    hash ^= raw.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `idem-${(hash >>> 0).toString(16)}`;
 }
 
 export function createQueryString(
