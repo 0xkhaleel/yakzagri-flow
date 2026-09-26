@@ -21,6 +21,10 @@ import {
   signMessage,
 } from "@stellar/freighter-api";
 import { AuthProvider, useAuth } from "../useAuth";
+import {
+  __resetFreighterIdentityStoreForTests,
+  useFreighterIdentity,
+} from "../useFreighterIdentity";
 import { api, ApiError } from "@/lib/api";
 
 // ── Mock @stellar/freighter-api ───────────────────────────────────────────────
@@ -114,6 +118,8 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 // Silence React act() warnings during async operations
 beforeEach(() => {
+  __resetFreighterIdentityStoreForTests();
+  Reflect.deleteProperty(window, "caches");
   jest.clearAllMocks();
   sessionStorage.clear();
 });
@@ -174,6 +180,26 @@ describe("Freighter wallet detection", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("connectWallet", () => {
+  it("updates useAuth when a wallet connects through the shared identity store", async () => {
+    mockWalletAbsent();
+    mockedRequestAccess.mockResolvedValue(requestAccessRes(WALLET_ADDRESS));
+
+    const { result } = renderHook(
+      () => ({ auth: useAuth(), identity: useFreighterIdentity() }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.auth.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.identity.connectWallet();
+    });
+
+    await waitFor(() =>
+      expect(result.current.auth.address).toBe(WALLET_ADDRESS),
+    );
+    expect(result.current.auth.isWalletConnected).toBe(true);
+  });
+
   it("requests access from Freighter and updates address in state", async () => {
     mockWalletAbsent();
     mockedRequestAccess.mockResolvedValue(requestAccessRes(WALLET_ADDRESS));
@@ -377,6 +403,11 @@ describe("logout", () => {
     mockedSignMessage.mockResolvedValue(signMessageRes(SIGNED_CHALLENGE));
     mockedVerify.mockResolvedValue({ token: JWT_TOKEN });
     mockedLogout.mockResolvedValue({ message: "Logged out successfully" });
+    const deleteCache = jest.fn().mockResolvedValue(true);
+    Object.defineProperty(window, "caches", {
+      configurable: true,
+      value: { delete: deleteCache },
+    });
 
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -394,6 +425,7 @@ describe("logout", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.token).toBeNull();
     expect(sessionStorage.getItem("amana_jwt")).toBeNull();
+    expect(deleteCache).toHaveBeenCalledWith("amana-api-cache-v1");
   });
 
   it("calls the logout API with the current token", async () => {

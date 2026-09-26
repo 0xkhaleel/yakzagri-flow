@@ -1,11 +1,37 @@
 // src/types/trade.ts
 
-export type TradeStatus =
-  | "IN TRANSIT"
-  | "PENDING"
-  | "SETTLED"
-  | "DISPUTED"
-  | "DRAFT";
+export const TRADE_STATUSES = [
+  "IN TRANSIT",
+  "PENDING",
+  "SETTLED",
+  "DISPUTED",
+  "DRAFT",
+] as const;
+
+export type TradeStatus = (typeof TRADE_STATUSES)[number];
+
+/**
+ * Runtime guard that narrows an arbitrary value to the canonical
+ * `TradeStatus` union. Use this at the API boundary so raw strings are
+ * validated instead of trusted.
+ */
+export function isTradeStatus(value: unknown): value is TradeStatus {
+  return (
+    typeof value === "string" &&
+    (TRADE_STATUSES as readonly string[]).includes(value)
+  );
+}
+
+/**
+ * Canonical money amount, expressed in USDC.
+ *
+ * The API boundary uses two different field names for the same underlying
+ * value: requests send `amountUsdc` while responses return `amountCngn`.
+ * Both are USDC-denominated amounts; the naming drift is historical. All
+ * internal/UI shapes should use `amountUsdc` and rely on the transform
+ * mappers in `lib/domain-schemas/trade.ts` to cross the boundary.
+ */
+export type UsdcAmount = number;
 
 export interface TradeParty {
   name: string;
@@ -27,7 +53,7 @@ export interface TimelineEvent {
   };
 }
 
-export type TransactionEventStatus = "completed" | "active" | "pending";
+export type TransactionEventStatus = "completed" | "active" | "pending" | "failed";
 
 export type TransactionEventActor = "system" | "buyer" | "seller" | "driver";
 
@@ -57,10 +83,10 @@ export interface TradeDetail {
   seller: TradeParty;
 
   // Financials
-  vaultAmountLocked: number;
-  assetValue: number;
+  vaultAmountLocked: UsdcAmount;
+  assetValue: UsdcAmount;
   platformFeePercent: number;
-  platformFee: number;
+  platformFee: UsdcAmount;
   networkGasEst: string;
 
   // Contract

@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 /**
  * FlagDebugPanel — admin-only overlay showing all active feature flags.
@@ -40,10 +42,10 @@ export function FlagDebugPanel() {
         className="flex items-center gap-1.5 rounded-lg border border-border-default bg-card px-3 py-2 text-xs font-semibold text-text-secondary shadow-lg hover:border-border-hover hover:text-text-primary transition-colors"
       >
         <span aria-hidden>🚩</span>
-        <span>Flags</span>
+        <span>{translateCopy("ui.flags_5d72875")}</span>
         {isLoading && (
           <span
-            aria-label="Refreshing flags"
+            aria-label={translateCopy("ui.refreshing_flags_21644f1")}
             className="ml-1 inline-block h-2 w-2 animate-spin rounded-full border border-gold border-t-transparent"
           />
         )}
@@ -53,16 +55,16 @@ export function FlagDebugPanel() {
       {isOpen && (
         <div
           role="dialog"
-          aria-label="Feature flags debug panel"
+          aria-label={translateCopy("ui.feature_flags_debug_panel_9dc6c32")}
           className="absolute bottom-10 right-0 w-72 rounded-xl border border-border-default bg-card shadow-xl"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border-default px-4 py-3">
-            <span className="font-semibold text-text-primary text-sm">Feature Flags</span>
+            <span className="font-semibold text-text-primary text-sm">{translateCopy("ui.feature_flags_4f5a546")}</span>
             <button
               onClick={() => { refresh(); }}
               disabled={isLoading}
-              aria-label="Refresh feature flags from server"
+              aria-label={translateCopy("ui.refresh_feature_flags_from_serve_448cb0e")}
               className="rounded px-2 py-0.5 text-[11px] font-medium text-gold hover:underline disabled:opacity-50"
             >
               {isLoading ? "Refreshing…" : "Refresh"}
@@ -97,7 +99,7 @@ export function FlagDebugPanel() {
 
           {/* Footer note */}
           <div className="border-t border-border-default px-4 py-2 text-[10px] text-text-muted">
-            Flags resolve: backend → env → catalog default. Staff only.
+            {translateCopy("ui.flags_resolve_backend_env_catalo_a857a66")}
           </div>
         </div>
       )}

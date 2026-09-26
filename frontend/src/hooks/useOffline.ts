@@ -44,7 +44,7 @@ export function useOffline(): UseOfflineReturn {
         method: "GET",
         cache: "no-cache",
         signal: controller.signal,
-        headers: { "X-Offline-Probe": "1" },
+        // Don't send custom headers that trigger CORS preflight on same-origin requests
       });
 
       clearTimeout(timeoutId);
@@ -55,22 +55,24 @@ export function useOffline(): UseOfflineReturn {
       setIsOffline(!isActuallyOnline);
       if (!isActuallyOnline) {
         setWasOffline(true);
-      } else if (isActuallyOnline && wasOffline) {
-        // Will be cleared by retryOnline or caller
       }
+      // If online, keep wasOffline flag until caller clears it via retryOnline
       return isActuallyOnline;
     } catch {
-      // If fetch fails but navigator says online, treat as offline for safety
+      // If fetch fails, treat as offline for safety
       const offline = typeof navigator !== "undefined" ? !navigator.onLine : true;
-      if (offline || true) {
+      if (offline) {
         // Probe failure => consider offline (conservative)
         setIsOffline(true);
         setWasOffline(true);
         return false;
       }
-      return true;
+      // Navigator says online but fetch failed; keep current state and return false
+      setIsOffline(true);
+      setWasOffline(true);
+      return false;
     }
-  }, [wasOffline]);
+  }, []);
 
   const retryOnline = useCallback(async () => {
     const online = await checkOnlineStatus();

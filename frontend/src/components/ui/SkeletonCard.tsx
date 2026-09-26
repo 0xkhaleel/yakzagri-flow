@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 import { Skeleton } from "./Skeleton";
 
 type SkeletonCardProps = {
@@ -10,7 +12,7 @@ export function SkeletonCard({ className, lines = 3 }: SkeletonCardProps) {
     <div
       className={`rounded-xl border border-border-default bg-card p-5 ${className ?? ""}`}
       aria-busy="true"
-      aria-label="Loading content"
+      aria-label={translateCopy("ui.loading_content_7e2a198")}
     >
       <div className="mb-4 flex items-center gap-3">
         <Skeleton className="h-8 w-8 rounded-lg" />

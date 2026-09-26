@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React, { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -149,12 +151,12 @@ export function DisputeVerificationModal({
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border-default shrink-0">
               <Dialog.Title className="text-lg font-semibold text-text-primary">
-                Delivery Verification
+                {translateCopy("ui.delivery_verification_28987f0")}
               </Dialog.Title>
               <Dialog.Close
                 onClick={onClose}
                 className="text-text-muted hover:text-text-primary transition-colors"
-                aria-label="Close"
+                aria-label={translateCopy("common.close")}
               >
                 <X className="w-5 h-5" />
               </Dialog.Close>
@@ -166,11 +168,11 @@ export function DisputeVerificationModal({
             >
               {/* Trade context */}
               <div className="bg-bg-elevated rounded-xl px-4 py-3 flex flex-col gap-1">
-                <p className="text-xs text-text-muted">Trade ID</p>
+                <p className="text-xs text-text-muted">{translateCopy("ui.trade_id_153d513")}</p>
                 <p className="text-sm font-mono text-text-primary truncate">
                   {tradeId}
                 </p>
-                <p className="text-xs text-text-muted mt-1">Contract</p>
+                <p className="text-xs text-text-muted mt-1">{translateCopy("ui.contract_5a0ba3b")}</p>
                 <p className="text-sm font-mono text-text-secondary truncate">
                   {contractId}
                 </p>
@@ -194,7 +196,7 @@ export function DisputeVerificationModal({
                       "
                     >
                       <CheckCircle className="w-4 h-4" />
-                      Accept Goods
+                      {translateCopy("ui.accept_goods_a2c5226")}
                     </button>
                     <button
                       onClick={handleRaiseDispute}
@@ -208,14 +210,14 @@ export function DisputeVerificationModal({
                       "
                     >
                       <AlertTriangle className="w-4 h-4" />
-                      Raise Dispute
+                      {translateCopy("ui.raise_dispute_448d5e7")}
                     </button>
                   </div>
 
                   {!ipfsHash && (
                     <p className="text-xs text-text-muted text-center flex items-center justify-center gap-1">
                       <Upload className="w-3 h-3" />
-                      Upload video evidence before proceeding
+                      {translateCopy("ui.upload_video_evidence_before_pro_541d38b")}
                     </p>
                   )}
                 </>
@@ -226,19 +228,17 @@ export function DisputeVerificationModal({
                 <div className="flex flex-col gap-5">
                   <div className="bg-gold-muted border border-[rgba(212,168,83,0.3)] rounded-xl p-4 text-sm text-text-primary">
                     <p className="font-semibold mb-1 text-gold">
-                      Confirm Goods Acceptance
+                      {translateCopy("ui.confirm_goods_acceptance_bf5e3bd")}
                     </p>
                     <p className="text-text-secondary">
-                      Signing this transaction will call{" "}
-                      <code className="font-mono text-gold">release()</code> on
-                      the Amana escrow contract, releasing locked funds to the
-                      seller. This action is <strong>irreversible</strong>.
+                      {translateCopy("ui.signing_this_transaction_will_ca_49f1c91")}{" "}
+                      <code className="font-mono text-gold">{translateCopy("ui.release_66a2a3e")}</code> {translateCopy("ui.on_the_amana_escrow_contract_rel_5833d33")}{" "}<strong>{translateCopy("ui.irreversible_54572a7")}</strong>.
                     </p>
                   </div>
                   {ipfsHash && (
                     <div className="text-xs text-text-muted bg-bg-elevated rounded-lg px-3 py-2 flex items-center gap-2">
                       <span className="truncate flex-1 font-mono">
-                        IPFS: {ipfsHash}
+                        {translateCopy("ui.ipfs_cde081a")}{" "}{ipfsHash}
                       </span>
                       <a
                         href={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}
@@ -255,14 +255,14 @@ export function DisputeVerificationModal({
                       onClick={() => setStep("upload")}
                       className="flex-1 py-3 rounded-xl text-sm font-semibold border border-border-default text-text-secondary hover:bg-bg-elevated transition-colors"
                     >
-                      Back
+                      {translateCopy("common.back")}
                     </button>
                     <button
                       onClick={handleConfirmAccept}
                       disabled={isSubmitting}
                       className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gold text-text-inverse hover:bg-gold-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
-                      Sign &amp; Release Funds
+                      {translateCopy("ui.sign_release_funds_3a7894d")}
                     </button>
                   </div>
                 </div>
@@ -273,21 +273,20 @@ export function DisputeVerificationModal({
                 <div className="flex flex-col gap-5">
                   <div className="bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] rounded-xl p-4 text-sm text-text-primary">
                     <p className="font-semibold mb-1 text-status-danger">
-                      Confirm Dispute
+                      {translateCopy("ui.confirm_dispute_8d31555")}
                     </p>
                     <p className="text-text-secondary">
-                      Signing this transaction will call{" "}
+                      {translateCopy("ui.signing_this_transaction_will_ca_49f1c91")}{" "}
                       <code className="font-mono text-status-danger">
-                        raise_dispute()
+                        {translateCopy("ui.raise_dispute_7474587")}
                       </code>
-                      , routing the trade to a mediator. Funds remain locked
-                      until resolution.
+                      {translateCopy("ui.routing_the_trade_to_a_mediator__c3fec17")}
                     </p>
                   </div>
                   {ipfsHash && (
                     <div className="text-xs text-text-muted bg-bg-elevated rounded-lg px-3 py-2 flex items-center gap-2">
                       <span className="truncate flex-1 font-mono">
-                        IPFS: {ipfsHash}
+                        {translateCopy("ui.ipfs_cde081a")}{" "}{ipfsHash}
                       </span>
                       <a
                         href={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}
@@ -304,14 +303,14 @@ export function DisputeVerificationModal({
                       onClick={() => setStep("upload")}
                       className="flex-1 py-3 rounded-xl text-sm font-semibold border border-border-default text-text-secondary hover:bg-bg-elevated transition-colors"
                     >
-                      Back
+                      {translateCopy("common.back")}
                     </button>
                     <button
                       onClick={handleConfirmDispute}
                       disabled={isSubmitting}
                       className="flex-1 py-3 rounded-xl text-sm font-semibold bg-status-danger text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                     >
-                      Sign &amp; Raise Dispute
+                      {translateCopy("ui.sign_raise_dispute_aad2133")}
                     </button>
                   </div>
                 </div>
@@ -322,7 +321,7 @@ export function DisputeVerificationModal({
                 <div className="flex flex-col items-center gap-4 py-8">
                   <div className="w-10 h-10 border-2 border-gold border-t-transparent rounded-full animate-spin" />
                   <p className="text-text-secondary text-sm text-center">
-                    Waiting for Freighter wallet signature…
+                    {translateCopy("ui.waiting_for_freighter_wallet_sig_dd02e8f")}
                   </p>
                 </div>
               )}
@@ -332,11 +331,10 @@ export function DisputeVerificationModal({
                 <div className="flex flex-col items-center gap-4 py-6 text-center">
                   <CheckCircle className="w-12 h-12 text-emerald" />
                   <p className="text-lg font-semibold text-text-primary">
-                    Funds Released
+                    {translateCopy("ui.funds_released_c1c3657")}
                   </p>
                   <p className="text-sm text-text-secondary">
-                    The escrow has been settled and funds released to the
-                    seller.
+                    {translateCopy("ui.the_escrow_has_been_settled_and__48258a6")}
                   </p>
                   {txHash && (
                     <a
@@ -345,14 +343,14 @@ export function DisputeVerificationModal({
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-xs text-gold hover:text-gold-hover transition-colors"
                     >
-                      View transaction <ExternalLink className="w-3 h-3" />
+                      {translateCopy("ui.view_transaction_8349b59")}{" "}<ExternalLink className="w-3 h-3" />
                     </a>
                   )}
                   <button
                     onClick={onClose}
                     className="mt-2 px-6 py-2 rounded-xl bg-gold text-text-inverse text-sm font-semibold hover:bg-gold-hover transition-colors"
                   >
-                    Close
+                    {translateCopy("common.close")}
                   </button>
                 </div>
               )}
@@ -362,11 +360,10 @@ export function DisputeVerificationModal({
                 <div className="flex flex-col items-center gap-4 py-6 text-center">
                   <AlertTriangle className="w-12 h-12 text-status-warning" />
                   <p className="text-lg font-semibold text-text-primary">
-                    Dispute Raised
+                    {translateCopy("ui.dispute_raised_dc9335a")}
                   </p>
                   <p className="text-sm text-text-secondary">
-                    A mediator has been alerted. Funds remain locked pending
-                    resolution.
+                    {translateCopy("ui.a_mediator_has_been_alerted_fund_102fa88")}
                   </p>
                   {txHash && (
                     <a
@@ -375,14 +372,14 @@ export function DisputeVerificationModal({
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-xs text-gold hover:text-gold-hover transition-colors"
                     >
-                      View transaction <ExternalLink className="w-3 h-3" />
+                      {translateCopy("ui.view_transaction_8349b59")}{" "}<ExternalLink className="w-3 h-3" />
                     </a>
                   )}
                   <button
                     onClick={onClose}
                     className="mt-2 px-6 py-2 rounded-xl border border-border-default text-text-secondary text-sm font-semibold hover:bg-bg-elevated transition-colors"
                   >
-                    Close
+                    {translateCopy("common.close")}
                   </button>
                 </div>
               )}
@@ -392,7 +389,7 @@ export function DisputeVerificationModal({
                 <div className="flex flex-col items-center gap-4 py-6 text-center">
                   <X className="w-12 h-12 text-status-danger" />
                   <p className="text-lg font-semibold text-text-primary">
-                    Transaction Failed
+                    {translateCopy("ui.transaction_failed_f0ae2bb")}
                   </p>
                   {errorMsg && (
                     <p className="text-sm text-status-danger bg-[rgba(239,68,68,0.1)] rounded-lg px-4 py-2">
@@ -403,7 +400,7 @@ export function DisputeVerificationModal({
                     onClick={() => setStep("upload")}
                     className="mt-2 px-6 py-2 rounded-xl border border-border-default text-text-secondary text-sm font-semibold hover:bg-bg-elevated transition-colors"
                   >
-                    Try Again
+                    {translateCopy("ui.try_again_cef2fe0")}
                   </button>
                 </div>
               )}
