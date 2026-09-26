@@ -307,15 +307,15 @@ function AuthGate({
 const FOOTER = {
   version: "V4.8.2",
   links: [
-    { label: "Privacy Protocol", href: "#" },
-    { label: "Compliance", href: "#" },
-    { label: "Audit Report", href: "#" },
+    { label: "Privacy Protocol", href: "/settings" },
+    { label: "Compliance", href: "/vault" },
+    { label: "Audit Report", href: "/vault/manage" },
   ],
   socialLinks: [
-    { platform: "x" as const, href: "#" },
-    { platform: "instagram" as const, href: "#" },
-    { platform: "tiktok" as const, href: "#" },
-    { platform: "discord" as const, href: "#" },
+    { platform: "x" as const, href: "https://x.com" },
+    { platform: "instagram" as const, href: "https://www.instagram.com" },
+    { platform: "tiktok" as const, href: "https://www.tiktok.com" },
+    { platform: "discord" as const, href: "https://discord.com" },
   ],
 };
 
