@@ -242,3 +242,37 @@ export function cacheClearAll(): void {
   }
   toRemove.forEach((k) => localStorage.removeItem(k));
 }
+
+// ─── Offline read helpers ────────────────────────────────────────────────────
+
+/**
+ * Read the last-viewed trades list from the cache for offline reading.
+ * Returns the cached data (even if stale) or null on a miss.
+ */
+export function readCachedTradesList<T>(): T | null {
+  const { entry } = cacheRead<T>("trades_list", "all");
+  return entry?.data ?? null;
+}
+
+/**
+ * Read a single last-viewed trade from the cache for offline reading.
+ * Returns the cached data (even if stale) or null on a miss.
+ */
+export function readCachedTradeDetail<T>(tradeId: string): T | null {
+  const { entry } = cacheRead<T>("trade_detail", tradeId);
+  return entry?.data ?? null;
+}
+
+/**
+ * Persist the trades list for offline reading.
+ */
+export function writeCachedTradesList<T>(data: T): void {
+  cacheWrite("trades_list", "all", data);
+}
+
+/**
+ * Persist a single trade for offline reading.
+ */
+export function writeCachedTradeDetail<T>(tradeId: string, data: T): void {
+  cacheWrite("trade_detail", tradeId, data);
+}
