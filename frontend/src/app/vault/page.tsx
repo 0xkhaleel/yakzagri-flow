@@ -14,6 +14,7 @@ import {
 import { DriverManifestForm, LoadingState, type DriverManifestData } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
 import { useWallet } from "@/hooks/useWallet";
+import { formatDateTime, formatNumber } from "@/lib/i18n/format";
 import {
   api,
   apiConfig,
@@ -25,15 +26,15 @@ import {
 const FOOTER_CONTENT = {
   version: "V4.8.2",
   links: [
-    { label: "Privacy Protocol", href: "#" },
-    { label: "Compliance", href: "#" },
-    { label: "Audit Report", href: "#" },
+    { label: "Privacy Protocol", href: "/settings" },
+    { label: "Compliance", href: "/vault" },
+    { label: "Audit Report", href: "/vault/manage" },
   ],
   socialLinks: [
-    { platform: "x" as const, href: "#" },
-    { platform: "instagram" as const, href: "#" },
-    { platform: "tiktok" as const, href: "#" },
-    { platform: "discord" as const, href: "#" },
+    { platform: "x" as const, href: "https://x.com" },
+    { platform: "instagram" as const, href: "https://www.instagram.com" },
+    { platform: "tiktok" as const, href: "https://www.tiktok.com" },
+    { platform: "discord" as const, href: "https://discord.com" },
   ],
 };
 
@@ -118,7 +119,7 @@ export default function VaultPage() {
             ? ("multi-sig" as const)
             : ("ledger" as const),
       title: `Trade ${trade.status.toLowerCase().replace(/_/g, " ")}`,
-      metadata: `${new Date(trade.updatedAt).toLocaleString()} - ${trade.tradeId}`,
+      metadata: `${formatDateTime(trade.updatedAt)} - ${trade.tradeId}`,
     })) ?? [
       {
         type: "ledger" as const,
@@ -356,7 +357,7 @@ export default function VaultPage() {
                     },
                     {
                       label: "Total Volume",
-                      date: `$${vaultValue.toLocaleString()}`,
+                      date: `$${formatNumber(vaultValue)}`,
                       status: "pending",
                     },
                   ]}

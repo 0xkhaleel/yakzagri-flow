@@ -1,5 +1,7 @@
 "use client";
 
+import { formatNumber } from "@/lib/i18n/format";
+
 interface TradeAmountRowProps {
   amountCngn: string | number;
   amountLocal?: string | number;
@@ -10,7 +12,7 @@ interface TradeAmountRowProps {
 
 function formatValue(value: string | number): string {
   if (typeof value === "number") {
-    return value.toLocaleString("en-US");
+    return formatNumber(value);
   }
 
   return value;

@@ -46,6 +46,7 @@ export function VaultFooter({ version, links, socialLinks }: VaultFooterProps) {
                 key={link.label}
                 href={link.href}
                 className="hover:text-text-primary transition-colors"
+                aria-label={link.label}
               >
                 {link.label}
               </a>
@@ -63,6 +64,9 @@ export function VaultFooter({ version, links, socialLinks }: VaultFooterProps) {
                 <a
                   key={social.platform}
                   href={social.href}
+                  target={social.href.startsWith("http") ? "_blank" : undefined}
+                  rel={social.href.startsWith("http") ? "noreferrer" : undefined}
+                  aria-label={`Visit ${social.platform} page`}
                   className="w-10 h-10 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center hover:border-border-hover transition-colors"
                 >
                   <Icon className="w-4 h-4 text-text-primary" />

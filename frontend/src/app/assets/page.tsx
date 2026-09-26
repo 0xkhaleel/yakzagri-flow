@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { api, type TradeStatsResponse, type TradeResponse } from "@/lib/api";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { formatNumber } from "@/lib/i18n/format";
 import { Button } from "@/components/ui/Button";
 import {
   TrendingUp,
@@ -415,7 +416,7 @@ function AssetTable({
                 </div>
 
                 <p className="text-sm font-semibold text-text-primary tabular-nums">
-                  {parseFloat(trade.amountCngn).toLocaleString()}
+                  {formatNumber(parseFloat(trade.amountCngn))}
                 </p>
 
                 <p className="text-sm text-text-secondary font-mono truncate">
@@ -564,7 +565,7 @@ export default function AssetsPage() {
   const disputedCount = allTrades.filter((t: TradeResponse) => t.status.toLowerCase() === "disputed").length;
 
   const formattedBalance = balance
-    ? parseFloat(balance).toLocaleString(undefined, { maximumFractionDigits: 2 })
+    ? formatNumber(parseFloat(balance), { maximumFractionDigits: 2 })
     : null;
 
   return (
@@ -623,7 +624,7 @@ export default function AssetsPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <SummaryCard
                 label="Total Volume"
-                value={loading ? "—" : `${totalVolume.toLocaleString()} cNGN`}
+                value={loading ? "—" : `${formatNumber(totalVolume)} cNGN`}
                 sub="All-time escrow value"
                 icon={<TrendingUp className="w-5 h-5" />}
                 accent="gold"

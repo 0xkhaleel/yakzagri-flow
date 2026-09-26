@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { formatNumber } from "@/lib/i18n/format";
 import {
   api,
   type TradeResponse,
@@ -307,15 +308,15 @@ function AuthGate({
 const FOOTER = {
   version: "V4.8.2",
   links: [
-    { label: "Privacy Protocol", href: "#" },
-    { label: "Compliance", href: "#" },
-    { label: "Audit Report", href: "#" },
+    { label: "Privacy Protocol", href: "/settings" },
+    { label: "Compliance", href: "/vault" },
+    { label: "Audit Report", href: "/vault/manage" },
   ],
   socialLinks: [
-    { platform: "x" as const, href: "#" },
-    { platform: "instagram" as const, href: "#" },
-    { platform: "tiktok" as const, href: "#" },
-    { platform: "discord" as const, href: "#" },
+    { platform: "x" as const, href: "https://x.com" },
+    { platform: "instagram" as const, href: "https://www.instagram.com" },
+    { platform: "tiktok" as const, href: "https://www.tiktok.com" },
+    { platform: "discord" as const, href: "https://discord.com" },
   ],
 };
 
@@ -570,15 +571,15 @@ export default function VaultManagePage() {
                 />
                 <StatCard
                   label="Locked in Escrow"
-                  value={`${totalLocked.toLocaleString()} cNGN`}
-                  sub="Across active trades"
+                  value={`$${formatNumber(totalLocked)}`}
+                  sub="cNGN"
                   accent
                 />
                 <StatCard
                   label="Wallet Balance"
                   value={
                     walletBalance
-                      ? `${parseFloat(walletBalance.balance).toLocaleString()} ${walletBalance.asset}`
+                      ? `${formatNumber(parseFloat(walletBalance.balance))} ${walletBalance.asset}`
                       : "—"
                   }
                   sub="Available"
@@ -701,7 +702,7 @@ export default function VaultManagePage() {
                           {/* Amount */}
                           <div>
                             <p className="text-sm font-semibold text-text-primary">
-                              {parseFloat(trade.amountCngn).toLocaleString()}{" "}
+                              {formatNumber(parseFloat(trade.amountCngn))}{" "}
                               cNGN
                             </p>
                             <p className="text-xs text-text-muted mt-0.5">

@@ -11,9 +11,10 @@ import Link from "next/link";
 import { LegalDisclaimerModal } from "@/components/ui/LegalDisclaimerModal";
 import { useOffline } from "@/hooks/useOffline";
 import { useOfflineQueueStore } from "@/stores/offlineQueueStore";
-import { useToast, TOAST_CONTRACT } from "@/hooks/useToast";
+import { useToast } from "@/hooks/useToast";
 import { shouldDedup, registerAction } from "@/lib/actionDedup";
 import { generateIdempotencyKey } from "@/lib/idempotency";
+import { generateCorrelationId } from "@/lib/correlationId";
 
 type Row = { label: string; value: string };
 
@@ -45,7 +46,7 @@ export default function Step3Review() {
   const price = parseFloat(data.pricePerUnit);
   const rawAmount = !isNaN(qty) && !isNaN(price) ? qty * price : NaN;
 
-  const total = !isNaN(rawAmount) && rawAmount > 0 ? rawAmount.toLocaleString("en-NG") : "—";
+  const total = !isNaN(rawAmount) && rawAmount > 0 ? formatNumber(rawAmount) : "—";
 
   const amountUsdc = !isNaN(rawAmount) && rawAmount > 0 ? rawAmount.toFixed(7) : "0";
 
@@ -98,7 +99,7 @@ export default function Step3Review() {
       return;
     }
 
-    const correlationId = `corr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const correlationId = generateCorrelationId();
     const idempotencyKey = generateIdempotencyKey();
     registerAction(dedupKey, correlationId, idempotencyKey);
 
