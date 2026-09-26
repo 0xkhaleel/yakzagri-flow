@@ -49,8 +49,10 @@ const LINE_ITEMS: CostLineItem[] = [
 
 export function PaymentOverviewCard({
   totalCngn,
-  ngnRate = 1580,
+  ngnRate,
 }: PaymentOverviewCardProps) {
+  // Use passed ngnRate or fall back to config
+  const rate = ngnRate ?? getNgnExchangeRate();
   const [currency, setCurrency] = useState<"cNGN" | "NGN">("cNGN");
 
   const lockedDisplay =
@@ -92,7 +94,7 @@ export function PaymentOverviewCard({
               {label}
             </span>
             <span className="text-sm font-semibold text-text-primary">
-              {getValue(totalCngn, currency, ngnRate)}
+              {getValue(totalCngn, currency, rate)}
             </span>
           </div>
         ))}

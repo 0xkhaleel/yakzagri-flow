@@ -184,6 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Clear all auth-related storage
     clearStoredToken();
     if (typeof window !== "undefined" && "caches" in window) {
       try {
@@ -195,8 +196,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setState((prev) => ({
       ...prev,
+      address: null,
+      shortAddress: null,
       token: null,
       isAuthenticated: false,
+      isWalletConnected: false,
       error: null,
     }));
     trackAuthEvent("logout", "success");
@@ -220,12 +224,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!state.token) return;
 
-    const payload = JSON.parse(atob(state.token.split(".")[1]));
-    const exp = payload.exp;
-    if (!exp) return;
-
-    const expiresIn = exp * 1000 - Date.now();
-    if (expiresIn <= 0) {
+    // Guard the parse with try/catch, reusing isTokenExpired helper
+    if (isTokenExpired(state.token)) {
       clearStoredToken();
       setState((prev) => ({
         ...prev,
@@ -235,18 +235,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const refreshBuffer = 60 * 1000;
-    const timeout = setTimeout(() => {
+    try {
+      const payload = JSON.parse(atob(state.token.split(".")[1]));
+      const exp = payload.exp;
+      if (!exp) return;
+
+      const expiresIn = exp * 1000 - Date.now();
+      if (expiresIn <= 0) {
+        clearStoredToken();
+        setState((prev) => ({
+          ...prev,
+          token: null,
+          isAuthenticated: false,
+        }));
+        return;
+      }
+
+      const refreshBuffer = 60 * 1000;
+      const timeout = setTimeout(() => {
+        clearStoredToken();
+        setState((prev) => ({
+          ...prev,
+          token: null,
+          isAuthenticated: false,
+          error: "Session expired. Please authenticate again.",
+        }));
+      }, expiresIn - refreshBuffer);
+
+      return () => clearTimeout(timeout);
+    } catch (error) {
+      console.error('Failed to parse token expiration:', error);
+      // If parse fails, treat token as invalid
       clearStoredToken();
       setState((prev) => ({
         ...prev,
         token: null,
         isAuthenticated: false,
-        error: "Session expired. Please authenticate again.",
+        error: "Invalid token format",
       }));
-    }, expiresIn - refreshBuffer);
-
-    return () => clearTimeout(timeout);
+    }
   }, [state.token]);
 
   const value = useMemo<AuthContextType>(
