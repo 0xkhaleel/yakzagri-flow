@@ -2,26 +2,13 @@
 import { t as translateCopy } from "@/lib/i18n";
 
 
-import React, { useState } from "react";
+import React, { startTransition, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { t, type Locale } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface NotificationPrefs {
-  tradeUpdates: boolean;
-  disputeAlerts: boolean;
-  vaultActivity: boolean;
-  systemAnnouncements: boolean;
-}
-
-interface AppPrefs {
-  network: "mainnet" | "testnet";
-  currency: "USD" | "EUR" | "GBP";
-  autoSignOut: "15" | "30" | "60" | "never";
-}
 
 interface ValidationErrors {
   [key: string]: string;
@@ -77,6 +64,7 @@ function Toggle({
       <button
         type="button"
         role="switch"
+        aria-label={label}
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
@@ -108,10 +96,11 @@ function SelectField({
   options: { value: string; label: string }[];
   error?: string;
 }) {
+  const fieldId = `setting-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return (
     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
       <div className="flex-1">
-        <p className="text-sm font-medium text-text-primary">{label}</p>
+        <label htmlFor={fieldId} className="text-sm font-medium text-text-primary">{label}</label>
         {description && (
           <p className="text-xs text-text-secondary mt-0.5">{description}</p>
         )}
@@ -125,6 +114,7 @@ function SelectField({
         )}
       </div>
       <select
+        id={fieldId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-invalid={!!error}
@@ -156,18 +146,8 @@ export default function SettingsPage() {
     logout,
   } = useAuth();
 
-  const [notifications, setNotifications] = useState<NotificationPrefs>({
-    tradeUpdates: true,
-    disputeAlerts: true,
-    vaultActivity: false,
-    systemAnnouncements: true,
-  });
-
-  const [prefs, setPrefs] = useState<AppPrefs>({
-    network: "testnet",
-    currency: "USD",
-    autoSignOut: "30",
-  });
+  const [notifications, setNotifications] = useState(DEFAULT_PREFERENCES.notifications);
+  const [prefs, setPrefs] = useState<Pick<AppPreferences, "network" | "currency" | "autoSignOut">>(DEFAULT_PREFERENCES);
 
   const [copied, setCopied] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -175,14 +155,29 @@ export default function SettingsPage() {
     {},
   );
 
-  function setNotif<K extends keyof NotificationPrefs>(
+  useEffect(() => {
+    const saved = readPreferences();
+    startTransition(() => {
+      setNotifications(saved.notifications);
+      setPrefs({
+        network: saved.network,
+        currency: saved.currency,
+        autoSignOut: saved.autoSignOut,
+      });
+    });
+  }, []);
+
+  function setNotif<K extends keyof AppPreferences["notifications"]>(
     key: K,
-    value: NotificationPrefs[K],
+    value: AppPreferences["notifications"][K],
   ) {
     setNotifications((prev) => ({ ...prev, [key]: value }));
   }
 
-  function setPref<K extends keyof AppPrefs>(key: K, value: AppPrefs[K]) {
+  function setPref<K extends "network" | "currency" | "autoSignOut">(
+    key: K,
+    value: AppPreferences[K],
+  ) {
     setPrefs((prev) => ({ ...prev, [key]: value }));
     setValidationErrors((prev) => ({ ...prev, [key]: "" }));
   }
@@ -218,7 +213,7 @@ export default function SettingsPage() {
       return;
     }
 
-    // Preferences are local-only for now; extend with API call as needed.
+    writePreferences({ ...prefs, notifications });
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2500);
   }
@@ -420,7 +415,7 @@ export default function SettingsPage() {
               label="Network"
               description="The Stellar network your wallet interacts with."
               value={prefs.network}
-              onChange={(v) => setPref("network", v as AppPrefs["network"])}
+              onChange={(v) => setPref("network", v as AppPreferences["network"])}
               error={validationErrors.network}
               options={[
                 { value: "mainnet", label: "Mainnet" },
@@ -432,11 +427,13 @@ export default function SettingsPage() {
               label="Preferred currency"
               description="Fiat currency used for value estimates."
               value={prefs.currency}
-              onChange={(v) => setPref("currency", v as AppPrefs["currency"])}
+              onChange={(v) => setPref("currency", v as AppPreferences["currency"])}
               options={[
                 { value: "USD", label: "USD — US Dollar" },
                 { value: "EUR", label: "EUR — Euro" },
                 { value: "GBP", label: "GBP — British Pound" },
+                { value: "NGN", label: "NGN — Nigerian Naira" },
+                { value: "cNGN", label: "cNGN — CNGN stablecoin" },
               ]}
             />
             <Divider />
@@ -445,7 +442,7 @@ export default function SettingsPage() {
               description="Automatically end your session after inactivity."
               value={prefs.autoSignOut}
               onChange={(v) =>
-                setPref("autoSignOut", v as AppPrefs["autoSignOut"])
+                setPref("autoSignOut", v as AppPreferences["autoSignOut"])
               }
               options={[
                 { value: "15", label: "15 minutes" },

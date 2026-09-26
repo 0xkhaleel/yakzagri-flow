@@ -2,7 +2,7 @@
 import { t as translateCopy } from "@/lib/i18n";
 
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { NavLink } from "@/components/ui/Navigation";
@@ -32,6 +32,22 @@ export function AppTopNav({
   const pathname = usePathname();
   const router = useRouter();
   const isAdmin = useIsAdmin();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  useEffect(() => {
+    const updateNotificationState = () => {
+      setNotificationsEnabled(
+        Object.values(readPreferences().notifications).some(Boolean),
+      );
+    };
+    updateNotificationState();
+    window.addEventListener(PREFERENCES_CHANGED_EVENT, updateNotificationState);
+    window.addEventListener("storage", updateNotificationState);
+    return () => {
+      window.removeEventListener(PREFERENCES_CHANGED_EVENT, updateNotificationState);
+      window.removeEventListener("storage", updateNotificationState);
+    };
+  }, []);
 
   return (
     <header className="h-14 bg-card border-b border-border-default flex items-center px-4 lg:px-6 gap-4 lg:gap-8 flex-shrink-0">

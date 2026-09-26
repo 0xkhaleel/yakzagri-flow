@@ -9,6 +9,7 @@ import {
   resolveLocale,
   type Locale,
 } from "./config";
+import { readSavedCurrency } from "@/lib/preferences";
 
 type Numeric = number | string | bigint;
 
@@ -35,13 +36,19 @@ export interface MoneyOptions {
 /** Format a decimal amount as currency. Default: `₦1,234.56`. */
 export function formatMoney(amount: Numeric, options: MoneyOptions = {}): string {
   const {
-    currency = DEFAULT_CURRENCY,
     locale = resolveLocale(),
     compactFraction = false,
   } = options;
+  const currency = options.currency ?? readSavedCurrency() ?? DEFAULT_CURRENCY;
   const value = toNumber(amount);
   const fractionDigits =
     compactFraction && Number.isInteger(value) ? 0 : 2;
+  if (currency === "cNGN") {
+    return `${new Intl.NumberFormat(intlLocale(locale), {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: 2,
+    }).format(value)} cNGN`;
+  }
   return new Intl.NumberFormat(intlLocale(locale), {
     style: "currency",
     currency,
