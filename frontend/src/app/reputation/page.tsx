@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +9,7 @@ import { RepScoreRing } from "@/components/ui/RepScoreRing";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { AlertCircle, RefreshCw, TrendingUp, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
+import { formatDate as formatLocalizedDate } from "@/lib/i18n";
 
 function SkeletonReputationPage() {
   return (
@@ -55,8 +58,7 @@ function SkeletonReputationPage() {
 
 function formatDate(iso: string): string {
   try {
-    const d = new Date(iso);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return formatLocalizedDate(iso);
   } catch {
     return iso;
   }
@@ -136,9 +138,9 @@ export default function ReputationPage() {
         <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center">
           <AlertCircle className="w-8 h-8 text-gold" />
         </div>
-        <h1 className="text-2xl font-bold text-text-primary">Connect Wallet</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{translateCopy("ui.connect_wallet_234d7c8")}</h1>
         <p className="text-text-secondary max-w-md">
-          Please connect your wallet to view your trust score and trading reputation on the Amana platform.
+          {translateCopy("ui.please_connect_your_wallet_to_vi_a4f8c6d")}
         </p>
         <Button
           variant="primary"
@@ -161,11 +163,11 @@ export default function ReputationPage() {
         <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center">
           <AlertCircle className="w-8 h-8 text-status-danger" />
         </div>
-        <h1 className="text-xl font-semibold text-text-primary">Failed to Load Reputation</h1>
+        <h1 className="text-xl font-semibold text-text-primary">{translateCopy("ui.failed_to_load_reputation_940a7ad")}</h1>
         <p className="text-text-secondary max-w-md">{error}</p>
         <Button variant="primary" onClick={fetchReputation}>
           <RefreshCw className="w-4 h-4 mr-2" />
-          Try Again
+          {translateCopy("ui.try_again_cef2fe0")}
         </Button>
       </div>
     );
@@ -177,9 +179,9 @@ export default function ReputationPage() {
         <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center">
           <TrendingUp className="w-8 h-8 text-text-secondary" />
         </div>
-        <h1 className="text-2xl font-bold text-text-primary">No Reputation Data</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{translateCopy("ui.no_reputation_data_8b0fe48")}</h1>
         <p className="text-text-secondary max-w-md">
-          Your reputation will be calculated once you start trading on the Amana platform.
+          {translateCopy("ui.your_reputation_will_be_calculat_af47dce")}
         </p>
       </div>
     );
@@ -213,18 +215,18 @@ export default function ReputationPage() {
   return (
     <div className="px-6 py-8 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Reputation</h1>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">{translateCopy("ui.reputation_5f21606")}</h1>
         <p className="text-text-secondary">
-          Your trading reputation and trust metrics on the Amana platform
+          {translateCopy("ui.your_trading_reputation_and_trus_302c8e8")}
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-bg-elevated rounded-lg border border-border-default p-8 flex flex-col items-center gap-3">
           <RepScoreRing score={ringScore} size="xl" animated />
-          <p className="text-sm text-text-secondary mt-2">Trust Score</p>
+          <p className="text-sm text-text-secondary mt-2">{translateCopy("ui.trust_score_2c7902e")}</p>
           <p className="text-3xl font-bold text-text-primary">{data.trustScore}</p>
-          <p className="text-xs text-text-muted">out of 100</p>
+          <p className="text-xs text-text-muted">{translateCopy("ui.out_of_100_da0953a")}</p>
         </div>
 
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -245,9 +247,9 @@ export default function ReputationPage() {
 
       <div className="bg-bg-elevated rounded-lg border border-border-default">
         <div className="p-6 border-b border-border-default">
-          <h2 className="text-xl font-semibold text-text-primary">Trust History</h2>
+          <h2 className="text-xl font-semibold text-text-primary">{translateCopy("ui.trust_history_4968d5f")}</h2>
           <p className="text-sm text-text-secondary mt-1">
-            Recent events that impacted your reputation score
+            {translateCopy("ui.recent_events_that_impacted_your_52215a2")}
           </p>
         </div>
         <div className="p-6">
@@ -255,7 +257,7 @@ export default function ReputationPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
               <Clock className="w-12 h-12 text-text-muted" />
               <p className="text-text-secondary">
-                No reputation events yet. Complete trades to build your trust history.
+                {translateCopy("ui.no_reputation_events_yet_complet_145eec9")}
               </p>
             </div>
           ) : (

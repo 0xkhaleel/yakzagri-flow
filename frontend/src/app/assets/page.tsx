@@ -1,11 +1,15 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { formatDate } from "@/lib/i18n";
 import { api, type TradeStatsResponse, type TradeResponse } from "@/lib/api";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { formatNumber } from "@/lib/i18n/format";
 import { Button } from "@/components/ui/Button";
 import {
   TrendingUp,
@@ -103,13 +107,13 @@ function AssetsSidebar({
             </svg>
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-text-primary truncate">Asset Manager</p>
-            <p className="text-[10px] uppercase tracking-widest text-gold truncate">Portfolio View</p>
+            <p className="text-xs font-semibold text-text-primary truncate">{translateCopy("ui.asset_manager_df9f634")}</p>
+            <p className="text-[10px] uppercase tracking-widest text-gold truncate">{translateCopy("ui.portfolio_view_9263555")}</p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 py-3" aria-label="Asset navigation">
+      <nav className="flex-1 py-3" aria-label={translateCopy("ui.asset_navigation_e3613f9")}>
         <ul className="space-y-0.5">
           {ASSET_NAV.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
@@ -135,7 +139,7 @@ function AssetsSidebar({
 
       <div className="px-4 pb-4">
         <Link href="/trades/create" className="block">
-          <Button variant="primary" className="w-full">+ New Asset</Button>
+          <Button variant="primary" className="w-full">{translateCopy("ui.new_asset_23ebdb4")}</Button>
         </Link>
       </div>
 
@@ -233,14 +237,14 @@ function AllocationBar({ trades, loading }: AllocationBarProps) {
 
   return (
     <div className="rounded-2xl border border-border-default bg-surface-1 p-5">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">Asset Allocation</h3>
+      <h3 className="text-sm font-semibold text-text-primary mb-4">{translateCopy("ui.asset_allocation_9cd81b5")}</h3>
       {loading ? (
         <Skeleton className="h-3 w-full rounded-full" />
       ) : trades.length === 0 ? (
-        <p className="text-xs text-text-muted">No assets to display.</p>
+        <p className="text-xs text-text-muted">{translateCopy("ui.no_assets_to_display_11ee790")}</p>
       ) : (
         <>
-          <div className="flex h-3 rounded-full overflow-hidden gap-0.5 mb-4" role="img" aria-label="Asset allocation breakdown">
+          <div className="flex h-3 rounded-full overflow-hidden gap-0.5 mb-4" role="img" aria-label={translateCopy("ui.asset_allocation_breakdown_ab7929b")}>
             {segments.map((s) => (
               <div
                 key={s.key}
@@ -308,7 +312,7 @@ function AssetTable({
     <div className="rounded-2xl border border-border-default bg-surface-1 overflow-hidden">
       {/* Table toolbar */}
       <div className="px-6 py-4 border-b border-border-default flex flex-col sm:flex-row sm:items-center gap-3">
-        <h2 className="text-sm font-semibold text-text-primary shrink-0">Asset Positions</h2>
+        <h2 className="text-sm font-semibold text-text-primary shrink-0">{translateCopy("ui.asset_positions_9582d62")}</h2>
 
         <div className="flex-1 flex flex-col sm:flex-row gap-2 sm:items-center">
           {/* Search */}
@@ -316,16 +320,16 @@ function AssetTable({
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             <input
               type="search"
-              placeholder="Search by ID or address…"
+              placeholder={translateCopy("ui.search_by_id_or_address_c4aebf8")}
               value={search}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
               className="w-full pl-8 pr-3 py-1.5 text-xs bg-surface-2 border border-border-default rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:border-gold/50 transition-colors"
-              aria-label="Search assets"
+              aria-label={translateCopy("ui.search_assets_5d5a0ea")}
             />
           </div>
 
           {/* Status filters */}
-          <div className="flex gap-1 flex-wrap" role="group" aria-label="Filter by status">
+          <div className="flex gap-1 flex-wrap" role="group" aria-label={translateCopy("ui.filter_by_status_f43653d")}>
             {STATUS_FILTERS.map((f) => (
               <button
                 key={f.value}
@@ -350,7 +354,7 @@ function AssetTable({
           onClick={onRefresh}
           disabled={loading}
           className="shrink-0 p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-2 transition-colors disabled:opacity-40"
-          aria-label="Refresh assets"
+          aria-label={translateCopy("ui.refresh_assets_948f8b6")}
         >
               <svg className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
         </button>
@@ -360,17 +364,17 @@ function AssetTable({
           className="shrink-0 text-xs font-semibold text-gold hover:text-gold-hover transition-colors flex items-center gap-1"
         >
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
-          New Asset
+          {translateCopy("ui.new_asset_08b99c5")}
         </Link>
       </div>
 
       {/* Table header */}
       <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 bg-surface-2 text-xs font-medium text-text-muted uppercase tracking-wider border-b border-border-default">
-        <span>Asset / Trade ID</span>
-        <span>Amount (cNGN)</span>
-        <span>Counterparty</span>
-        <span>Status</span>
-        <span>Action</span>
+        <span>{translateCopy("ui.asset_trade_id_1e38d8e")}</span>
+        <span>{translateCopy("ui.amount_cngn_55587aa")}</span>
+        <span>{translateCopy("ui.counterparty_97b2be4")}</span>
+        <span>{translateCopy("ui.status_bae7d5b")}</span>
+        <span>{translateCopy("ui.action_97c89a4")}</span>
       </div>
 
       {/* Rows */}
@@ -381,7 +385,7 @@ function AssetTable({
           <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border-default flex items-center justify-center mx-auto mb-4">
             <Activity className="w-6 h-6 text-text-muted" />
           </div>
-          <p className="text-sm font-medium text-text-primary">No assets found</p>
+          <p className="text-sm font-medium text-text-primary">{translateCopy("ui.no_assets_found_92ac341")}</p>
           <p className="text-xs text-text-secondary mt-1">
             {search || statusFilter !== "all"
               ? "Try adjusting your search or filter."
@@ -408,14 +412,12 @@ function AssetTable({
                     {trade.tradeId.slice(0, 14)}…
                   </Link>
                   <p className="text-xs text-text-muted mt-0.5">
-                    {new Date(trade.createdAt).toLocaleDateString("en-US", {
-                      month: "short", day: "numeric", year: "numeric",
-                    })}
+                    {formatDate(trade.createdAt)}
                   </p>
                 </div>
 
                 <p className="text-sm font-semibold text-text-primary tabular-nums">
-                  {parseFloat(trade.amountCngn).toLocaleString()}
+                  {formatNumber(parseFloat(trade.amountCngn))}
                 </p>
 
                 <p className="text-sm text-text-secondary font-mono truncate">
@@ -432,7 +434,7 @@ function AssetTable({
                   className="text-xs font-semibold text-text-secondary hover:text-gold transition-colors whitespace-nowrap"
                   aria-label={`View asset ${trade.tradeId}`}
                 >
-                  View →
+                  {translateCopy("ui.view_cf3dbda")}
                 </Link>
               </div>
             );
@@ -444,7 +446,7 @@ function AssetTable({
       {totalPages > 1 && (
         <div className="px-6 py-3 border-t border-border-default flex items-center justify-between">
           <p className="text-xs text-text-muted">
-            Page {page} of {totalPages}
+            {translateCopy("ui.page_fb06270")}{" "}{page} {translateCopy("ui.of_de04fa0")}{" "}{totalPages}
           </p>
           <div className="flex items-center gap-1">
             <button
@@ -452,7 +454,7 @@ function AssetTable({
               onClick={() => onPageChange(page - 1)}
               disabled={page <= 1 || loading}
               className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-2 disabled:opacity-30 transition-colors"
-              aria-label="Previous page"
+              aria-label={translateCopy("ui.previous_page_81f5471")}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
@@ -461,7 +463,7 @@ function AssetTable({
               onClick={() => onPageChange(page + 1)}
               disabled={page >= totalPages || loading}
               className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-2 disabled:opacity-30 transition-colors"
-              aria-label="Next page"
+              aria-label={translateCopy("ui.next_page_4bfc194")}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
             </button>
@@ -564,7 +566,7 @@ export default function AssetsPage() {
   const disputedCount = allTrades.filter((t: TradeResponse) => t.status.toLowerCase() === "disputed").length;
 
   const formattedBalance = balance
-    ? parseFloat(balance).toLocaleString(undefined, { maximumFractionDigits: 2 })
+    ? formatNumber(parseFloat(balance), { maximumFractionDigits: 2 })
     : null;
 
   return (
@@ -577,12 +579,12 @@ export default function AssetsPage() {
         {/* Page header */}
         <div className="px-8 h-14 border-b border-border-default bg-surface-1 shrink-0 flex items-center justify-between">
           <div>
-            <h1 className="text-sm font-semibold text-text-primary">Asset Management</h1>
-            <p className="text-xs text-text-muted">Your cNGN-backed trade positions</p>
+            <h1 className="text-sm font-semibold text-text-primary">{translateCopy("ui.asset_management_5ec47dd")}</h1>
+            <p className="text-xs text-text-muted">{translateCopy("ui.your_cngn_backed_trade_positions_71149a7")}</p>
           </div>
           {isAuthenticated && (
             <Link href="/trades/create">
-              <Button variant="primary" className="text-xs">+ New Asset</Button>
+              <Button variant="primary" className="text-xs">{translateCopy("ui.new_asset_23ebdb4")}</Button>
             </Link>
           )}
         </div>
@@ -595,9 +597,9 @@ export default function AssetsPage() {
             {!isAuthenticated && !authLoading && (
               <div className="rounded-2xl border border-gold/20 bg-gold-muted px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-gold">Connect your wallet</p>
+                  <p className="text-sm font-semibold text-gold">{translateCopy("ui.connect_your_wallet_3fc6ece")}</p>
                   <p className="text-xs text-text-secondary mt-0.5">
-                    Link your Freighter wallet to view live asset positions and balances.
+                    {translateCopy("ui.link_your_freighter_wallet_to_vi_5edfb96")}
                   </p>
                 </div>
                 <Button
@@ -623,7 +625,7 @@ export default function AssetsPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <SummaryCard
                 label="Total Volume"
-                value={loading ? "—" : `${totalVolume.toLocaleString()} cNGN`}
+                value={loading ? "—" : `${formatNumber(totalVolume)} cNGN`}
                 sub="All-time escrow value"
                 icon={<TrendingUp className="w-5 h-5" />}
                 accent="gold"

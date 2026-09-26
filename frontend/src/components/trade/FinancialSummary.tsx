@@ -1,8 +1,11 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import type { TradeDetail } from "@/types/trade";
 import { TradeAmountRow } from "./TradeAmountRow";
+import { formatNumber } from "@/lib/i18n/format";
 
 interface FinancialSummaryProps {
   trade: TradeDetail;
@@ -44,9 +47,9 @@ export function FinancialSummary({ trade }: FinancialSummaryProps) {
     <div className="bg-card rounded-xl border border-border-default p-6 shadow-card">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold text-text-secondary tracking-wide uppercase">
-          Financial Summary
+          {translateCopy("ui.financial_summary_8cfc2d8")}
         </h2>
-        <span className="text-xs text-text-muted">All amounts in cNGN</span>
+        <span className="text-xs text-text-muted">{translateCopy("ui.all_amounts_in_cngn_8864cc6")}</span>
       </div>
 
       <TradeAmountRow
@@ -61,11 +64,11 @@ export function FinancialSummary({ trade }: FinancialSummaryProps) {
       <div>
         <FinancialRow
           label="Asset Value"
-          value={`${trade.assetValue.toLocaleString()} cNGN`}
+          value={`${formatNumber(trade.assetValue)} cNGN`}
         />
         <FinancialRow
           label={`Platform Fee (${trade.platformFeePercent}%)`}
-          value={`${trade.platformFee.toLocaleString()} cNGN`}
+          value={`${formatNumber(trade.platformFee)} cNGN`}
           highlight
         />
         <FinancialRow
@@ -91,11 +94,10 @@ export function FinancialSummary({ trade }: FinancialSummaryProps) {
         </div>
         <div>
           <p className="text-xs font-semibold text-emerald mb-0.5 tracking-wide">
-            SMART CONTRACT SECURED
+            {translateCopy("ui.smart_contract_secured_e779579")}
           </p>
           <p className="text-xs text-text-secondary leading-relaxed">
-            Funds are programmatically locked. Release occurs only upon
-            multi-sig validation or verified shipment receipt.
+            {translateCopy("ui.funds_are_programmatically_locke_01d3ceb")}
           </p>
         </div>
       </div>

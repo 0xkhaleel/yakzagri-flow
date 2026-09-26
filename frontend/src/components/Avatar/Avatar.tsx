@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 import React from 'react';
 import Image from 'next/image';
 
@@ -78,8 +80,8 @@ const Avatar: React.FC<AvatarProps> = ({
       {verified && (
         <div
           className={`absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 rounded-full bg-bg-primary border border-bg-primary flex items-center justify-center ${badgeSizeClass}`}
-          aria-label="Verified"
-          title="Verified"
+          aria-label={translateCopy("ui.verified_aed3b8c")}
+          title={translateCopy("ui.verified_aed3b8c")}
         >
           <svg
             viewBox="0 0 16 16"
@@ -102,8 +104,8 @@ const Avatar: React.FC<AvatarProps> = ({
       {online && !verified && (
         <div
           className={`absolute bottom-0 left-0 translate-x-[-25%] translate-y-[25%] rounded-full bg-emerald border-2 border-bg-primary ${badgeSizeClass}`}
-          aria-label="Online"
-          title="Online"
+          aria-label={translateCopy("ui.online_c3e839d")}
+          title={translateCopy("ui.online_c3e839d")}
         />
       )}
     </div>

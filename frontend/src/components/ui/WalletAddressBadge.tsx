@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useMemo, useState } from "react";
 import { Check, Clipboard, ExternalLink } from "lucide-react";
@@ -67,8 +69,8 @@ export function WalletAddressBadge({
           type="button"
           onClick={() => void onCopy()}
           className="opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-text-primary"
-          aria-label="Copy wallet address"
-          title="Copy wallet address"
+          aria-label={translateCopy("ui.copy_wallet_address_43b3785")}
+          title={translateCopy("ui.copy_wallet_address_43b3785")}
         >
           {copied ? (
             <Check className="w-3.5 h-3.5 text-emerald" />
@@ -84,8 +86,8 @@ export function WalletAddressBadge({
           target="_blank"
           rel="noopener noreferrer"
           className="opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-gold"
-          aria-label="Open wallet in Stellar Expert"
-          title="Open wallet in Stellar Expert"
+          aria-label={translateCopy("ui.open_wallet_in_stellar_expert_77617d7")}
+          title={translateCopy("ui.open_wallet_in_stellar_expert_77617d7")}
         >
           <ExternalLink className="w-3.5 h-3.5" />
         </a>

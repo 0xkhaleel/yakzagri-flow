@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 import { useState } from "react";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { Shield, Key } from "lucide-react";
@@ -38,12 +40,12 @@ export function VaultValueCard({
       <div className="flex flex-col w-76 h-[335.13px]">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold tracking-widest text-text-secondary uppercase">
-            Total Vault Value
+            {translateCopy("ui.total_vault_value_f76713c")}
           </p>
           <div className="flex items-center gap-1 text-xs">
             <span className="text-text-secondary">{currency}</span>
             <span className="text-text-muted">/</span>
-            <span className="text-text-muted">FIAT</span>
+            <span className="text-text-muted">{translateCopy("ui.fiat_38215b1")}</span>
           </div>
         </div>
 
@@ -57,12 +59,11 @@ export function VaultValueCard({
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-4 h-4 text-emerald" />
               <span className="text-sm font-semibold text-emerald">
-                Fully Insured
+                {translateCopy("ui.fully_insured_4f11523")}
               </span>
             </div>
             <p className="text-xs text-emerald leading-relaxed">
-              Secured with multi-signature cold storage and 24/7 autonomous
-              monitoring.
+              {translateCopy("ui.secured_with_multi_signature_col_f802bee")}
             </p>
           </div>
         )}
@@ -74,7 +75,7 @@ export function VaultValueCard({
           className="mt-auto w-full flex items-center justify-center gap-2 bg-gold hover:bg-gold-hover text-text-inverse font-semibold py-3 px-6 rounded-xl transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Key className="w-5 h-5" />
-          Release Funds
+          {translateCopy("ui.release_funds_2f565c4")}
         </button>
       </div>
     </BentoCard>

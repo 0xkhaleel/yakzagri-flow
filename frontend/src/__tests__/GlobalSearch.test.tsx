@@ -124,6 +124,17 @@ describe("GlobalSearch — keyboard trigger", () => {
     pressMetaK();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
+
+  it("restores focus to the trigger after closing", async () => {
+    const user = userEvent.setup();
+    render(<GlobalSearch />);
+    await user.click(screen.getByRole("button", { name: /open global search/i }));
+    pressEscape();
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /open global search/i })).toHaveFocus(),
+    );
+  });
 });
 
 // ── Search input ──────────────────────────────────────────────────────────────
@@ -285,5 +296,52 @@ describe("GlobalSearch — navigation on select", () => {
     jest.useRealTimers();
 
     expect(mockPush).toHaveBeenCalledWith("/trades/t1");
+  });
+
+  it("links the active option to the searchbox accessibly", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+
+    render(<GlobalSearch />);
+    pressMetaK();
+    await user.type(screen.getByRole("searchbox"), "trade");
+    act(() => jest.advanceTimersByTime(300));
+    await waitFor(() => expect(screen.getByText("Trade #001")).toBeInTheDocument());
+
+    const searchbox = screen.getByRole("searchbox");
+    expect(searchbox).toHaveAttribute("aria-controls", "global-search-results");
+    expect(screen.getByRole("listbox", { name: /search results/i })).toHaveAttribute("id", "global-search-results");
+    fireEvent.keyDown(searchbox, { key: "ArrowDown" });
+    expect(searchbox).toHaveAttribute("aria-activedescendant", "search-result-0");
+
+    jest.useRealTimers();
+  });
+
+  it("navigates user results to their reputation page", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<GlobalSearch />);
+    pressMetaK();
+    await user.type(screen.getByRole("searchbox"), "alice");
+    act(() => jest.advanceTimersByTime(300));
+    await waitFor(() => expect(screen.getByText("Alice Seller")).toBeInTheDocument());
+    jest.useRealTimers();
+
+    await userEvent.click(screen.getByText("Alice Seller"));
+    expect(mockPush).toHaveBeenCalledWith("/reputation/u1");
+  });
+
+  it("navigates contract results to the stream detail route", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<GlobalSearch />);
+    pressMetaK();
+    await user.type(screen.getByRole("searchbox"), "contract");
+    act(() => jest.advanceTimersByTime(300));
+    await waitFor(() => expect(screen.getByText("Contract AMN-99")).toBeInTheDocument());
+    jest.useRealTimers();
+
+    await userEvent.click(screen.getByText("Contract AMN-99"));
+    expect(mockPush).toHaveBeenCalledWith("/streams/c1");
   });
 });

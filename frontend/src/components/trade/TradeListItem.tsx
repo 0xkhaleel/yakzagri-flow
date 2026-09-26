@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import { Eye, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
@@ -103,7 +105,7 @@ export function TradeListItem({
               onView();
             }}
             aria-label={`View trade ${tradeId}`}
-            title="View trade"
+            title={translateCopy("ui.view_trade_2c6ad20")}
             className="p-2 rounded-lg border border-border-default text-text-muted hover:border-border-hover hover:text-text-primary transition-colors focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
           >
             <Eye aria-hidden="true" className="w-4 h-4" />
@@ -116,7 +118,7 @@ export function TradeListItem({
                 onDeposit();
               }}
               aria-label={`Deposit for trade ${tradeId}`}
-              title="Deposit"
+              title={translateCopy("ui.deposit_e7b0b31")}
               className="p-2 rounded-lg border border-border-default text-text-muted hover:border-emerald/40 hover:text-emerald transition-colors focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
             >
               <ArrowDownToLine aria-hidden="true" className="w-4 h-4" />
@@ -130,7 +132,7 @@ export function TradeListItem({
                 onWithdraw();
               }}
               aria-label={`Withdraw for trade ${tradeId}`}
-              title="Withdraw"
+              title={translateCopy("ui.withdraw_47e5641")}
               className="p-2 rounded-lg border border-border-default text-text-muted hover:border-status-danger/40 hover:text-status-danger transition-colors focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
             >
               <ArrowUpFromLine aria-hidden="true" className="w-4 h-4" />

@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 import Link from "next/link";
 import { type ReactNode } from "react";
 
@@ -17,7 +19,7 @@ interface BreadcrumbProps {
 
 export function Breadcrumb({ items, adminAction }: BreadcrumbProps) {
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center justify-between">
+    <nav aria-label={translateCopy("ui.breadcrumb_c766e66")} className="flex items-center justify-between">
       <ol className="flex items-center space-x-2 text-sm">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;

@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import type { TransactionEvent, TransactionEventStatus } from "@/types/trade";
@@ -94,7 +96,7 @@ export function TimelineEventItem({
           <div className="flex items-center gap-2 flex-shrink-0">
             {isActive && (
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-status-warning/10 text-status-warning border border-status-warning/20 font-semibold tracking-wide uppercase">
-                Active
+                {translateCopy("ui.active_a733b80")}
               </span>
             )}
             {event.timestamp && (
