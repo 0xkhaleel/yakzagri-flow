@@ -13,6 +13,31 @@ export interface AssetInfo {
 }
 
 /**
+ * Load and validate the NGN issuer address from environment.
+ * Fails closed if the issuer is not configured or is still a placeholder.
+ */
+function getNgnIssuer(): string {
+  const issuer = process.env.NEXT_PUBLIC_NGN_ISSUER;
+
+  if (!issuer || issuer === "EXAMPLE_ISSUER_ADDRESS") {
+    throw new Error(
+      "NGN issuer not configured. Set NEXT_PUBLIC_NGN_ISSUER to a valid Stellar issuer address. " +
+      "The issuer should be a valid Stellar public key (e.g., GXXXXX...)"
+    );
+  }
+
+  // Basic validation: Stellar public keys start with G and are 56 characters
+  if (!issuer.startsWith("G") || issuer.length !== 56) {
+    throw new Error(
+      `Invalid NGN issuer address: "${issuer}". ` +
+      "Stellar public keys must start with 'G' and be 56 characters long."
+    );
+  }
+
+  return issuer;
+}
+
+/**
  * Common Stellar assets used in the application
  */
 export const STELLAR_ASSETS: Record<string, AssetInfo> = {
@@ -39,10 +64,12 @@ export const STELLAR_ASSETS: Record<string, AssetInfo> = {
     name: "Euro Coin",
     type: "credit_alphanum4",
   },
-  // Nigerian Naira token (example - replace with actual issuer if different)
+  // Nigerian Naira token — issuer address must be configured via NEXT_PUBLIC_NGN_ISSUER
   NGN: {
     code: "NGN",
-    issuer: "EXAMPLE_ISSUER_ADDRESS", // Replace with actual issuer
+    get issuer() {
+      return getNgnIssuer();
+    },
     decimals: 7,
     symbol: "NGN",
     name: "Nigerian Naira",

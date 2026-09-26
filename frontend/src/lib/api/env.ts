@@ -28,8 +28,25 @@ export function getStellarRpcUrl(): string {
 }
 
 export function getStellarNetworkPassphrase(): string {
-  return (
+  const passphrase =
+    process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE ||
     process.env.NEXT_PUBLIC_STELLAR_NETWORK ||
-    "Test SDF Network ; September 2015"
-  );
+    "Test SDF Network ; September 2015";
+
+  // Validate that it's a real passphrase, not a shorthand like 'testnet' or 'public'
+  // Real passphrases contain separators (spaces, semicolons, periods) characteristic of full network names
+  // e.g., "Test SDF Network ; September 2015", "Public Global Stellar Network ; September 2015"
+  if (
+    passphrase.toLowerCase() === "testnet" ||
+    passphrase.toLowerCase() === "public" ||
+    passphrase.toLowerCase() === "mainnet"
+  ) {
+    throw new Error(
+      `Invalid Stellar network passphrase: "${passphrase}". ` +
+      `Expected a full passphrase like "Test SDF Network ; September 2015" or "Public Global Stellar Network ; September 2015". ` +
+      `Set NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE in your environment.`
+    );
+  }
+
+  return passphrase;
 }
