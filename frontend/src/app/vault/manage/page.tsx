@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
@@ -57,11 +59,7 @@ function statusStyle(status: string) {
 }
 
 function fmt(date: string) {
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatLocalizedDate(date);
 }
 
 function shortAddr(addr: string) {
@@ -190,7 +188,7 @@ function ConfirmModal({
                 className="block text-xs text-text-secondary mb-1"
                 htmlFor="dispute-category"
               >
-                Category
+                {translateCopy("ui.category_a3c686e")}
               </label>
               <select
                 id="dispute-category"
@@ -198,10 +196,10 @@ function ConfirmModal({
                 onChange={(e) => setDisputeCategory(e.target.value)}
                 className="w-full rounded-lg border border-border-default bg-bg-input text-text-primary text-sm px-3 py-2 focus:outline-none focus:border-border-focus"
               >
-                <option value="non_delivery">Non-delivery</option>
-                <option value="quality_issue">Quality issue</option>
-                <option value="payment_dispute">Payment dispute</option>
-                <option value="other">Other</option>
+                <option value="non_delivery">{translateCopy("ui.non_delivery_907cdab")}</option>
+                <option value="quality_issue">{translateCopy("ui.quality_issue_fb6b865")}</option>
+                <option value="payment_dispute">{translateCopy("ui.payment_dispute_e33ec03")}</option>
+                <option value="other">{translateCopy("ui.other_6e6a6f2")}</option>
               </select>
             </div>
             <div>
@@ -209,14 +207,14 @@ function ConfirmModal({
                 className="block text-xs text-text-secondary mb-1"
                 htmlFor="dispute-reason"
               >
-                Reason
+                {translateCopy("ui.reason_f219cc0")}
               </label>
               <textarea
                 id="dispute-reason"
                 rows={3}
                 value={disputeReason}
                 onChange={(e) => setDisputeReason(e.target.value)}
-                placeholder="Describe the issue…"
+                placeholder={translateCopy("ui.describe_the_issue_35fbb91")}
                 className="w-full rounded-lg border border-border-default bg-bg-input text-text-primary text-sm px-3 py-2 focus:outline-none focus:border-border-focus resize-none"
               />
             </div>
@@ -230,7 +228,7 @@ function ConfirmModal({
             disabled={busy}
             className="px-4 py-2 rounded-lg border border-border-default text-text-secondary text-sm hover:border-border-hover transition-colors disabled:opacity-40"
           >
-            Cancel
+            {translateCopy("common.cancel")}
           </button>
           <button
             type="button"
@@ -281,10 +279,10 @@ function AuthGate({
       </div>
       <div className="text-center">
         <p className="text-lg font-semibold text-text-primary">
-          Authentication required
+          {translateCopy("ui.authentication_required_682810d")}
         </p>
         <p className="text-sm text-text-secondary mt-1">
-          Connect and sign in with Freighter to manage your vaults.
+          {translateCopy("ui.connect_and_sign_in_with_freight_2aa3f1d")}
         </p>
       </div>
       <button
@@ -462,16 +460,16 @@ export default function VaultManagePage() {
                 href="/vault"
                 className="hover:text-text-secondary transition-colors"
               >
-                Vault
+                {translateCopy("ui.vault_fb46e37")}
               </Link>
               <span>/</span>
-              <span className="text-text-secondary">Manage</span>
+              <span className="text-text-secondary">{translateCopy("ui.manage_bf58d17")}</span>
             </div>
             <h1 className="text-2xl font-bold text-text-primary">
-              Vault Management
+              {translateCopy("ui.vault_management_ef1c83b")}
             </h1>
             <p className="mt-1 text-sm text-text-secondary">
-              Deposit, release, and manage your active escrow positions.
+              {translateCopy("ui.deposit_release_and_manage_your__b599141")}
             </p>
           </div>
           <button
@@ -490,7 +488,7 @@ export default function VaultManagePage() {
               <path d="M14 8A6 6 0 112 8" />
               <path d="M14 8l-2-2M14 8l2-2" />
             </svg>
-            Refresh
+            {translateCopy("ui.refresh_56e3bad")}
           </button>
         </div>
 
@@ -593,7 +591,7 @@ export default function VaultManagePage() {
               <div className="lg:col-span-2 space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-semibold text-text-primary">
-                    Escrow Positions
+                    {translateCopy("ui.escrow_positions_923e8f0")}
                   </h2>
                   <div className="flex gap-1 rounded-lg border border-border-default p-1 bg-bg-elevated">
                     {(["active", "all"] as const).map((tab) => (
@@ -615,7 +613,7 @@ export default function VaultManagePage() {
 
                 {parseFloat(walletBalance?.balance ?? "0") === 0 && (
                   <div className="rounded-lg border border-status-warning/20 bg-status-warning/10 px-4 py-3 text-sm text-status-warning flex items-center justify-between">
-                    <span>No available balance. Fund your wallet before creating a payment.</span>
+                    <span>{translateCopy("ui.no_available_balance_fund_your_w_1538a02")}</span>
                   </div>
                 )}
 
@@ -645,8 +643,7 @@ export default function VaultManagePage() {
                       </svg>
                     </div>
                     <p className="text-sm font-medium text-text-primary">
-                      No {activeTab === "active" ? "active " : ""}escrow
-                      positions
+                      {translateCopy("ui.no_816c52f")}{" "}{activeTab === "active" ? "active " : ""}{translateCopy("ui.escrow_positions_8036783")}
                     </p>
                     <p className="text-xs text-text-secondary mt-1">
                       {activeTab === "active"
@@ -657,17 +654,17 @@ export default function VaultManagePage() {
                       href="/trades/create"
                       className="inline-block mt-4 px-4 py-2 rounded-lg bg-gold text-text-inverse text-sm font-semibold hover:bg-gold-hover transition-colors"
                     >
-                      Create Trade
+                      {translateCopy("ui.create_trade_2747e94")}
                     </Link>
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-border-default bg-card overflow-hidden">
                     {/* Table header */}
                     <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 px-4 py-3 border-b border-border-default bg-bg-elevated text-xs font-medium text-text-muted uppercase tracking-wider">
-                      <span>Trade</span>
-                      <span>Amount</span>
-                      <span>Status</span>
-                      <span>Actions</span>
+                      <span>{translateCopy("ui.trade_b0811e4")}</span>
+                      <span>{translateCopy("ui.amount_43dc853")}</span>
+                      <span>{translateCopy("ui.status_bae7d5b")}</span>
+                      <span>{translateCopy("ui.actions_c3cd636")}</span>
                     </div>
 
                     {/* Rows */}
@@ -706,7 +703,7 @@ export default function VaultManagePage() {
                               cNGN
                             </p>
                             <p className="text-xs text-text-muted mt-0.5">
-                              Seller: {shortAddr(trade.sellerAddress)}
+                              {translateCopy("ui.seller_e1c9322")}{" "}{shortAddr(trade.sellerAddress)}
                             </p>
                           </div>
 
@@ -762,7 +759,7 @@ export default function VaultManagePage() {
                     href="/trades"
                     className="text-xs text-text-secondary hover:text-gold transition-colors flex items-center gap-1"
                   >
-                    View all trades
+                    {translateCopy("ui.view_all_trades_45758bd")}
                     <svg
                       className="w-3 h-3"
                       viewBox="0 0 12 12"

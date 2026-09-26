@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StrKey } from "@stellar/stellar-sdk";
@@ -194,28 +196,28 @@ export default function Step3Review() {
           </svg>
         </div>
         <div>
-          <p className="text-text-primary font-semibold text-lg">Trade Created</p>
-          <p className="text-text-secondary text-sm mt-1">Funds locked in escrow vault</p>
+          <p className="text-text-primary font-semibold text-lg">{translateCopy("ui.trade_created_c6d612a")}</p>
+          <p className="text-text-secondary text-sm mt-1">{translateCopy("ui.funds_locked_in_escrow_vault_b134ccb")}</p>
         </div>
         <div className="w-full rounded-lg bg-bg-elevated border border-border-default px-4 py-3 text-left">
-          <p className="text-xs text-text-muted mb-1">Trade ID</p>
+          <p className="text-xs text-text-muted mb-1">{translateCopy("ui.trade_id_153d513")}</p>
           <p className="text-emerald font-mono text-sm break-all">{tradeId}</p>
         </div>
         <div className="w-full rounded-lg bg-bg-elevated border border-border-default px-4 py-3 text-left">
-          <p className="text-xs text-text-muted mb-1">Transaction Hash</p>
+          <p className="text-xs text-text-muted mb-1">{translateCopy("ui.transaction_hash_7534364")}</p>
           <p className="text-emerald font-mono text-sm break-all">{txHash}</p>
         </div>
         <button
           onClick={() => router.push(`/trades/${tradeId}`)}
           className="h-12 w-full flex items-center justify-center rounded-full bg-gradient-gold-cta text-text-inverse font-semibold"
         >
-          View Trade Details
+          {translateCopy("ui.view_trade_details_c527f5b")}
         </button>
         <Link
           href="/trades"
           className="text-sm text-text-secondary hover:text-text-primary"
         >
-          View All Trades
+          {translateCopy("ui.view_all_trades_20304ec")}
         </Link>
       </div>
     );
@@ -230,7 +232,7 @@ export default function Step3Review() {
           </svg>
         </div>
         <div>
-          <p className="text-text-primary font-semibold text-lg">Authentication Required</p>
+          <p className="text-text-primary font-semibold text-lg">{translateCopy("ui.authentication_required_fbbe499")}</p>
           <p className="text-text-secondary text-sm mt-1">
             {isWalletConnected
               ? "Sign in with your wallet to create trades."
@@ -248,7 +250,7 @@ export default function Step3Review() {
           onClick={() => setStep(2)}
           className="text-sm text-text-secondary hover:text-text-primary"
         >
-          Go Back
+          {translateCopy("ui.go_back_f03e2d0")}
         </button>
       </div>
     );
@@ -269,8 +271,7 @@ export default function Step3Review() {
       </div>
 
       <div className="rounded-lg bg-gold-muted border border-gold/20 px-4 py-3 text-sm text-gold">
-        By submitting, you authorize a Stellar transaction to create an escrow trade,
-        locking {amountUsdc} cNGN in the Amana escrow contract.
+        {translateCopy("ui.by_submitting_you_authorize_a_st_2a21969")}{" "}{amountUsdc} {translateCopy("ui.cngn_in_the_amana_escrow_contrac_539a265")}
       </div>
 
       {error && (
@@ -278,8 +279,8 @@ export default function Step3Review() {
       )}
       {pendingCount > 0 && (
         <div className="rounded-lg bg-status-warning/10 border border-status-warning/30 px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-status-warning">{pendingCount} queued action(s) will send when online</span>
-          <span className="text-xs text-text-muted">Idempotency keys preserved — no duplicates</span>
+          <span className="text-sm text-status-warning">{pendingCount} {translateCopy("ui.queued_action_s_will_send_when_o_186a14f")}</span>
+          <span className="text-xs text-text-muted">{translateCopy("ui.idempotency_keys_preserved_no_du_0f369d4")}</span>
         </div>
       )}
 
@@ -297,7 +298,7 @@ export default function Step3Review() {
           onClick={() => setStep(2)}
           className="flex-1 h-12 rounded-full border border-border-default text-text-secondary hover:border-border-hover transition-colors disabled:opacity-40"
         >
-          Back
+          {translateCopy("common.back")}
         </button>
         <button
           disabled={loading || !isFormValid}
@@ -310,7 +311,7 @@ export default function Step3Review() {
                 <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
                 <path d="M12 2a10 10 0 0 1 10 10" />
               </svg>
-              Creating Trade...
+              {translateCopy("ui.creating_trade_776cf21")}
             </>
           ) : (
             "Lock Funds & Create Trade"

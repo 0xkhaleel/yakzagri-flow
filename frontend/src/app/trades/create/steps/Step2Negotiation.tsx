@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 import { useState } from "react";
 import { useTrade } from "../TradeContext";
 import { validateStep2 } from "../validation";
@@ -58,13 +60,13 @@ export default function Step2Negotiation() {
       {/* Loss ratio */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-text-secondary">Loss Ratio (Buyer / Seller)</span>
+          <span className="text-sm text-text-secondary">{translateCopy("ui.loss_ratio_buyer_seller_2845a0d")}</span>
           <span className="text-gold font-semibold text-sm">
             {data.buyerRatio}% / {data.sellerRatio}%
           </span>
         </div>
 
-        <label htmlFor="buyerRatio" className="sr-only">Buyer loss ratio percentage</label>
+        <label htmlFor="buyerRatio" className="sr-only">{translateCopy("ui.buyer_loss_ratio_percentage_aa74e46")}</label>
         <input
           id="buyerRatio"
           type="range"
@@ -72,7 +74,7 @@ export default function Step2Negotiation() {
           max={100}
           step={5}
           value={data.buyerRatio}
-          aria-label="Buyer loss ratio"
+          aria-label={translateCopy("ui.buyer_loss_ratio_a0e1590")}
           aria-valuetext={`Buyer absorbs ${data.buyerRatio} percent, Seller absorbs ${data.sellerRatio} percent`}
           onChange={(e) => handleBuyerRatio(parseInt(e.target.value))}
           className="w-full accent-gold"
@@ -80,14 +82,14 @@ export default function Step2Negotiation() {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-lg bg-bg-elevated border border-border-default px-4 py-3">
-            <p className="text-xs text-text-muted mb-1">Buyer absorbs</p>
+            <p className="text-xs text-text-muted mb-1">{translateCopy("ui.buyer_absorbs_319cfa2")}</p>
             <p className="text-text-primary font-semibold">{data.buyerRatio}%</p>
             {totalValue > 0 && (
               <p className="text-xs text-text-secondary mt-1">{data.currency} {buyerLoss}</p>
             )}
           </div>
           <div className="rounded-lg bg-bg-elevated border border-border-default px-4 py-3">
-            <p className="text-xs text-text-muted mb-1">Seller absorbs</p>
+            <p className="text-xs text-text-muted mb-1">{translateCopy("ui.seller_absorbs_6dd1cf2")}</p>
             <p className="text-text-primary font-semibold">{data.sellerRatio}%</p>
             {totalValue > 0 && (
               <p className="text-xs text-text-secondary mt-1">{data.currency} {sellerLoss}</p>
@@ -99,7 +101,7 @@ export default function Step2Negotiation() {
 
       {/* Delivery window */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="deliveryDays" className="text-sm text-text-secondary">Delivery Window (days)</label>
+        <label htmlFor="deliveryDays" className="text-sm text-text-secondary">{translateCopy("ui.delivery_window_days_afe0adf")}</label>
         <input
           id="deliveryDays"
           type="number"
@@ -120,11 +122,11 @@ export default function Step2Negotiation() {
 
       {/* Notes */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="tradeNotes" className="text-sm text-text-secondary">Additional Terms / Notes</label>
+        <label htmlFor="tradeNotes" className="text-sm text-text-secondary">{translateCopy("ui.additional_terms_notes_9a27e30")}</label>
         <textarea
           id="tradeNotes"
           rows={3}
-          placeholder="e.g. Goods must be bagged and sealed. Driver must present manifest."
+          placeholder={translateCopy("ui.e_g_goods_must_be_bagged_and_sea_f879108")}
           value={data.notes}
           onChange={(e) => update({ notes: e.target.value })}
           className="bg-bg-input border border-border-default rounded-md px-4 py-3 text-text-primary text-sm resize-none focus:outline-none focus:border-border-focus"
@@ -133,8 +135,7 @@ export default function Step2Negotiation() {
 
       {/* Info callout */}
       <div className="rounded-lg bg-emerald-muted border border-emerald/20 px-4 py-3 text-sm text-emerald">
-        Funds will be locked as cNGN via Stellar Path Payment from your NGN balance.
-        The 1% platform fee is deducted on settlement.
+        {translateCopy("ui.funds_will_be_locked_as_cngn_via_270528e")}
       </div>
 
       <div className="flex gap-3">
@@ -142,13 +143,13 @@ export default function Step2Negotiation() {
           onClick={() => setStep(1)}
           className="flex-1 h-12 rounded-full border border-border-default text-text-secondary hover:border-border-hover transition-colors"
         >
-          Back
+          {translateCopy("common.back")}
         </button>
         <button
           onClick={handleReview}
           className="flex-1 h-12 rounded-full bg-gradient-gold-cta text-text-inverse font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Review Trade
+          {translateCopy("ui.review_trade_56119c6")}
         </button>
       </div>
     </div>

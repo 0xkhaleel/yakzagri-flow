@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import Link from "next/link";
@@ -59,7 +61,7 @@ export function AppTopNav({
 
       {/* Logo */}
       <Link href="/" className="text-gold font-bold text-lg tracking-tight flex-shrink-0">
-        Amana
+        {translateCopy("ui.amana_545d363")}
       </Link>
 
       {/* Nav links */}
@@ -81,7 +83,7 @@ export function AppTopNav({
         {/* Admin role indicator */}
         {isAdmin && (
           <Badge variant="locked" size="sm">
-            Admin
+            {translateCopy("ui.admin_4e7afeb")}
           </Badge>
         )}
 

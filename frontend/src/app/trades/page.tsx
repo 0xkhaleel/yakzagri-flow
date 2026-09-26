@@ -1,10 +1,13 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/components/AnalyticsProvider";
 import { useToast } from "@/hooks/useToast";
+import { formatDate as formatLocalizedDate } from "@/lib/i18n";
 import { api, ApiError, TradeResponse } from "@/lib/api";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
@@ -157,11 +160,7 @@ export default function TradesPage() {
   }
 
   function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    return formatLocalizedDate(dateString);
   }
 
   function formatAddress(address: string) {
@@ -184,32 +183,32 @@ export default function TradesPage() {
             onClick={() => addToast({ type: "success", title: "Success", message: "Trade completed successfully!" })}
             className="px-3 py-1.5 rounded-md bg-status-success/10 border border-status-success/30 text-status-success text-xs font-medium hover:bg-status-success/20 transition-colors"
           >
-            Success
+            {translateCopy("ui.success_42a8f65")}
           </button>
           <button
             type="button"
             onClick={() => addToast({ type: "error", title: "Error", message: "Failed to complete trade." })}
             className="px-3 py-1.5 rounded-md bg-status-danger/10 border border-status-danger/30 text-status-danger text-xs font-medium hover:bg-status-danger/20 transition-colors"
           >
-            Error
+            {translateCopy("ui.error_7f2f6a1")}
           </button>
           <button
             type="button"
             onClick={() => addToast({ type: "warning", title: "Warning", message: "Trade is disputed." })}
             className="px-3 py-1.5 rounded-md bg-status-warning/10 border border-status-warning/30 text-status-warning text-xs font-medium hover:bg-status-warning/20 transition-colors"
           >
-            Warning
+            {translateCopy("ui.warning_e9c4556")}
           </button>
           <button
             type="button"
             onClick={() => addToast({ type: "info", title: "Info", message: "New message received." })}
             className="px-3 py-1.5 rounded-md bg-status-info/10 border border-status-info/30 text-status-info text-xs font-medium hover:bg-status-info/20 transition-colors"
           >
-            Info
+            {translateCopy("ui.info_4b631f6")}
           </button>
         </div>
         <Link href="/trades/create">
-          <Button variant="primary">Create Trade</Button>
+          <Button variant="primary">{translateCopy("ui.create_trade_2747e94")}</Button>
         </Link>
       </div>
 
@@ -360,7 +359,7 @@ export default function TradesPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 text-sm text-text-secondary">
               <span>
-                Page {page} of {totalPages}
+                {translateCopy("ui.page_fb06270")}{" "}{page} {translateCopy("ui.of_de04fa0")}{" "}{totalPages}
               </span>
               <div className="flex gap-2">
                 <button
@@ -368,14 +367,14 @@ export default function TradesPage() {
                   disabled={page === 1}
                   className="px-3 py-1.5 rounded-md border border-border-default hover:border-border-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
-                  Previous
+                  {translateCopy("ui.previous_50f9428")}
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
                   className="px-3 py-1.5 rounded-md border border-border-default hover:border-border-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
-                  Next
+                  {translateCopy("ui.next_bc98198")}
                 </button>
               </div>
             </div>

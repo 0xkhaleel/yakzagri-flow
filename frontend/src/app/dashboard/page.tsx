@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -57,9 +59,9 @@ export default function DashboardPage() {
         <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-gold" />
         </div>
-        <h1 className="text-2xl font-bold text-text-primary">Connect Wallet</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{translateCopy("ui.connect_wallet_234d7c8")}</h1>
         <p className="text-text-secondary max-w-md">
-          Please connect your wallet to access your personalized Amana dashboard, track your trades, and manage your assets.
+          {translateCopy("ui.please_connect_your_wallet_to_ac_5e32708")}
         </p>
       </div>
     );
@@ -102,7 +104,7 @@ export default function DashboardPage() {
             onClick={() => window.location.reload()} 
             className="mt-4 px-4 py-2 text-sm font-medium bg-bg-elevated hover:bg-bg-card rounded-md border border-border-default transition-colors"
           >
-            Try Again
+            {translateCopy("ui.try_again_cef2fe0")}
           </button>
         </div>
       </div>
@@ -114,15 +116,15 @@ export default function DashboardPage() {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
-          <p className="text-text-secondary mt-1">Overview of your agricultural trade activities.</p>
+          <h1 className="text-3xl font-bold text-text-primary">{translateCopy("ui.dashboard_d87f47b")}</h1>
+          <p className="text-text-secondary mt-1">{translateCopy("ui.overview_of_your_agricultural_tr_d2a1d58")}</p>
         </div>
         <div className="flex gap-3">
           <Link
             href="/trades/create"
             className="px-5 py-2.5 bg-gold text-text-inverse font-semibold rounded-lg hover:bg-gold-hover transition-colors shadow-glow-gold"
           >
-            Create Trade
+            {translateCopy("ui.create_trade_2747e94")}
           </Link>
         </div>
       </div>
@@ -130,7 +132,7 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <BentoCard 
-          title="Total Volume" 
+          title={translateCopy("ui.total_volume_eb89096")}
           icon={<CreditCard className="w-5 h-5" />}
           glowVariant="gold"
         >
@@ -138,12 +140,12 @@ export default function DashboardPage() {
             {stats?.totalVolume ? `${formatNumber(stats.totalVolume)} USDC` : "0 USDC"}
           </div>
           <div className="text-sm text-text-secondary mt-1">
-            Total historical trade volume
+            {translateCopy("ui.total_historical_trade_volume_aa4655d")}
           </div>
         </BentoCard>
 
         <BentoCard 
-          title="Active Trades" 
+          title={translateCopy("ui.active_trades_ee8d911")}
           icon={<Activity className="w-5 h-5" />}
           glowVariant="emerald"
         >
@@ -151,31 +153,31 @@ export default function DashboardPage() {
             {stats?.openTrades || 0}
           </div>
           <div className="text-sm text-status-success mt-1">
-            Currently in progress
+            {translateCopy("ui.currently_in_progress_91d2aec")}
           </div>
         </BentoCard>
 
         <BentoCard 
-          title="Completed Trades" 
+          title={translateCopy("ui.completed_trades_cfc3825")}
           icon={<CheckCircle2 className="w-5 h-5" />}
         >
           <div className="text-3xl font-bold text-text-primary mt-2">
             {(stats?.totalTrades || 0) - (stats?.openTrades || 0)}
           </div>
           <div className="text-sm text-text-secondary mt-1">
-            Successfully settled
+            {translateCopy("ui.successfully_settled_2cb5457")}
           </div>
         </BentoCard>
 
         <BentoCard 
-          title="Total Trades" 
+          title={translateCopy("ui.total_trades_002b416")}
           icon={<AlertCircle className="w-5 h-5" />}
         >
           <div className="text-3xl font-bold text-text-primary mt-2">
             {stats?.totalTrades || 0}
           </div>
           <div className="text-sm text-text-secondary mt-1">
-            Lifetime trades created
+            {translateCopy("ui.lifetime_trades_created_cd4e5e1")}
           </div>
         </BentoCard>
       </div>
@@ -183,9 +185,9 @@ export default function DashboardPage() {
       {/* Recent Activity Section */}
       <div className="space-y-4">
         <div className="flex justify-between items-end">
-          <h2 className="text-xl font-semibold text-text-primary">Recent Trades</h2>
+          <h2 className="text-xl font-semibold text-text-primary">{translateCopy("ui.recent_trades_28436af")}</h2>
           <Link href="/trades" className="text-sm text-gold hover:underline underline-offset-4">
-            View All
+            {translateCopy("ui.view_all_efd8355")}
           </Link>
         </div>
         
@@ -194,15 +196,15 @@ export default function DashboardPage() {
             <div className="w-12 h-12 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center mb-3">
               <Activity className="w-6 h-6 text-text-muted" />
             </div>
-            <p className="text-text-primary font-medium">No recent trades found.</p>
+            <p className="text-text-primary font-medium">{translateCopy("ui.no_recent_trades_found_3a3f178")}</p>
             <p className="text-text-secondary text-sm mt-1 max-w-sm mb-4">
-              You haven&apos;t initiated or received any trades yet. Create your first trade to get started.
+              {translateCopy("ui.you_haven_t_initiated_or_receive_e915857")}
             </p>
             <Link
               href="/trades/create"
               className="px-4 py-2 bg-bg-elevated border border-border-default text-text-primary text-sm font-medium rounded-lg hover:bg-bg-input transition-colors"
             >
-              Start Trading
+              {translateCopy("ui.start_trading_e00d57a")}
             </Link>
           </div>
         ) : (
@@ -211,11 +213,11 @@ export default function DashboardPage() {
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-text-muted uppercase bg-bg-elevated/50 border-b border-border-default">
                   <tr>
-                    <th scope="col" className="px-6 py-4 font-medium">Trade ID</th>
-                    <th scope="col" className="px-6 py-4 font-medium">Counterparty</th>
-                    <th scope="col" className="px-6 py-4 font-medium">Amount</th>
-                    <th scope="col" className="px-6 py-4 font-medium">Status</th>
-                    <th scope="col" className="px-6 py-4 font-medium">Date</th>
+                    <th scope="col" className="px-6 py-4 font-medium">{translateCopy("ui.trade_id_153d513")}</th>
+                    <th scope="col" className="px-6 py-4 font-medium">{translateCopy("ui.counterparty_97b2be4")}</th>
+                    <th scope="col" className="px-6 py-4 font-medium">{translateCopy("ui.amount_43dc853")}</th>
+                    <th scope="col" className="px-6 py-4 font-medium">{translateCopy("ui.status_bae7d5b")}</th>
+                    <th scope="col" className="px-6 py-4 font-medium">{translateCopy("ui.date_eb9a4bc")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -250,7 +252,7 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-text-secondary">
-                        {new Date(trade.createdAt).toLocaleDateString()}
+                        {formatDate(trade.createdAt)}
                       </td>
                     </tr>
                   ))}

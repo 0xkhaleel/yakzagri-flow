@@ -7,6 +7,27 @@ import {
   formatRelativeTime,
 } from "@/lib/i18n/format";
 import { pseudoLocalize } from "@/lib/i18n/pseudo";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { createElement, Fragment } from "react";
+import { LocaleProvider, useLocale } from "@/lib/i18n/LocaleProvider";
+import { setActiveLocale } from "@/lib/i18n/config";
+
+function LocaleProbe() {
+  const { locale, setLocale } = useLocale();
+  return createElement(
+    Fragment,
+    null,
+    createElement("span", null, locale),
+    createElement("span", null, t("common.retry")),
+    createElement("button", { onClick: () => setLocale("ha-NG") }, "Choose Hausa"),
+  );
+}
+
+afterEach(() => {
+  setActiveLocale(undefined);
+  window.localStorage.clear();
+});
 
 describe("formatNaira", () => {
   it("renders NGN as ₦1,234.56", () => {
@@ -81,6 +102,37 @@ describe("t()", () => {
     const out = t("common.retry", { locale: "pseudo" });
     expect(out).toMatch(/^⟦/);
     expect(out).toContain("Ŕéţŕý");
+  });
+
+  it("uses translated catalogs for supported Nigerian languages", () => {
+    expect(t("common.retry", { locale: "ha-NG" })).toBe("Sake gwadawa");
+    expect(t("common.retry", { locale: "yo-NG" })).toBe("Gbìyànjú lẹ́ẹ̀kansi");
+    expect(t("common.retry", { locale: "ig-NG" })).toBe("Nwaa ọzọ");
+  });
+
+  it("persists locale selection and applies it to the document", async () => {
+    const user = userEvent.setup();
+    render(createElement(LocaleProvider, null, createElement(LocaleProbe)));
+
+    await user.click(screen.getByRole("button", { name: "Choose Hausa" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("ha-NG")).toBeInTheDocument();
+      expect(screen.getByText("Sake gwadawa")).toBeInTheDocument();
+      expect(document.documentElement.lang).toBe("ha-NG");
+      expect(window.localStorage.getItem("amana-locale")).toBe("ha-NG");
+    });
+  });
+
+  it("restores the saved locale after hydration", async () => {
+    window.localStorage.setItem("amana-locale", "yo-NG");
+    render(createElement(LocaleProvider, null, createElement(LocaleProbe)));
+
+    await waitFor(() => {
+      expect(screen.getByText("yo-NG")).toBeInTheDocument();
+      expect(screen.getByText("Gbìyànjú lẹ́ẹ̀kansi")).toBeInTheDocument();
+      expect(document.documentElement.lang).toBe("yo-NG");
+    });
   });
 });
 

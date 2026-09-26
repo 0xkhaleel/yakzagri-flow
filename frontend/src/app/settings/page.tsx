@@ -1,8 +1,12 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React, { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { t, type Locale } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -140,6 +144,7 @@ function SelectField({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
+  const { locale, setLocale } = useLocale();
   const {
     address,
     isAuthenticated,
@@ -233,21 +238,40 @@ export default function SettingsPage() {
       <div className="max-w-3xl mx-auto space-y-8">
         {/* Page header */}
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
+          <h1 className="text-2xl font-bold text-text-primary">{translateCopy("ui.settings_c7f73bb")}</h1>
           <p className="mt-1 text-sm text-text-secondary">
-            Manage your wallet, notifications, and application preferences.
+            {translateCopy("ui.manage_your_wallet_notifications_3ed9a7d")}
           </p>
         </div>
 
+        <SectionCard
+          title={t("common.language")}
+          description={t("common.languageDescription")}
+        >
+          <select
+            aria-label={t("common.language")}
+            value={locale}
+            onChange={(event) => setLocale(event.target.value as Locale)}
+            className="w-full sm:w-64 rounded-lg border border-border-default bg-bg-input px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-border-focus"
+          >
+            <option value="en-NG">{t("common.englishNigeria")}</option>
+            <option value="en-US">{t("common.englishUnitedStates")}</option>
+            <option value="ha-NG">{t("common.hausa")}</option>
+            <option value="yo-NG">{t("common.yoruba")}</option>
+            <option value="ig-NG">{t("common.igbo")}</option>
+            {locale === "pseudo" && <option value="pseudo">{translateCopy("ui.pseudo_testing_90b1ccd")}</option>}
+          </select>
+        </SectionCard>
+
         {/* ── Wallet & Identity ── */}
         <SectionCard
-          title="Wallet & Identity"
+          title={translateCopy("ui.wallet_identity_4efb32d")}
           description="Your Stellar wallet is your identity on Amana."
         >
           <div className="rounded-xl border border-border-default bg-bg-elevated px-4 py-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase tracking-widest text-text-muted">
-                Wallet address
+                {translateCopy("ui.wallet_address_d6607aa")}
               </span>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full font-medium ${
@@ -274,7 +298,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={handleCopyAddress}
-                  title="Copy address"
+                  title={translateCopy("ui.copy_address_4eaae53")}
                   className="shrink-0 p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
                 >
                   {copied ? (
@@ -333,7 +357,7 @@ export default function SettingsPage() {
                 onClick={logout}
                 className="rounded-lg border border-status-danger/40 text-status-danger px-4 py-2 text-sm font-semibold hover:bg-status-danger/10 transition-colors"
               >
-                Sign Out
+                {translateCopy("ui.sign_out_61fd08f")}
               </button>
             )}
           </div>
@@ -341,19 +365,18 @@ export default function SettingsPage() {
 
         {/* ── Appearance ── */}
         <SectionCard
-          title="Appearance"
+          title={translateCopy("ui.appearance_41def7a")}
           description="Switch between light, dark, or system-preference theme."
         >
           <ThemeToggle />
           <p className="text-xs text-text-muted mt-2">
-            Your preference is saved locally and persists across sessions.
-            System mode follows your operating system setting.
+            {translateCopy("ui.your_preference_is_saved_locally_5120f9e")}
           </p>
         </SectionCard>
 
         {/* ── Notifications ── */}
         <SectionCard
-          title="Notifications"
+          title={translateCopy("ui.notifications_753a22b")}
           description="Choose which events trigger in-app alerts."
         >
           <div className="space-y-4">
@@ -389,7 +412,7 @@ export default function SettingsPage() {
 
         {/* ── Application Preferences ── */}
         <SectionCard
-          title="Application Preferences"
+          title={translateCopy("ui.application_preferences_41d8dfa")}
           description="Network, display currency, and session settings."
         >
           <div className="space-y-5">
@@ -439,7 +462,7 @@ export default function SettingsPage() {
               onClick={handleSavePreferences}
               className="rounded-lg bg-gold px-5 py-2 text-sm font-semibold text-text-inverse hover:bg-gold-hover transition-colors"
             >
-              Save preferences
+              {translateCopy("ui.save_preferences_d8ab74e")}
             </button>
             {saveSuccess && (
               <span className="text-sm text-emerald flex items-center gap-1.5">
@@ -452,7 +475,7 @@ export default function SettingsPage() {
                 >
                   <path d="M2 8l4 4 8-8" />
                 </svg>
-                Saved
+                {translateCopy("ui.saved_c0ae8f6")}
               </span>
             )}
           </div>
@@ -460,7 +483,7 @@ export default function SettingsPage() {
 
         {/* ── Security ── */}
         <SectionCard
-          title="Security"
+          title={translateCopy("ui.security_f25ce1b")}
           description="Information about how your session and keys are protected."
         >
           <ul className="space-y-3">
@@ -536,7 +559,7 @@ export default function SettingsPage() {
         </SectionCard>
 
         {/* ── About ── */}
-        <SectionCard title="About">
+        <SectionCard title={translateCopy("ui.about_6b21fb7")}>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
             {[
               { label: "Platform", value: "Amana" },

@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -94,7 +96,7 @@ export default function AdminAuditHistoryPage() {
     return (
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="admin-audit-page">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-text-primary">Admin Action History</h1>
+          <h1 className="text-3xl font-bold text-text-primary">{translateCopy("ui.admin_action_history_ca3d545")}</h1>
         </div>
         <SkeletonList rows={PAGE_SIZE} />
       </div>
@@ -114,7 +116,7 @@ export default function AdminAuditHistoryPage() {
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="admin-audit-page">
         <ErrorState
           variant="card"
-          title="Couldn't load admin action history"
+          title={translateCopy("ui.couldn_t_load_admin_action_histo_2023376")}
           message={error}
           onRetry={fetchAuditHistory}
         />
@@ -126,7 +128,7 @@ export default function AdminAuditHistoryPage() {
     <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="admin-audit-page">
       <Breadcrumbs items={breadcrumbs} className="mb-3" />
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-text-primary">Admin Action History</h1>
+        <h1 className="text-3xl font-bold text-text-primary">{translateCopy("ui.admin_action_history_ca3d545")}</h1>
       </div>
 
       <VirtualizedList
@@ -136,7 +138,7 @@ export default function AdminAuditHistoryPage() {
         keyExtractor={(entry) => String(entry.id)}
         isEmpty={entries.length === 0}
         emptyState={
-          <div className="text-center py-12 text-text-secondary">No admin actions recorded yet</div>
+          <div className="text-center py-12 text-text-secondary">{translateCopy("ui.no_admin_actions_recorded_yet_98d002a")}</div>
         }
         renderItem={(entry) => (
           <div className="p-6 bg-bg-elevated rounded-lg border border-border-default mb-4">
@@ -148,15 +150,15 @@ export default function AdminAuditHistoryPage() {
                   </span>
                 </div>
                 <div className="text-sm text-text-secondary mb-1">
-                  Admin: {entry.actorAddress}
+                  {translateCopy("ui.admin_a537f08")}{" "}{entry.actorAddress}
                 </div>
                 {entry.targetReference && (
                   <div className="text-sm text-text-secondary mb-1">
-                    Reference: {entry.targetReference}
+                    {translateCopy("ui.reference_45c3dc1")}{" "}{entry.targetReference}
                   </div>
                 )}
                 {entry.note && (
-                  <div className="text-sm text-text-secondary mb-1">Note: {entry.note}</div>
+                  <div className="text-sm text-text-secondary mb-1">{translateCopy("ui.note_83423c1")}{" "}{entry.note}</div>
                 )}
               </div>
               <div className="text-sm text-text-secondary whitespace-nowrap">
@@ -175,10 +177,10 @@ export default function AdminAuditHistoryPage() {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
-            Previous
+            {translateCopy("ui.previous_50f9428")}
           </Button>
           <span className="px-3 py-1 text-sm text-text-secondary">
-            Page {page} of {totalPages}
+            {translateCopy("ui.page_fb06270")}{" "}{page} {translateCopy("ui.of_de04fa0")}{" "}{totalPages}
           </span>
           <Button
             variant="secondary"
@@ -186,7 +188,7 @@ export default function AdminAuditHistoryPage() {
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
           >
-            Next
+            {translateCopy("ui.next_bc98198")}
           </Button>
         </div>
       )}

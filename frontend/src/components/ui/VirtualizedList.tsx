@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -63,10 +65,10 @@ export function VirtualizedList<T>({
 
   if (isEmpty) {
     return (
-      <div className={className} role="list" aria-label="Empty list">
+      <div className={className} role="list" aria-label={translateCopy("ui.empty_list_6dcc057")}>
         {emptyState ?? (
           <div className="py-12 text-center text-text-secondary text-sm">
-            No items to display
+            {translateCopy("ui.no_items_to_display_099de12")}
           </div>
         )}
       </div>
@@ -79,7 +81,7 @@ export function VirtualizedList<T>({
       className={`overflow-auto ${className ?? ""}`}
       style={{ height: totalHeight }}
       role="list"
-      aria-label="Virtualized list"
+      aria-label={translateCopy("ui.virtualized_list_4c3cd62")}
       tabIndex={0}
     >
       <div

@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -169,7 +171,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
         </svg>
         <span className="hidden sm:inline">Search</span>
         <kbd className="ml-1 hidden sm:inline-flex items-center gap-0.5 rounded border border-border-default px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
-          <span>⌘</span>K
+          <span>⌘</span>{translateCopy("ui.k_a7ee38b")}
         </kbd>
       </button>
     );
@@ -179,7 +181,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Global search"
+      aria-label={translateCopy("ui.global_search_a2b8a16")}
       className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] bg-overlay backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) close(); }}
     >
@@ -211,10 +213,10 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
           )}
           <button
             onClick={close}
-            aria-label="Close search"
+            aria-label={translateCopy("ui.close_search_0906f92")}
             className="rounded px-1.5 py-0.5 text-xs text-text-muted border border-border-default hover:border-border-hover transition-colors"
           >
-            Esc
+            {translateCopy("ui.esc_1f7a4f9")}
           </button>
         </div>
 
@@ -225,11 +227,11 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
           )}
 
           {!error && query && !loading && !hasResults && (
-            <p className="px-3 py-4 text-center text-sm text-text-muted">No results for &ldquo;{query}&rdquo;</p>
+            <p className="px-3 py-4 text-center text-sm text-text-muted">{translateCopy("ui.no_results_for_2a5f91d")}{query}&rdquo;</p>
           )}
 
           {!error && !query && (
-            <p className="px-3 py-4 text-center text-sm text-text-muted">Type to search trades, users, and contracts</p>
+            <p className="px-3 py-4 text-center text-sm text-text-muted">{translateCopy("ui.type_to_search_trades_users_and__6fdf7a0")}</p>
           )}
 
           {hasResults &&

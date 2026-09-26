@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { Component, type ReactNode, type ErrorInfo } from "react";
 import {
@@ -98,7 +100,7 @@ function DefaultFallback({
       {/* Heading + message */}
       <div className="flex flex-col gap-2">
         <h2 className="text-xl font-semibold text-text-primary">
-          Something went wrong
+          {translateCopy("common.somethingWentWrong")}
         </h2>
         <p className="text-sm text-text-secondary">
           {process.env.NODE_ENV !== "production" && error.message
@@ -110,7 +112,7 @@ function DefaultFallback({
       {/* Correlation ID */}
       <div className="w-full rounded-lg bg-bg-elevated border border-border-default px-4 py-3 flex flex-col gap-1">
         <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
-          Error reference
+          {translateCopy("ui.error_reference_eda2378")}
         </span>
         <div className="flex items-center justify-between gap-2">
           <code
@@ -122,7 +124,7 @@ function DefaultFallback({
           <button
             type="button"
             onClick={handleCopy}
-            aria-label="Copy correlation ID"
+            aria-label={translateCopy("ui.copy_correlation_id_6dbeeef")}
             className="flex-shrink-0 rounded-md p-1.5 text-text-muted hover:text-text-primary hover:bg-bg-input transition-colors focus:outline-none focus:ring-2 focus:ring-accent-gold"
           >
             <svg
@@ -142,7 +144,7 @@ function DefaultFallback({
           </button>
         </div>
         <p className="text-xs text-text-muted">
-          Quote this ID when contacting support so we can locate the trace.
+          {translateCopy("ui.quote_this_id_when_contacting_su_88426b1")}
         </p>
       </div>
 
@@ -154,7 +156,7 @@ function DefaultFallback({
           data-testid="retry-button"
           className="w-full sm:w-auto flex-1 rounded-lg px-5 py-2.5 text-sm font-semibold bg-accent-gold text-text-inverse hover:bg-accent-gold-hover transition-colors focus:outline-none focus:ring-2 focus:ring-accent-gold focus:ring-offset-2 focus:ring-offset-bg-primary"
         >
-          Try again
+          {translateCopy("wallet.rejectedCta")}
         </button>
         <a
           href={backHref}
