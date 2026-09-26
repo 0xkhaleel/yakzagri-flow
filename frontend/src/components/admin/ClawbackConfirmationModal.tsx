@@ -18,26 +18,24 @@ export interface ClawbackConfirmationModalProps {
   streamId: string;
   amount: string;
   remainingVested: string;
-  onConfirm: () => void;
+  onPreview: () => void;
   onCancel: () => void;
-  /** true while the confirmed clawback request is in flight. */
-  confirming?: boolean;
+  /** true while the read-only preview request is in flight. */
+  previewing?: boolean;
 }
 
 /**
- * Confirmation gate for admin clawback submissions (#56). Requires an
- * explicit "Confirm clawback" click before anything is sent — dismissing the
- * modal (Cancel, overlay click, Escape) always routes through `onCancel`,
- * never submits.
+ * Review gate for the read-only clawback preview. Dismissing the modal never
+ * sends a request.
  */
 export function ClawbackConfirmationModal({
   open,
   streamId,
   amount,
   remainingVested,
-  onConfirm,
+  onPreview,
   onCancel,
-  confirming = false,
+  previewing = false,
 }: ClawbackConfirmationModalProps) {
   return (
     <Modal
@@ -75,8 +73,8 @@ export function ClawbackConfirmationModal({
           <Button variant="secondary" onClick={onCancel} disabled={confirming}>
             {translateCopy("common.cancel")}
           </Button>
-          <Button variant="primary" onClick={onConfirm} disabled={confirming}>
-            {confirming ? "Confirming…" : "Confirm clawback"}
+          <Button variant="primary" onClick={onPreview} disabled={previewing}>
+            {previewing ? "Loading preview…" : "Run preview"}
           </Button>
         </ModalFooter>
       </ModalContent>

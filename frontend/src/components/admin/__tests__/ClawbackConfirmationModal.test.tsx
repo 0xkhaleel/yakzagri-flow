@@ -11,7 +11,7 @@ describe("ClawbackConfirmationModal", () => {
         streamId="stream-abc-123"
         amount="3000"
         remainingVested="7500"
-        onConfirm={jest.fn()}
+        onPreview={jest.fn()}
         onCancel={jest.fn()}
       />,
     );
@@ -26,7 +26,7 @@ describe("ClawbackConfirmationModal", () => {
         streamId="stream-abc-123"
         amount="3000"
         remainingVested="7500"
-        onConfirm={jest.fn()}
+        onPreview={jest.fn()}
         onCancel={jest.fn()}
       />,
     );
@@ -37,9 +37,9 @@ describe("ClawbackConfirmationModal", () => {
     expect(screen.getByText("7500")).toBeInTheDocument();
   });
 
-  it("calls onConfirm only after the Confirm button is clicked", async () => {
+  it("calls onPreview only after the Run preview button is clicked", async () => {
     const user = userEvent.setup();
-    const onConfirm = jest.fn();
+    const onPreview = jest.fn();
 
     render(
       <ClawbackConfirmationModal
@@ -47,19 +47,19 @@ describe("ClawbackConfirmationModal", () => {
         streamId="stream-abc-123"
         amount="3000"
         remainingVested="7500"
-        onConfirm={onConfirm}
+        onPreview={onPreview}
         onCancel={jest.fn()}
       />,
     );
 
-    expect(onConfirm).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: /confirm clawback/i }));
-    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(onPreview).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: /run preview/i }));
+    expect(onPreview).toHaveBeenCalledTimes(1);
   });
 
   it("calls onCancel when Cancel is clicked, without calling onConfirm", async () => {
     const user = userEvent.setup();
-    const onConfirm = jest.fn();
+    const onPreview = jest.fn();
     const onCancel = jest.fn();
 
     render(
@@ -68,18 +68,18 @@ describe("ClawbackConfirmationModal", () => {
         streamId="stream-abc-123"
         amount="3000"
         remainingVested="7500"
-        onConfirm={onConfirm}
+        onPreview={onPreview}
         onCancel={onCancel}
       />,
     );
 
     await user.click(screen.getByRole("button", { name: /cancel/i }));
     expect(onCancel).toHaveBeenCalledTimes(1);
-    expect(onConfirm).not.toHaveBeenCalled();
+    expect(onPreview).not.toHaveBeenCalled();
   });
 
   it("calls onCancel (not onConfirm) when dismissed via Escape", () => {
-    const onConfirm = jest.fn();
+    const onPreview = jest.fn();
     const onCancel = jest.fn();
 
     render(
@@ -88,14 +88,14 @@ describe("ClawbackConfirmationModal", () => {
         streamId="stream-abc-123"
         amount="3000"
         remainingVested="7500"
-        onConfirm={onConfirm}
+        onPreview={onPreview}
         onCancel={onCancel}
       />,
     );
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onCancel).toHaveBeenCalledTimes(1);
-    expect(onConfirm).not.toHaveBeenCalled();
+    expect(onPreview).not.toHaveBeenCalled();
   });
 
   it("disables both buttons while confirming", () => {
@@ -105,13 +105,13 @@ describe("ClawbackConfirmationModal", () => {
         streamId="stream-abc-123"
         amount="3000"
         remainingVested="7500"
-        onConfirm={jest.fn()}
+        onPreview={jest.fn()}
         onCancel={jest.fn()}
-        confirming
+        previewing
       />,
     );
 
     expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /confirming/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /loading preview/i })).toBeDisabled();
   });
 });

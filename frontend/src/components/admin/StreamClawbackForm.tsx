@@ -17,12 +17,12 @@ export interface StreamClawbackFormProps {
   streamId: string;
   /** The stream's current remaining vested (unclaimed) balance, as an integer string. */
   remainingVested: string;
-  onSuccess?: (result: StreamClawbackPreviewResponse) => void;
+  onPreview?: (result: StreamClawbackPreviewResponse) => void;
 }
 
 /**
- * Admin clawback amount entry with client-side validation (#57) gated behind
- * an explicit confirmation modal (#56). Errors from the backend preview call
+ * Admin clawback preview amount entry with client-side validation (#57).
+ * Errors from the backend preview call
  * (invalid/too-large amount, 403, 500, ...) are surfaced via the shared
  * error-code -> message mapping (#59).
  */
@@ -30,12 +30,13 @@ export function StreamClawbackForm({
   token,
   streamId,
   remainingVested,
-  onSuccess,
+  onPreview,
 }: StreamClawbackFormProps) {
   const [amount, setAmount] = useState("");
   const [touched, setTouched] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [confirming, setConfirming] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewResult, setPreviewResult] = useState<StreamClawbackPreviewResponse | null>(null);
 
   const { handleError } = useErrorHandler();
   const { addToast } = useToast();
@@ -55,24 +56,23 @@ export function StreamClawbackForm({
     setModalOpen(false);
   };
 
-  const handleConfirm = async () => {
-    setConfirming(true);
+  const handlePreview = async () => {
+    setPreviewing(true);
     try {
       const result = await api.adminStreams.clawbackPreview(token, streamId, amount);
+      setPreviewResult(result);
       addToast({
         type: "success",
-        title: "Clawback previewed",
+        title: "Clawback preview ready",
         message: `Post-clawback balance would be ${result.postClawbackBalance}.`,
       });
       setModalOpen(false);
-      setAmount("");
-      setTouched(false);
-      onSuccess?.(result);
+      onPreview?.(result);
     } catch (error) {
       handleError(error);
       setModalOpen(false);
     } finally {
-      setConfirming(false);
+      setPreviewing(false);
     }
   };
 
@@ -94,6 +94,7 @@ export function StreamClawbackForm({
           onChange={(e) => {
             setAmount(e.target.value);
             setTouched(true);
+            setPreviewResult(null);
           }}
           onBlur={() => setTouched(true)}
           className="w-full rounded-md border border-border-default bg-bg-elevated px-3 py-2 text-sm text-text-primary focus-visible:outline-2 focus-visible:outline-gold"
@@ -105,14 +106,23 @@ export function StreamClawbackForm({
         {translateCopy("ui.review_clawback_043eda9")}
       </Button>
 
+      {previewResult && (
+        <div role="status" className="rounded-md border border-border-default bg-bg-elevated p-3 text-sm">
+          <p className="font-medium text-text-primary">Read-only preview</p>
+          <p className="mt-1 text-text-secondary">
+            Projected remaining vested balance: {previewResult.postClawbackBalance}. No balance was changed.
+          </p>
+        </div>
+      )}
+
       <ClawbackConfirmationModal
         open={modalOpen}
         streamId={streamId}
         amount={amount}
         remainingVested={remainingVested}
-        onConfirm={handleConfirm}
+        onPreview={handlePreview}
         onCancel={handleCancel}
-        confirming={confirming}
+        previewing={previewing}
       />
     </div>
   );

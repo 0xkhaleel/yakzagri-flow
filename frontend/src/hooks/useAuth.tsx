@@ -10,29 +10,27 @@ import {
   type ReactNode,
 } from "react";
 import {
-  getAddress,
-  isAllowed,
-  isConnected,
-  requestAccess,
   signMessage,
 } from "@stellar/freighter-api";
 import { api, ApiError } from "@/lib/api";
 import { trackAuthEvent } from "@/lib/analytics";
+import { useFreighterIdentity } from "@/hooks/useFreighterIdentity";
 
 const TOKEN_STORAGE_KEY = "amana_jwt";
+const TOKEN_ADDRESS_STORAGE_KEY = "amana_jwt_address";
 
 interface AuthState {
-  address: string | null;
-  shortAddress: string | null;
   token: string | null;
   isAuthenticated: boolean;
-  isWalletConnected: boolean;
-  isWalletDetected: boolean;
   isLoading: boolean;
   error: string | null;
 }
 
 interface AuthContextType extends AuthState {
+  address: string | null;
+  shortAddress: string | null;
+  isWalletConnected: boolean;
+  isWalletDetected: boolean;
   connectWallet: () => Promise<void>;
   authenticate: () => Promise<void>;
   logout: () => Promise<void>;
@@ -40,10 +38,6 @@ interface AuthContextType extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
-function shortenAddress(address: string): string {
-  return `${address.slice(0, 6)}...${address.slice(-6)}`;
-}
 
 function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -58,6 +52,16 @@ function setStoredToken(token: string): void {
 function clearStoredToken(): void {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+  sessionStorage.removeItem(TOKEN_ADDRESS_STORAGE_KEY);
+}
+
+function getTokenAddress(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.walletAddress ?? payload.sub ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function isTokenExpired(token: string): boolean {
@@ -72,49 +76,18 @@ function isTokenExpired(token: string): boolean {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const identity = useFreighterIdentity();
   const [state, setState] = useState<AuthState>({
-    address: null,
-    shortAddress: null,
     token: null,
     isAuthenticated: false,
-    isWalletConnected: false,
-    isWalletDetected: false,
     isLoading: true,
     error: null,
   });
-
-  const checkWalletState = useCallback(async () => {
-    try {
-      const [connectedResult, allowedResult] = await Promise.all([
-        isConnected(),
-        isAllowed(),
-      ]);
-
-      const hasWallet =
-        connectedResult.error === undefined && connectedResult.isConnected;
-      const hasPermission =
-        allowedResult.error === undefined && allowedResult.isAllowed;
-
-      let address: string | null = null;
-      if (hasWallet && hasPermission) {
-        const addressResult = await getAddress();
-        if (addressResult.error === undefined) {
-          address = addressResult.address;
-        }
-      }
-
-      return { hasWallet, hasPermission, address };
-    } catch (error) {
-      console.error('Failed to read wallet state:', error);
-      return { hasWallet: false, hasPermission: false, address: null };
-    }
-  }, []);
 
   const refreshAuth = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const { hasWallet, hasPermission, address } = await checkWalletState();
       const storedToken = getStoredToken();
 
       let token: string | null = null;
@@ -123,15 +96,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (storedToken && !isTokenExpired(storedToken)) {
         token = storedToken;
         isAuthenticated = true;
+      } else if (storedToken) {
+        clearStoredToken();
       }
 
       setState({
-        address,
-        shortAddress: address ? shortenAddress(address) : null,
         token,
         isAuthenticated,
-        isWalletConnected: hasWallet && hasPermission,
-        isWalletDetected: hasWallet,
         isLoading: false,
         error: null,
       });
@@ -142,41 +113,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error: error instanceof Error ? error.message : "Failed to refresh auth",
       }));
     }
-  }, [checkWalletState]);
-
-  const connectWallet = useCallback(async () => {
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      trackAuthEvent("connect_wallet", "started");
-      const requestResult = await requestAccess();
-      if (requestResult.error !== undefined) {
-        throw new Error(requestResult.error.message || "Failed to connect wallet");
-      }
-
-      const address = requestResult.address;
-      setState((prev) => ({
-        ...prev,
-        address,
-        shortAddress: shortenAddress(address),
-        isWalletConnected: true,
-        isWalletDetected: true,
-        isLoading: false,
-      }));
-      trackAuthEvent("connect_wallet", "success", { connected: true });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to connect wallet";
-      trackAuthEvent("connect_wallet", "failed", { error: message });
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: message,
-      }));
-    }
   }, []);
 
   const authenticate = useCallback(async () => {
-    if (!state.address) {
+    if (!identity.address) {
       setState((prev) => ({
         ...prev,
         error: "Wallet not connected",
@@ -188,10 +128,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       trackAuthEvent("authenticate", "started");
-      const { challenge } = await api.auth.challenge(state.address);
+      const { challenge } = await api.auth.challenge(identity.address);
 
       const signResult = await signMessage(challenge, {
-        address: state.address,
+        address: identity.address,
       });
 
       if (signResult.error !== undefined) {
@@ -205,9 +145,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const signedChallenge = typeof signedMessage === "string" 
         ? signedMessage 
         : Buffer.from(signedMessage).toString("base64url");
-      const { token } = await api.auth.verify(state.address, signedChallenge);
+      const { token } = await api.auth.verify(identity.address, signedChallenge);
 
       setStoredToken(token);
+      sessionStorage.setItem(TOKEN_ADDRESS_STORAGE_KEY, identity.address);
 
       setState((prev) => ({
         ...prev,
@@ -232,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error: errorMessage,
       }));
     }
-  }, [state.address]);
+  }, [identity.address]);
 
   const logout = useCallback(async () => {
     if (state.token) {
@@ -244,6 +185,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     clearStoredToken();
+    if (typeof window !== "undefined" && "caches" in window) {
+      try {
+        await window.caches.delete("amana-api-cache-v1");
+      } catch (error) {
+        console.warn("Failed to clear cached API responses:", error);
+      }
+    }
 
     setState((prev) => ({
       ...prev,
@@ -257,6 +205,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refreshAuth();
   }, [refreshAuth]);
+
+  useEffect(() => {
+    if (identity.isLoading || !identity.address || !state.token) return;
+    const tokenAddress =
+      sessionStorage.getItem(TOKEN_ADDRESS_STORAGE_KEY) ??
+      getTokenAddress(state.token);
+    if (tokenAddress && tokenAddress.toLowerCase() !== identity.address.toLowerCase()) {
+      clearStoredToken();
+      setState((prev) => ({ ...prev, token: null, isAuthenticated: false }));
+    }
+  }, [identity.address, identity.isLoading, state.token]);
 
   useEffect(() => {
     if (!state.token) return;
@@ -293,12 +252,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextType>(
     () => ({
       ...state,
-      connectWallet,
+      address: identity.address,
+      shortAddress: identity.shortAddress,
+      isWalletConnected: identity.isAuthorized,
+      isWalletDetected: identity.isWalletDetected,
+      isLoading: state.isLoading || identity.isLoading,
+      error: state.error ?? identity.error,
+      connectWallet: identity.connectWallet,
       authenticate,
       logout,
       refreshAuth,
     }),
-    [state, connectWallet, authenticate, logout, refreshAuth]
+    [state, identity, authenticate, logout, refreshAuth]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -4,10 +4,10 @@ import { t as translateCopy } from "@/lib/i18n";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StrKey } from "@stellar/stellar-sdk";
-import { signTransaction } from "@stellar/freighter-api";
 import { useTrade } from "../TradeContext";
 import { useAuth } from "@/hooks/useAuth";
-import { api, apiConfig, ApiError } from "@/lib/api";
+import { ApiError } from "@/lib/api";
+import { submitTradeCreation } from "@/lib/trades/submitTradeCreation";
 import { createTradeInputSchema, fieldErrors } from "@/lib/domain-schemas/trade";
 import Link from "next/link";
 import { LegalDisclaimerModal } from "@/components/ui/LegalDisclaimerModal";
@@ -36,7 +36,7 @@ export default function Step3Review() {
   const { isOffline } = useOffline();
   const enqueue = useOfflineQueueStore((s) => s.enqueue);
   const pendingCount = useOfflineQueueStore((s) => s.queue.length);
-  const { addToast, addToastWithCorrelation, updateToast } = useToast();
+  const { addToastWithCorrelation, updateToast } = useToast();
   const [loading, setLoading] = useState(false);
   const submittingRef = useRef(false);
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -135,39 +135,13 @@ export default function Step3Review() {
     addToastWithCorrelation({ type: "info", title: "In progress", message: "Locking funds…", correlationId, duration: 0 });
 
     try {
-      const createResponse = await api.trades.create(token, payload, { idempotencyKey, correlationId });
-
-      setTradeId(createResponse.tradeId);
-
-      const signResult = await signTransaction(createResponse.unsignedXdr, {
-        networkPassphrase: apiConfig.getStellarNetworkPassphrase(),
+      const submission = await submitTradeCreation(token, payload, {
+        idempotencyKey,
+        correlationId,
       });
 
-      if (signResult.error !== undefined) {
-        throw new Error(signResult.error.message || "Failed to sign transaction");
-      }
-
-      const signedXdr = signResult.signedTxXdr;
-
-      const rpcUrl = apiConfig.getStellarRpcUrl();
-      const submitResponse = await fetch(rpcUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: 1,
-          method: "sendTransaction",
-          params: { transaction: signedXdr },
-        }),
-      });
-
-      const submitResult = await submitResponse.json();
-
-      if (submitResult.error) {
-        throw new Error(submitResult.error.message || "Transaction submission failed");
-      }
-
-      setTxHash(submitResult.result?.hash || createResponse.tradeId);
+      setTradeId(submission.tradeId);
+      setTxHash(submission.transactionHash);
       updateToast(correlationId, { type: "success", title: "Success", message: "Trade created — funds locked.", duration: 5000 });
       // Clear draft on success
       try { localStorage.removeItem("amana:draft-trade"); } catch {}
