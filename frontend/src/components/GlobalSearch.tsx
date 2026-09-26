@@ -21,12 +21,6 @@ const CATEGORY_LABELS: Record<keyof GroupedResults, string> = {
   contracts: "Contracts",
 };
 
-const CATEGORY_PATHS: Record<keyof GroupedResults, string> = {
-  trades: "/trades",
-  users: "/users",
-  contracts: "/contracts",
-};
-
 interface GlobalSearchProps {
   /** Called when the overlay is dismissed without a selection */
   onClose?: () => void;
@@ -43,6 +37,8 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
   const [activeIndex, setActiveIndex] = useState(-1);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasOpenRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const allItems = [
@@ -67,6 +63,13 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
     setActiveIndex(-1);
     onClose?.();
   }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen && wasOpenRef.current) {
+      triggerRef.current?.focus();
+    }
+    wasOpenRef.current = isOpen;
+  }, [isOpen]);
 
   // Cmd+K / Ctrl+K global shortcut
   useEffect(() => {
@@ -127,7 +130,12 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
   }, [query, isOpen, token]);
 
   function handleSelect(item: SearchResultItem & { category: keyof GroupedResults }) {
-    router.push(`${CATEGORY_PATHS[item.category]}/${item.id}`);
+    const routes: Record<keyof GroupedResults, string> = {
+      trades: `/trades/${encodeURIComponent(item.id)}`,
+      users: `/reputation/${encodeURIComponent(item.id)}`,
+      contracts: `/streams/${encodeURIComponent(item.id)}`,
+    };
+    router.push(routes[item.category]);
     close();
   }
 
@@ -152,15 +160,16 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
   if (!isOpen) {
     return (
       <button
+        ref={triggerRef}
         onClick={open}
-        aria-label={translateCopy("ui.open_global_search_489a247")}
-        className="flex items-center gap-2 rounded-lg border border-border-default bg-bg-elevated px-3 py-1.5 text-sm text-text-muted hover:border-border-hover hover:text-text-secondary transition-colors"
+        aria-label="Open global search"
+        className="flex items-center gap-2 rounded-lg border border-border-default bg-bg-elevated px-2 py-1.5 text-sm text-text-muted hover:border-border-hover hover:text-text-secondary transition-colors sm:px-3"
       >
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
           <circle cx="6.5" cy="6.5" r="4.5" />
           <path d="M10 10l3 3" strokeLinecap="round" />
         </svg>
-        <span>{translateCopy("ui.search_bce0641")}</span>
+        <span className="hidden sm:inline">Search</span>
         <kbd className="ml-1 hidden sm:inline-flex items-center gap-0.5 rounded border border-border-default px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
           <span>⌘</span>{translateCopy("ui.k_a7ee38b")}
         </kbd>
@@ -187,8 +196,10 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
             ref={inputRef}
             type="text"
             role="searchbox"
-            aria-label={translateCopy("ui.search_trades_users_and_contract_3948f3a")}
-            placeholder={translateCopy("ui.search_trades_users_contracts_204acaf")}
+            aria-label="Search trades, users, and contracts"
+            aria-controls="global-search-results"
+            aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
+            placeholder="Search trades, users, contracts…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyNavigation}
@@ -210,7 +221,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
         </div>
 
         {/* Results */}
-        <div className="max-h-[60vh] overflow-y-auto p-2" role="listbox" aria-label={translateCopy("ui.search_results_0144dae")}>
+        <div id="global-search-results" className="max-h-[60vh] overflow-y-auto p-2" role="listbox" aria-label="Search results">
           {error && (
             <p className="px-3 py-4 text-center text-sm text-status-danger">{error}</p>
           )}
@@ -236,8 +247,8 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
                     : results.trades.length + results.users.length;
 
               return (
-                <div key={category} className="mb-1">
-                  <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+                <div key={category} className="mb-1" role="group" aria-labelledby={`search-group-${category}`}>
+                  <p id={`search-group-${category}`} className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
                     {CATEGORY_LABELS[category]}
                   </p>
                   {items.map((item, idx) => {
@@ -246,6 +257,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
                     return (
                       <button
                         key={item.id}
+                        id={`search-result-${globalIdx}`}
                         role="option"
                         aria-selected={isActive}
                         onClick={() => handleSelect({ ...item, category })}

@@ -5,6 +5,7 @@ import { t as translateCopy } from "@/lib/i18n";
 import { useState } from "react";
 import { CreditCard } from "lucide-react";
 import { BentoCard } from "@/components/ui/BentoCard";
+import { formatNumber } from "@/lib/i18n/format";
 
 interface PaymentOverviewCardProps {
   totalCngn: number;
@@ -22,16 +23,16 @@ const LINE_ITEMS: CostLineItem[] = [
     label: "Total Trade Value",
     getValue: (total, currency, rate) =>
       currency === "NGN"
-        ? `₦${(total * rate).toLocaleString("en-NG", { maximumFractionDigits: 2 })}`
-        : `${total.toLocaleString()} cNGN`,
+        ? `₦${formatNumber(total * rate, { maximumFractionDigits: 2 })}`
+        : `${formatNumber(total)} cNGN`,
   },
   {
     label: "Amana Platform Fee (1%)",
     getValue: (total, currency, rate) => {
       const fee = parseFloat((total * 0.01).toFixed(2));
       return currency === "NGN"
-        ? `₦${(fee * rate).toLocaleString("en-NG", { maximumFractionDigits: 2 })}`
-        : `${fee.toLocaleString()} cNGN`;
+        ? `₦${formatNumber(fee * rate, { maximumFractionDigits: 2 })}`
+        : `${formatNumber(fee)} cNGN`;
     },
   },
   {
@@ -39,8 +40,8 @@ const LINE_ITEMS: CostLineItem[] = [
     getValue: (total, currency, rate) => {
       const net = parseFloat((total - total * 0.01).toFixed(2));
       return currency === "NGN"
-        ? `₦${(net * rate).toLocaleString("en-NG", { maximumFractionDigits: 2 })}`
-        : `${net.toLocaleString()} cNGN`;
+        ? `₦${formatNumber(net * rate, { maximumFractionDigits: 2 })}`
+        : `${formatNumber(net)} cNGN`;
     },
     dimmed: true,
   },
@@ -54,8 +55,8 @@ export function PaymentOverviewCard({
 
   const lockedDisplay =
     currency === "NGN"
-      ? `₦${(totalCngn * ngnRate).toLocaleString("en-NG", { maximumFractionDigits: 2 })}`
-      : `${totalCngn.toLocaleString()} cNGN`;
+      ? `₦${formatNumber(totalCngn * ngnRate, { maximumFractionDigits: 2 })}`
+      : `${formatNumber(totalCngn)} cNGN`;
 
   return (
     <BentoCard

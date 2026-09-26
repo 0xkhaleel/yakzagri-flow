@@ -4,6 +4,7 @@ import { t as translateCopy } from "@/lib/i18n";
 
 import React from "react";
 import type { TradeDetail } from "@/types/trade";
+import { formatNumber } from "@/lib/i18n/format";
 
 interface VaultSidebarProps {
   trade: TradeDetail;
@@ -16,7 +17,7 @@ export function VaultSidebar({ trade }: VaultSidebarProps) {
         {translateCopy("ui.vault_amount_locked_39aaa41")}
       </p>
       <p className="text-4xl font-bold text-gold mb-4">
-        {trade.vaultAmountLocked.toLocaleString()}{" "}
+        {formatNumber(trade.vaultAmountLocked)}{" "}
         <span className="text-xl font-semibold text-text-secondary">cNGN</span>
       </p>
 
@@ -24,7 +25,7 @@ export function VaultSidebar({ trade }: VaultSidebarProps) {
         <div className="flex justify-between text-sm">
           <span className="text-text-secondary">{translateCopy("ui.asset_value_1ee2852")}</span>
           <span className="text-text-primary font-medium">
-            {trade.assetValue.toLocaleString()} cNGN
+            {formatNumber(trade.assetValue)} cNGN
           </span>
         </div>
         <div className="flex justify-between text-sm">
@@ -32,7 +33,7 @@ export function VaultSidebar({ trade }: VaultSidebarProps) {
             {translateCopy("ui.platform_fee_427cfef")}{trade.platformFeePercent}%)
           </span>
           <span className="text-status-danger font-medium">
-            {trade.platformFee.toLocaleString()} cNGN
+            {formatNumber(trade.platformFee)} cNGN
           </span>
         </div>
         <div className="flex justify-between text-sm">

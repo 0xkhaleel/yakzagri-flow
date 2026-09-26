@@ -4,10 +4,11 @@ import { t as translateCopy } from "@/lib/i18n";
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { NavLink } from "@/components/ui/Navigation";
 import { Badge } from "@/components/ui/Badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useNotificationStore } from "@/stores/notificationStore";
 
 interface AppTopNavProps {
   onToggleSidebar?: () => void;
@@ -29,6 +30,7 @@ export function AppTopNav({
   isSidebarOpen,
 }: AppTopNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const isAdmin = useIsAdmin();
 
   return (
@@ -76,6 +78,8 @@ export function AppTopNav({
 
       {/* Right side */}
       <div className="ml-auto flex items-center gap-3">
+        <GlobalSearch />
+
         {/* Admin role indicator */}
         {isAdmin && (
           <Badge variant="locked" size="sm">
@@ -84,7 +88,12 @@ export function AppTopNav({
         )}
 
         {/* Notification bell */}
-        <button className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-elevated transition-all">
+        <button
+          type="button"
+          aria-label="Open notifications"
+          onClick={() => void useNotificationStore.getState().fetch()}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-elevated transition-all"
+        >
           <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M8 1a5 5 0 015 5v3l1.5 2.5H1.5L3 9V6a5 5 0 015-5z" />
             <path d="M6.5 13.5a1.5 1.5 0 003 0" />
@@ -92,7 +101,12 @@ export function AppTopNav({
         </button>
 
         {/* Avatar */}
-        <button className="w-8 h-8 rounded-full bg-elevated border border-border-default flex items-center justify-center text-text-secondary hover:text-text-primary transition-all">
+        <button
+          type="button"
+          aria-label="Open account settings"
+          onClick={() => router.push("/settings")}
+          className="w-8 h-8 rounded-full bg-elevated border border-border-default flex items-center justify-center text-text-secondary hover:text-text-primary transition-all"
+        >
           <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
             <circle cx="8" cy="5" r="3" />
             <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" />

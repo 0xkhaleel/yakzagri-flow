@@ -62,17 +62,14 @@ export default function StreamsPage() {
             {translateCopy("ui.quick_access_85257a4")}
           </p>
           <p className="text-sm text-text-muted mb-4">
-            {translateCopy("ui.to_view_a_specific_stream_naviga_667edb0")}{" "}
-            <code className="rounded bg-bg-elevated px-2 py-1 text-xs text-text-primary font-mono">
-              {translateCopy("ui.streams_streamid_6141e5b")}
-            </code>
+            Use a real stream ID from your connected wallet or the stream overview to open a detail page.
           </p>
           <div className="flex gap-3">
             <Link
-              href="/streams/example-stream-123"
+              href="/admin/streams"
               className="rounded-lg border border-border-default bg-bg-elevated px-4 py-2 text-sm font-medium text-text-secondary hover:border-border-hover hover:bg-card hover:text-text-primary transition-colors"
             >
-              {translateCopy("ui.view_example_stream_e1ed95f")}
+              View Stream Ledger
             </Link>
           </div>
         </div>

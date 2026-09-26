@@ -2,7 +2,7 @@
 import { t as translateCopy } from "@/lib/i18n";
 
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/components/AnalyticsProvider";
@@ -12,9 +12,10 @@ import { api, ApiError, TradeResponse } from "@/lib/api";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { NavButton } from "@/components/ui/Navigation";
-import { VirtualizedList } from "@/components/ui/VirtualizedList";
+import { StatusBadge, type TradeStatus as BadgeTradeStatus } from "@/components/ui/StatusBadge";
 
 type TradeStatus = "all" | "active" | "pending" | "completed" | "disputed";
+type TradeRole = "all" | "buying" | "selling";
 
 const FILTERS: { label: string; value: TradeStatus }[] = [
   { label: "All", value: "all" },
@@ -24,19 +25,33 @@ const FILTERS: { label: string; value: TradeStatus }[] = [
   { label: "Disputed", value: "disputed" },
 ];
 
-// Status chip tokens: text = status color, bg = status/10, border = status/20.
-// "completed" and "draft" use neutral surface tokens (no alert color).
-const STATUS_STYLES: Record<string, string> = {
-  active:    "text-status-success bg-status-success/10 border border-status-success/20",
-  pending:   "text-status-warning bg-status-warning/10 border border-status-warning/20",
-  completed: "text-text-secondary bg-surface-2 border border-border-default",
-  disputed:  "text-status-danger  bg-status-danger/10  border border-status-danger/20",
-  locked:    "text-status-locked  bg-status-locked/10  border border-status-locked/20",
-  draft:     "text-status-draft   bg-surface-1         border border-border-default",
-};
-
 const PAGE_SIZE = 100;
-const ROW_HEIGHT = 52;
+
+const ROLE_FILTERS: { label: string; value: TradeRole }[] = [
+  { label: "All roles", value: "all" },
+  { label: "Buying", value: "buying" },
+  { label: "Selling", value: "selling" },
+];
+
+function matchesStatus(status: string, filter: TradeStatus) {
+  if (filter === "all") return true;
+  const normalized = status.toLowerCase().replace(/_/g, "-");
+  if (filter === "active") return ["funded", "active", "delivered", "in-transit"].includes(normalized);
+  if (filter === "pending") return ["created", "pending", "pending-signature"].includes(normalized);
+  if (filter === "completed") return ["completed", "settled", "released", "resolved"].includes(normalized);
+  return normalized === "disputed";
+}
+
+function toBadgeStatus(status: string): BadgeTradeStatus {
+  const normalized = status.toLowerCase().replace(/_/g, "-");
+  if (normalized === "disputed") return "disputed";
+  if (normalized === "delivered") return "delivered";
+  if (normalized === "funded" || normalized === "locked") return "locked";
+  if (["completed", "settled", "released", "resolved"].includes(normalized)) return "delivered";
+  if (normalized === "draft" || normalized === "cancelled") return "draft";
+  if (["in-transit", "in transit"].includes(normalized)) return "in-transit";
+  return "pending";
+}
 
 function TradesTableSkeleton() {
   return (
@@ -68,19 +83,17 @@ function TradesTableSkeleton() {
 }
 
 export default function TradesPage() {
-  const { token, isAuthenticated } = useAuth();
+  const { token, address, isAuthenticated } = useAuth();
   const { trackApiFailure, trackFunnelStep } = useAnalytics();
   const { addToast } = useToast();
   const [activeFilter, setActiveFilter] = useState<TradeStatus>("all");
+  const [activeRole, setActiveRole] = useState<TradeRole>("all");
   const [page, setPage] = useState(1);
   const [trades, setTrades] = useState<TradeResponse[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    trackFunnelStep("trade_page_view", { filter: activeFilter });
-
     async function fetchTrades() {
       if (!isAuthenticated || !token) {
         setLoading(false);
@@ -91,15 +104,13 @@ export default function TradesPage() {
       setError(null);
 
       try {
-        const statusParam = activeFilter === "all" ? undefined : activeFilter;
-        const response = await api.trades.list(token, {
-          status: statusParam,
-          page,
-          limit: PAGE_SIZE,
-        });
-
-        setTrades(response.items);
-        setTotalPages(response.pagination.totalPages);
+        const response = await api.trades.list(token, { page: 1, limit: PAGE_SIZE });
+        const allTrades = [...response.items];
+        for (let nextPage = 2; nextPage <= response.pagination.totalPages; nextPage += 1) {
+          const nextResponse = await api.trades.list(token, { page: nextPage, limit: PAGE_SIZE });
+          allTrades.push(...nextResponse.items);
+        }
+        setTrades(allTrades);
       } catch (err) {
         let errorMessage = "Failed to load trades";
         let status = 0;
@@ -111,7 +122,7 @@ export default function TradesPage() {
           errorMessage = err.message;
         }
 
-        trackApiFailure("/trades", status, { message: errorMessage, filter: activeFilter });
+        trackApiFailure("/trades", status, { message: errorMessage });
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -119,10 +130,32 @@ export default function TradesPage() {
     }
 
     fetchTrades();
-  }, [token, isAuthenticated, activeFilter, page, trackApiFailure, trackFunnelStep]);
+  }, [token, isAuthenticated, trackApiFailure]);
+
+  useEffect(() => {
+    trackFunnelStep("trade_page_view", { filter: activeFilter, role: activeRole });
+  }, [activeFilter, activeRole, trackFunnelStep]);
+
+  const filteredTrades = useMemo(() => {
+    const normalizedAddress = address?.toLowerCase();
+    return trades.filter((trade) => {
+      if (!matchesStatus(trade.status, activeFilter)) return false;
+      if (activeRole === "buying") return trade.buyerAddress.toLowerCase() === normalizedAddress;
+      if (activeRole === "selling") return trade.sellerAddress.toLowerCase() === normalizedAddress;
+      return true;
+    });
+  }, [trades, address, activeFilter, activeRole]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTrades.length / PAGE_SIZE));
+  const pagedTrades = filteredTrades.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function handleFilter(value: TradeStatus) {
     setActiveFilter(value);
+    setPage(1);
+  }
+
+  function handleRoleFilter(value: TradeRole) {
+    setActiveRole(value);
     setPage(1);
   }
 
@@ -179,9 +212,27 @@ export default function TradesPage() {
         </Link>
       </div>
 
-      {/* Filter tabs */}
-      <div className="mb-6" role="tablist" aria-label={translateCopy("ui.trade_filters_04d4c45")}>
-        <div className="flex items-center gap-2">
+      {/* Trade filters */}
+      <div className="mb-6 space-y-3">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Trade role filter">
+          <span className="mr-1 text-xs font-medium text-text-muted">Role</span>
+          {ROLE_FILTERS.map((filter) => {
+            const isActive = activeRole === filter.value;
+            return (
+              <NavButton
+                key={filter.value}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => handleRoleFilter(filter.value)}
+                isActive={isActive}
+              >
+                {filter.label}
+              </NavButton>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Trade status filter">
+          <span className="mr-1 text-xs font-medium text-text-muted">Status</span>
           {FILTERS.map((filter) => {
             const isActive = activeFilter === filter.value;
 
@@ -189,8 +240,7 @@ export default function TradesPage() {
               <NavButton
                 key={filter.value}
                 type="button"
-                role="tab"
-                aria-selected={isActive}
+                aria-pressed={isActive}
                 onClick={() => handleFilter(filter.value)}
                 isActive={isActive}
               >
@@ -214,7 +264,7 @@ export default function TradesPage() {
       {/* Trade list */}
       {!loading && !error && (
         <>
-          {trades.length === 0 ? (
+          {filteredTrades.length === 0 ? (
             <div className="rounded-lg border border-border-default bg-surface-1 py-20 px-6 text-center shadow-elev-1">
               {/* Icon */}
               <div className="flex justify-center mb-6">
@@ -237,82 +287,71 @@ export default function TradesPage() {
 
               {/* Heading */}
               <h3 className="text-xl font-semibold text-text-primary mb-3">
-                {translateCopy("ui.no_trades_yet_c6ce989")}
+                {trades.length === 0 ? "No trades yet" : "No trades match these filters"}
               </h3>
 
               {/* Description */}
               <p className="text-text-secondary text-sm mb-8 max-w-sm mx-auto leading-relaxed">
-                {translateCopy("ui.get_started_by_creating_your_fir_a82b980")}
+                {trades.length === 0
+                  ? "Get started by creating your first trade to begin settling agricultural transactions securely on the blockchain."
+                  : "Try another role or status filter to see more trades."}
               </p>
 
               {/* CTA Button */}
-              <Link href="/trades/create">
-                <Button variant="primary" size="lg">{translateCopy("ui.create_your_first_trade_4176121")}</Button>
-              </Link>
+              {trades.length === 0 && (
+                <Link href="/trades/create">
+                  <Button variant="primary" size="lg">Create Your First Trade</Button>
+                </Link>
+              )}
             </div>
           ) : (
-            <div className="rounded-lg border border-border-default overflow-hidden shadow-elev-1">
-              <table className="w-full text-sm">
+            <div className="rounded-lg border border-border-default overflow-x-auto shadow-elev-1">
+              <table className="w-full min-w-[700px] text-sm">
+                <caption className="sr-only">Trades matching the selected filters</caption>
                 <thead>
                   <tr className="border-b border-border-default bg-surface-1">
-                    <th className="text-left px-4 py-3 text-text-muted font-medium">
-                      {translateCopy("ui.id_89f89c0")}
+                    <th scope="col" className="text-left px-4 py-3 text-text-muted font-medium">
+                      ID
                     </th>
-                    <th className="text-left px-4 py-3 text-text-muted font-medium">
-                      {translateCopy("ui.counterparty_97b2be4")}
+                    <th scope="col" className="text-left px-4 py-3 text-text-muted font-medium">
+                      Counterparty
                     </th>
-                    <th className="text-left px-4 py-3 text-text-muted font-medium">
-                      {translateCopy("ui.amount_43dc853")}
+                    <th scope="col" className="text-left px-4 py-3 text-text-muted font-medium">
+                      Amount
                     </th>
-                    <th className="text-left px-4 py-3 text-text-muted font-medium">
-                      {translateCopy("ui.status_bae7d5b")}
+                    <th scope="col" className="text-left px-4 py-3 text-text-muted font-medium">
+                      Status
                     </th>
-                    <th className="text-left px-4 py-3 text-text-muted font-medium">
-                      {translateCopy("ui.created_accf40c")}
+                    <th scope="col" className="text-left px-4 py-3 text-text-muted font-medium">
+                      Created
                     </th>
                   </tr>
                 </thead>
+                <tbody className="divide-y divide-border-default">
+                  {pagedTrades.map((trade, index) => {
+                    const isBuyer = trade.buyerAddress.toLowerCase() === address?.toLowerCase();
+                    const counterparty = isBuyer ? trade.sellerAddress : trade.buyerAddress;
+                    return (
+                      <tr
+                        key={trade.tradeId}
+                        className={`${index % 2 === 0 ? "bg-surface-0" : "bg-surface-1"} hover:bg-surface-2 transition-colors`}
+                      >
+                        <th scope="row" className="px-4 py-3 text-left text-gold font-mono">
+                          <Link href={`/trades/${trade.tradeId}`} className="hover:underline underline-offset-4">
+                            {trade.tradeId.slice(0, 8)}...
+                          </Link>
+                        </th>
+                        <td className="px-4 py-3 text-text-secondary font-mono">
+                          {formatAddress(counterparty)}
+                        </td>
+                        <td className="px-4 py-3 text-text-primary">{trade.amountCngn} cNGN</td>
+                        <td className="px-4 py-3"><StatusBadge status={toBadgeStatus(trade.status)} size="sm" /></td>
+                        <td className="px-4 py-3 text-text-secondary">{formatDate(trade.createdAt)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               </table>
-              <VirtualizedList
-                items={trades}
-                rowHeight={ROW_HEIGHT}
-                maxHeight={Math.min(trades.length * ROW_HEIGHT, 600)}
-                keyExtractor={(trade) => trade.tradeId}
-                renderItem={(trade, i) => (
-                  <div
-                    className={`grid grid-cols-5 gap-4 px-4 py-3 border-b border-border-default last:border-0 hover:bg-surface-2 transition-colors ${
-                      i % 2 === 0 ? "bg-surface-0" : "bg-surface-1"
-                    }`}
-                  >
-                    <div className="text-gold font-mono">
-                      <Link
-                        href={`/trades/${trade.tradeId}`}
-                        className="hover:underline underline-offset-4"
-                      >
-                        {trade.tradeId.slice(0, 8)}...
-                      </Link>
-                    </div>
-                    <div className="text-text-secondary font-mono">
-                      {formatAddress(trade.sellerAddress)}
-                    </div>
-                    <div className="text-text-primary">
-                      {trade.amountCngn} cNGN
-                    </div>
-                    <div>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          STATUS_STYLES[trade.status] ?? "text-text-muted"
-                        }`}
-                      >
-                        {trade.status}
-                      </span>
-                    </div>
-                    <div className="text-text-secondary">
-                      {formatDate(trade.createdAt)}
-                    </div>
-                  </div>
-                )}
-              />
             </div>
           )}
 

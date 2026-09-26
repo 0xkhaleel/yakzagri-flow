@@ -16,7 +16,7 @@ import { ForbiddenState } from "@/components/ui/ForbiddenState";
 import { SkeletonList } from "@/components/ui/SkeletonList";
 import { Button } from "@/components/ui/Button";
 import { VirtualizedList } from "@/components/ui/VirtualizedList";
-import { formatDateTime } from "@/lib/i18n";
+import { formatDateTime } from "@/lib/i18n/format";
 
 const PAGE_SIZE = 20;
 const AUDIT_ROW_HEIGHT = 120;

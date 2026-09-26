@@ -11,7 +11,7 @@ import { Activity, CreditCard, CheckCircle2, AlertCircle } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { SkeletonList } from "@/components/ui/SkeletonList";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { formatDate } from "@/lib/i18n";
+import { formatNumber } from "@/lib/i18n/format";
 
 export default function DashboardPage() {
   const { token, isAuthenticated } = useAuth();
@@ -137,7 +137,7 @@ export default function DashboardPage() {
           glowVariant="gold"
         >
           <div className="text-3xl font-bold text-text-primary mt-2">
-            {stats?.totalVolume ? `${stats.totalVolume.toLocaleString()} USDC` : "0 USDC"}
+            {stats?.totalVolume ? `${formatNumber(stats.totalVolume)} USDC` : "0 USDC"}
           </div>
           <div className="text-sm text-text-secondary mt-1">
             {translateCopy("ui.total_historical_trade_volume_aa4655d")}

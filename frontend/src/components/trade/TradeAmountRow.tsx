@@ -1,6 +1,6 @@
 "use client";
 
-import { formatNumber, t } from "@/lib/i18n";
+import { formatNumber } from "@/lib/i18n/format";
 
 interface TradeAmountRowProps {
   amountCngn: string | number;

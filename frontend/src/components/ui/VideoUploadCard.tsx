@@ -13,14 +13,25 @@ export interface VideoUploadCardProps {
 
 export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const uploadRequestRef = useRef<XMLHttpRequest | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [ipfsHash, setIpfsHash] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  const cancelUpload = () => {
+    uploadRequestRef.current?.abort();
+    uploadRequestRef.current = null;
+    setUploading(false);
+    setProgress(0);
+    setError(null);
+  };
+
   const handleFile = async (file: File) => {
     if (!file) return;
+
+    uploadRequestRef.current?.abort();
     setPreview(URL.createObjectURL(file));
     setError(null);
     setUploading(true);
@@ -31,6 +42,8 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
       data.append("file", file);
 
       const xhr = new XMLHttpRequest();
+      uploadRequestRef.current = xhr;
+      xhr.timeout = 30000;
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
           setProgress(Math.round((e.loaded / e.total) * 100));
@@ -40,17 +53,30 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
       const hash = await new Promise<string>((resolve, reject) => {
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            const res = JSON.parse(xhr.responseText);
-            resolve(res.IpfsHash ?? res.cid ?? res.hash);
+            try {
+              const res = JSON.parse(xhr.responseText);
+              const result = res.IpfsHash ?? res.cid ?? res.hash;
+              if (!result) {
+                reject(new Error("Upload response did not include an IPFS hash"));
+                return;
+              }
+              resolve(result);
+            } catch {
+              reject(new Error("Upload response was not valid JSON"));
+            }
           } else {
-            reject(new Error(`Upload failed: ${xhr.statusText}`));
+            reject(new Error(`Upload failed: ${xhr.statusText || "Request failed"}`));
           }
         };
         xhr.onerror = () => reject(new Error("Network error during upload"));
-        xhr.open(
-          "POST",
-          "https://api.pinata.cloud/pinning/pinFileToIPFS"
-        );
+        xhr.ontimeout = () => reject(new Error("Upload timed out after 30 seconds"));
+        xhr.onabort = () => reject(new DOMException("Upload cancelled", "AbortError"));
+
+        const uploadUrl =
+          process.env.NEXT_PUBLIC_PINATA_API_URL?.trim() ||
+          "https://api.pinata.cloud/pinning/pinFileToIPFS";
+
+        xhr.open("POST", uploadUrl);
         const jwt = process.env.NEXT_PUBLIC_PINATA_JWT;
         if (jwt) xhr.setRequestHeader("Authorization", `Bearer ${jwt}`);
         xhr.send(data);
@@ -59,8 +85,14 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
       setIpfsHash(hash);
       onUpload?.(hash);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
+      if (uploadRequestRef.current === null || uploadRequestRef.current.readyState === XMLHttpRequest.DONE) {
+        uploadRequestRef.current = null;
+      }
       setUploading(false);
       setProgress(0);
     }
@@ -180,6 +212,11 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
 
       {/* Submit button — disabled state communicated via aria */}
       <button
+        type="button"
+        onClick={() => {
+          if (!ipfsHash || uploading) return;
+          onUpload?.(ipfsHash);
+        }}
         disabled={!ipfsHash || uploading}
         aria-disabled={!ipfsHash || uploading}
         aria-describedby={!ipfsHash ? "video-upload-hint" : undefined}
@@ -194,7 +231,16 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
       >
         {translateCopy("ui.submit_proof_7a3580b")}
       </button>
-      {!ipfsHash && <p id="video-upload-hint" className="sr-only">{translateCopy("ui.upload_video_evidence_before_sub_821f5ce")}</p>}
+      {!ipfsHash && <p id="video-upload-hint" className="sr-only">Upload video evidence before submitting proof</p>}
+      {uploading && (
+        <button
+          type="button"
+          onClick={cancelUpload}
+          className="mt-3 w-full rounded-lg border border-border-default bg-bg-elevated px-3 py-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
+        >
+          Cancel upload
+        </button>
+      )}
     </BentoCard>
   );
 }

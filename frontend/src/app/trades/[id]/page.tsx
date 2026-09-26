@@ -11,7 +11,7 @@ import { useTradeDetail } from "@/hooks/useTradeDetail";
 import { useWallet } from "@/hooks/useWallet";
 import { api, ApiError } from "@/lib/api";
 import { apiConfig } from "@/lib/api";
-import { formatDateTime } from "@/lib/i18n";
+import { formatDateTime } from "@/lib/i18n/format";
 
 function formatDate(dateString: string) {
   return formatDateTime(dateString);

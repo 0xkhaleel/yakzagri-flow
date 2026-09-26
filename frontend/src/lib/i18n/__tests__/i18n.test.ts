@@ -57,6 +57,15 @@ describe("formatNumber", () => {
   it("groups with the en-NG locale", () => {
     expect(formatNumber(1234567.89, { maximumFractionDigits: 2 })).toBe("1,234,567.89");
   });
+
+  it("supports fixed decimal precision through the shared helper", () => {
+    expect(
+      formatNumber(1234.5, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    ).toBe("1,234.50");
+  });
 });
 
 describe("formatDate", () => {
