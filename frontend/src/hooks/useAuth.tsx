@@ -1,61 +1,237 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { cacheClearAll } from '../lib/offlineCache';
 
-interface User {
-  id: string;
-  email: string;
-  name?: string;
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  signMessage,
+} from "@stellar/freighter-api";
+import { api, ApiError } from "@/lib/api";
+import { trackAuthEvent } from "@/lib/analytics";
+import { useFreighterIdentity } from "@/hooks/useFreighterIdentity";
+
+const TOKEN_STORAGE_KEY = "amana_jwt";
+const TOKEN_ADDRESS_STORAGE_KEY = "amana_jwt_address";
+
+interface AuthState {
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
 }
 
-interface AuthContextValue {
-  user: User | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+interface AuthContextType extends AuthState {
+  address: string | null;
+  shortAddress: string | null;
+  isWalletConnected: boolean;
+  isWalletDetected: boolean;
+  connectWallet: () => Promise<void>;
+  authenticate: () => Promise<void>;
   logout: () => Promise<void>;
+  refreshAuth: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
+
+function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+}
 
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+function clearStoredToken(): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+  sessionStorage.removeItem(TOKEN_ADDRESS_STORAGE_KEY);
+}
 
-  useEffect(() => {
+function getTokenAddress(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.walletAddress ?? payload.sub ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const exp = payload.exp;
+    if (!exp) return true;
+    return Date.now() >= exp * 1000;
+  } catch {
+    return true;
+  }
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const identity = useFreighterIdentity();
+  const [state, setState] = useState<AuthState>({
+    token: null,
+    isAuthenticated: false,
+    isLoading: true,
+    error: null,
+  });
+
+  const refreshAuth = useCallback(async () => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
-      const stored = localStorage.getItem(USER_KEY);
-      if (stored) {
-        setUser(JSON.parse(stored));
+      const storedToken = getStoredToken();
+
+      let token: string | null = null;
+      let isAuthenticated = false;
+
+      if (storedToken && !isTokenExpired(storedToken)) {
+        token = storedToken;
+        isAuthenticated = true;
+      } else if (storedToken) {
+        clearStoredToken();
       }
-    } catch {
-      // ignore malformed storage
-    } finally {
-      setLoading(false);
+
+      setState({
+        token,
+        isAuthenticated,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Failed to refresh auth",
+      }));
     }
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) {
-      throw new Error('Login failed');
+  const authenticate = useCallback(async () => {
+    if (!identity.address) {
+      setState((prev) => ({
+        ...prev,
+        error: "Wallet not connected",
+      }));
+      return;
     }
-    const data = await res.json();
-    localStorage.setItem(TOKEN_KEY, data.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-    setUser(data.user);
-  }, []);
+
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      trackAuthEvent("authenticate", "started");
+      const { challenge } = await api.auth.challenge(identity.address);
+
+      const signResult = await signMessage(challenge, {
+        address: identity.address,
+      });
+
+      if (signResult.error !== undefined) {
+        throw new Error(signResult.error.message || "Failed to sign challenge");
+      }
+
+      const signedMessage = signResult.signedMessage;
+      if (!signedMessage) {
+        throw new Error("No signed message returned");
+      }
+      const signedChallenge = typeof signedMessage === "string" 
+        ? signedMessage 
+        : Buffer.from(signedMessage).toString("base64url");
+      const { token } = await api.auth.verify(identity.address, signedChallenge);
+
+      setStoredToken(token);
+      sessionStorage.setItem(TOKEN_ADDRESS_STORAGE_KEY, identity.address);
+
+      setState((prev) => ({
+        ...prev,
+        token,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      }));
+      trackAuthEvent("authenticate", "success", { authenticated: true });
+    } catch (error) {
+      let errorMessage = "Authentication failed";
+      if (error instanceof ApiError) {
+        errorMessage = error.message;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      trackAuthEvent("authenticate", "failed", { error: errorMessage });
+
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: errorMessage,
+      }));
+    }
+  }, [identity.address]);
 
   const logout = useCallback(async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch {
-      // best-effort logout
+    if (state.token) {
+      try {
+        await api.auth.logout(state.token);
+      } catch (error) {
+        console.error('Logout request failed:', error);
+      }
+    }
+
+    // Clear all auth-related storage
+    clearStoredToken();
+    if (typeof window !== "undefined" && "caches" in window) {
+      try {
+        await window.caches.delete("amana-api-cache-v1");
+      } catch (error) {
+        console.warn("Failed to clear cached API responses:", error);
+      }
+    }
+
+    setState((prev) => ({
+      ...prev,
+      address: null,
+      shortAddress: null,
+      token: null,
+      isAuthenticated: false,
+      isWalletConnected: false,
+      error: null,
+    }));
+    trackAuthEvent("logout", "success");
+  }, [state.token]);
+
+  useEffect(() => {
+    void refreshAuth();
+  }, [refreshAuth]);
+
+  useEffect(() => {
+    if (identity.isLoading || !identity.address || !state.token) return;
+    const tokenAddress =
+      sessionStorage.getItem(TOKEN_ADDRESS_STORAGE_KEY) ??
+      getTokenAddress(state.token);
+    if (tokenAddress && tokenAddress.toLowerCase() !== identity.address.toLowerCase()) {
+      clearStoredToken();
+      setState((prev) => ({ ...prev, token: null, isAuthenticated: false }));
+    }
+  }, [identity.address, identity.isLoading, state.token]);
+
+  useEffect(() => {
+    if (!state.token) return;
+
+    // Guard the parse with try/catch, reusing isTokenExpired helper
+    if (isTokenExpired(state.token)) {
+      clearStoredToken();
+      setState((prev) => ({
+        ...prev,
+        token: null,
+        isAuthenticated: false,
+      }));
+      return;
     }
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -64,10 +240,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
+    try {
+      const payload = JSON.parse(atob(state.token.split(".")[1]));
+      const exp = payload.exp;
+      if (!exp) return;
+
+      const expiresIn = exp * 1000 - Date.now();
+      if (expiresIn <= 0) {
+        clearStoredToken();
+        setState((prev) => ({
+          ...prev,
+          token: null,
+          isAuthenticated: false,
+        }));
+        return;
+      }
+
+      const refreshBuffer = 60 * 1000;
+      const timeout = setTimeout(() => {
+        clearStoredToken();
+        setState((prev) => ({
+          ...prev,
+          token: null,
+          isAuthenticated: false,
+          error: "Session expired. Please authenticate again.",
+        }));
+      }, expiresIn - refreshBuffer);
+
+      return () => clearTimeout(timeout);
+    } catch (error) {
+      console.error('Failed to parse token expiration:', error);
+      // If parse fails, treat token as invalid
+      clearStoredToken();
+      setState((prev) => ({
+        ...prev,
+        token: null,
+        isAuthenticated: false,
+        error: "Invalid token format",
+      }));
+    }
+  }, [state.token]);
+
+  const value = useMemo<AuthContextType>(
+    () => ({
+      ...state,
+      address: identity.address,
+      shortAddress: identity.shortAddress,
+      isWalletConnected: identity.isAuthorized,
+      isWalletDetected: identity.isWalletDetected,
+      isLoading: state.isLoading || identity.isLoading,
+      error: state.error ?? identity.error,
+      connectWallet: identity.connectWallet,
+      authenticate,
+      logout,
+      refreshAuth,
+    }),
+    [state, identity, authenticate, logout, refreshAuth]
   );
 }
 

@@ -32,11 +32,23 @@ export const usdcAmount = z.union([
   z.number().positive("Amount must be positive").transform(String),
 ]);
 
+/**
+ * Canonical money amount. The API request field is `amountUsdc` while the API
+ * response field is `amountCngn`; both carry the same underlying decimal
+ * amount, so we type them with a single branded string to make the shared
+ * semantics explicit and prevent silent drift across the boundary.
+ */
+export type TradeAmount = string & { readonly __brand: "TradeAmount" };
+
+export const tradeAmount = usdcAmount.transform(
+  (value) => value as TradeAmount,
+);
+
 export const createTradeInputSchema = z
   .object({
     buyerAddress: stellarPublicKey.optional(),
     sellerAddress: stellarPublicKey,
-    amountUsdc: usdcAmount,
+    amountUsdc: tradeAmount,
     buyerLossBps: lossBps.optional(),
     sellerLossBps: lossBps.optional(),
     description: z.string().optional(),
@@ -54,6 +66,79 @@ export const createTradeInputSchema = z
   });
 
 export type CreateTradeInput = z.infer<typeof createTradeInputSchema>;
+
+/**
+ * Canonical trade model — the single source of truth for trade field names and
+ * types across the API↔UI boundary. API responses expose the money field as
+ * `amountCngn`; the mapper below normalizes it to the canonical `amount`.
+ */
+export const tradeSchema = z.object({
+  id: z.string(),
+  buyerAddress: stellarPublicKey.optional(),
+  sellerAddress: stellarPublicKey,
+  amount: tradeAmount,
+  buyerLossBps: lossBps.optional(),
+  sellerLossBps: lossBps.optional(),
+  description: z.string().optional(),
+  status: z.string(),
+  createdAt: z.string().optional(),
+});
+
+export type Trade = z.infer<typeof tradeSchema>;
+
+/**
+ * API response shape as returned by the backend. The money field is named
+ * `amountCngn` here, which is why an explicit mapper is required.
+ */
+export interface TradeResponse {
+  id: string;
+  buyerAddress?: string;
+  sellerAddress: string;
+  amountCngn: string;
+  buyerLossBps?: number;
+  sellerLossBps?: number;
+  description?: string;
+  status: string;
+  createdAt?: string;
+}
+
+/**
+ * Explicit transform mapper between the API response shape (`amountCngn`) and
+ * the canonical trade model (`amount`). This is the single place where the
+ * request/response money field naming is reconciled, so `amountUsdc` and
+ * `amountCngn` can no longer drift silently.
+ */
+export function fromTradeResponse(response: TradeResponse): Trade {
+  return {
+    id: response.id,
+    buyerAddress: response.buyerAddress,
+    sellerAddress: response.sellerAddress,
+    amount: response.amountCngn as TradeAmount,
+    buyerLossBps: response.buyerLossBps,
+    sellerLossBps: response.sellerLossBps,
+    description: response.description,
+    status: response.status,
+    createdAt: response.createdAt,
+  };
+}
+
+/**
+ * Explicit transform mapper from the canonical trade model back to the API
+ * response shape, mapping the canonical `amount` to `amountCngn`.
+ */
+export function toTradeResponse(trade: Trade): TradeResponse {
+  return {
+    id: trade.id,
+    buyerAddress: trade.buyerAddress,
+    sellerAddress: trade.sellerAddress,
+    amountCngn: trade.amount,
+    buyerLossBps: trade.buyerLossBps,
+    sellerLossBps: trade.sellerLossBps,
+    description: trade.description,
+    status: trade.status,
+    createdAt: trade.createdAt,
+  };
+}
 
 /** Flatten a ZodError into `{ field: message }` for form rendering. */
 export function fieldErrors(error: z.ZodError): Record<string, string> {

@@ -27,46 +27,17 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   fetch: async () => {
     set({ isLoading: true });
     try {
-      // Fetch from API, fallback to mock data on failure or for dev
       const response = await fetch('/api/notifications');
-      if (response.ok) {
-        const data = await response.json();
-        const notifications = data.notifications || data;
-        const unreadCount = notifications.filter((n: Notification) => !n.read).length;
-        set({ notifications, unreadCount, isLoading: false });
-      } else {
+      if (!response.ok) {
         throw new Error('API failed');
       }
+
+      const data = await response.json();
+      const notifications = Array.isArray(data?.notifications) ? data.notifications : Array.isArray(data) ? data : [];
+      const unreadCount = notifications.filter((n: Notification) => !n.read).length;
+      set({ notifications, unreadCount, isLoading: false });
     } catch {
-      // Mock data fallback
-      const mockNotifications: Notification[] = [
-        {
-          id: '1',
-          title: 'Trade Created',
-          message: 'Your trade #1024 has been successfully created.',
-          type: 'success',
-          read: false,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          title: 'Payment Received',
-          message: 'Payment of 100 USDC received for trade #1024.',
-          type: 'success',
-          read: false,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          title: 'System Alert',
-          message: 'Stellar network connectivity is currently optimal.',
-          type: 'info',
-          read: true,
-          createdAt: new Date().toISOString(),
-        }
-      ];
-      const unreadCount = mockNotifications.filter(n => !n.read).length;
-      set({ notifications: mockNotifications, unreadCount, isLoading: false });
+      set({ notifications: [], unreadCount: 0, isLoading: false });
     }
   },
 

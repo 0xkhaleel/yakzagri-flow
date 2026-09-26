@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import React from "react";
 import type { TradeDetail } from "@/types/trade";
@@ -39,9 +41,9 @@ function LossRatioBar({
 
 export function ContractInfo({ trade }: ContractInfoProps) {
   return (
-    <div className="bg-card rounded-xl border border-border-default p-6 shadow-card">
+    <div id="trade-contract" className="bg-card rounded-xl border border-border-default p-6 shadow-card">
       <h2 className="text-sm font-semibold text-text-secondary tracking-wide uppercase mb-4">
-        Contract Details
+        {translateCopy("ui.contract_details_130859d")}
       </h2>
 
       {/* Contract meta */}
@@ -65,7 +67,7 @@ export function ContractInfo({ trade }: ContractInfoProps) {
 
       <div className="mb-5 grid grid-cols-1 gap-3">
         <div>
-          <p className="text-xs text-text-muted mb-1">Buyer Wallet</p>
+          <p className="text-xs text-text-muted mb-1">{translateCopy("ui.buyer_wallet_a615485")}</p>
           <WalletAddressBadge
             address={trade.buyer.walletAddress}
             truncate="middle"
@@ -75,7 +77,7 @@ export function ContractInfo({ trade }: ContractInfoProps) {
           />
         </div>
         <div>
-          <p className="text-xs text-text-muted mb-1">Seller Wallet</p>
+          <p className="text-xs text-text-muted mb-1">{translateCopy("ui.seller_wallet_e520a6c")}</p>
           <WalletAddressBadge
             address={trade.seller.walletAddress}
             truncate="middle"
@@ -90,7 +92,7 @@ export function ContractInfo({ trade }: ContractInfoProps) {
       {trade.lossRatios && trade.lossRatios.length > 0 && (
         <div className="border-t border-border-default pt-4">
           <p className="text-xs font-semibold text-text-muted mb-3 tracking-wide uppercase">
-            Loss Ratios
+            {translateCopy("ui.loss_ratios_1c05e89")}
           </p>
           {trade.lossRatios.map((ratio) => (
             <LossRatioBar
@@ -134,14 +136,14 @@ export function ContractInfo({ trade }: ContractInfoProps) {
 
           <div className="relative z-10">
             <p className="text-xs font-semibold tracking-widest text-gold mb-0.5">
-              DESTINATION
+              {translateCopy("ui.destination_8ddd44f")}
             </p>
             <p className="text-sm font-bold text-text-primary">
               {trade.destinationPort}
             </p>
             {trade.etaLabel && (
               <p className="text-xs text-text-secondary mt-0.5">
-                ETA: {trade.etaLabel}
+                {translateCopy("ui.eta_200af13")}{" "}{trade.etaLabel}
               </p>
             )}
           </div>

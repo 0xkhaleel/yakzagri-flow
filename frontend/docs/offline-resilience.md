@@ -4,7 +4,9 @@
 
 ## Global connectivity state
 
-- `src/hooks/useOffline.ts` — probes `GET {apiBaseUrl}/health` (no external google.com, CSP-safe) + `navigator.onLine`, interval 5s, 3s timeout. Returns `{isOffline, wasOffline, isOnline, retryOnline}`.
+- `src/hooks/useOffline.ts` — probes `GET {apiBaseUrl}/health` (no external google.com, CSP-safe) + `navigator.onLine`, adaptive cadence, 3s timeout. Returns `{isOffline, wasOffline, isOnline, retryOnline}`.
+- Adaptive probe cadence (issue #118): `navigator.onLine` and `online`/`offline` events are checked first; the network probe only runs when the browser reports online. Probe interval starts at 5s and backs off exponentially (5s → 10s → 20s → 40s → 60s cap) while the connection stays stable, resetting to 5s on any failure or `offline` event. This drops steady-state probe load per tab.
+- Cross-tab sharing (issue #118): a `BroadcastChannel` (`amana-connectivity`) broadcasts connectivity transitions so all open tabs share one offline/online state instead of each tab probing independently.
 - Surfaced via `src/components/ui/ConnectivityBanner.tsx` fixed top banner (`role="status" aria-live="polite"`):
   - Offline: "You’re offline — actions will be queued…" + pending count + Retry button.
   - Was-offline + queue: "Reconnecting — replaying N…" 

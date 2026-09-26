@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { SettingsIcon } from "@/components/icons";
 import { Check, Clock, Flag } from "lucide-react";
@@ -54,14 +56,14 @@ export function ReleaseSequenceCard({
 
   return (
     <BentoCard
-      title="Release Sequence"
+      title={translateCopy("ui.release_sequence_9bc35fc")}
       icon={<SettingsIcon className="w-5 h-5" />}
       glowVariant="gold"
       className="h-full"
     >
       <div className="flex items-center justify-end mb-6">
         <span className="text-xs font-mono text-text-secondary bg-bg-elevated px-3 py-1 rounded-full border border-border-default">
-          SEQUENCE_ID: {sequenceId}
+          {translateCopy("ui.sequence_id_de0476d")}{" "}{sequenceId}
         </span>
       </div>
 

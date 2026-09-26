@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 import * as React from "react";
 import { clsx } from "clsx";
 import { Skeleton } from "./Skeleton";
@@ -24,7 +26,7 @@ export function LoadingState({
       <div
         className={clsx("flex flex-col gap-2", className)}
         aria-busy="true"
-        aria-label="Loading"
+        aria-label={translateCopy("ui.loading_8f26c65")}
       >
         <Skeleton variant="text" width="75%" height={16} />
         <Skeleton variant="text" width="50%" height={12} />
@@ -40,7 +42,7 @@ export function LoadingState({
           className,
         )}
         aria-busy="true"
-        aria-label="Loading"
+        aria-label={translateCopy("ui.loading_8f26c65")}
       >
         <Skeleton variant="circle" width={36} height={36} className="shrink-0" />
         <div className="flex flex-1 flex-col gap-2">
@@ -59,7 +61,7 @@ export function LoadingState({
         className,
       )}
       aria-busy="true"
-      aria-label="Loading"
+      aria-label={translateCopy("ui.loading_8f26c65")}
     >
       <div className="mb-5 flex items-center gap-3">
         <Skeleton width={32} height={32} />

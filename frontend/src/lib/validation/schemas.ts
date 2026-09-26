@@ -76,3 +76,38 @@ export const NotificationPreferencesSchema = z.object({
 });
 
 export type NotificationPreferences = z.infer<typeof NotificationPreferencesSchema>;
+
+/**
+ * Per-endpoint response schemas used to validate live API responses.
+ * Attach these to `request()`/`requestWithResult()` so backend schema drift
+ * is caught at the boundary instead of silently breaking the UI.
+ */
+export const TradeListSchema = z.array(TradeSchema);
+export type TradeList = z.infer<typeof TradeListSchema>;
+
+export const TradeResponseSchema = TradeSchema;
+export type TradeResponse = z.infer<typeof TradeResponseSchema>;
+
+export const WalletResponseSchema = WalletSchema;
+export type WalletResponse = z.infer<typeof WalletResponseSchema>;
+
+export const DisputeResponseSchema = DisputeSchema;
+export type DisputeResponse = z.infer<typeof DisputeResponseSchema>;
+
+export const ManifestResponseSchema = ManifestSchema;
+export type ManifestResponse = z.infer<typeof ManifestResponseSchema>;
+
+export const NotificationPreferencesResponseSchema = NotificationPreferencesSchema;
+export type NotificationPreferencesResponse = z.infer<
+  typeof NotificationPreferencesResponseSchema
+>;
+
+export const ApiErrorSchema = z.object({
+  message: z.string().min(1, "Error message is required"),
+  code: z.string().optional(),
+  details: z.unknown().optional(),
+});
+export type ApiError = z.infer<typeof ApiErrorSchema>;
+
+export const EmptyResponseSchema = z.union([z.null(), z.undefined(), z.object({}).passthrough()]);
+export type EmptyResponse = z.infer<typeof EmptyResponseSchema>;

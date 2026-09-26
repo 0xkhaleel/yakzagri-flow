@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { tracedHttpClient, TracedResponse, TracedRequestOptions } from '../lib/traced-fetch';
 
 /**
@@ -43,6 +43,11 @@ export function useTracedFetch<T = unknown>(defaultOptions: UseTracedFetchOption
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
+
+  // Keep the latest default options in a ref so callbacks stay stable across
+  // renders even when callers pass a fresh object literal each time.
+  const defaultOptionsRef = useRef(defaultOptions);
+  defaultOptionsRef.current = defaultOptions;
 
   // Cleanup on unmount
   const cleanup = useCallback(() => {
@@ -99,7 +104,7 @@ export function useTracedFetch<T = unknown>(defaultOptions: UseTracedFetchOption
     abortControllerRef.current = new AbortController();
     
     const requestOptions: TracedRequestOptions = {
-      ...defaultOptions,
+      ...defaultOptionsRef.current,
       ...options,
       signal: abortControllerRef.current.signal,
     };
@@ -148,8 +153,8 @@ export function useTracedFetch<T = unknown>(defaultOptions: UseTracedFetchOption
       });
 
       // Call success callback if provided
-      if (defaultOptions.onSuccess && finalResponse.data) {
-        defaultOptions.onSuccess(finalResponse.data);
+      if (defaultOptionsRef.current.onSuccess && finalResponse.data) {
+        defaultOptionsRef.current.onSuccess(finalResponse.data);
       }
       if (options.onSuccess && finalResponse.data) {
         options.onSuccess(finalResponse.data);
@@ -165,8 +170,8 @@ export function useTracedFetch<T = unknown>(defaultOptions: UseTracedFetchOption
       });
 
       // Call error callback if provided
-      if (defaultOptions.onError) {
-        defaultOptions.onError(err);
+      if (defaultOptionsRef.current.onError) {
+        defaultOptionsRef.current.onError(err);
       }
       if (options.onError) {
         options.onError(err);
@@ -174,7 +179,7 @@ export function useTracedFetch<T = unknown>(defaultOptions: UseTracedFetchOption
 
       throw err;
     }
-  }, [defaultOptions, executeRequest, updateState]);
+  }, [executeRequest, updateState]);
 
   // Convenience methods
   const get = useCallback((url: string, options: UseTracedFetchOptions = {}) => {
@@ -233,16 +238,21 @@ export function useTracedFetch<T = unknown>(defaultOptions: UseTracedFetchOption
 export function useTracedGet<T = unknown>(url: string | null, options: UseTracedFetchOptions = {}) {
   const { data, loading, error, correlationId, requestId, get } = useTracedFetch<T>(options);
 
+  // Keep the latest options in a ref so the effect below only re-runs when the
+  // URL meaningfully changes, not on every render due to object identity.
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   // Auto-fetch when URL changes
   React.useEffect(() => {
     if (url) {
-      get(url, options).catch(() => {
+      get(url, optionsRef.current).catch(() => {
         // Error is handled by the hook
       });
     }
-  }, [url, get, options]);
+  }, [url, get]);
 
-  return { data, loading, error, correlationId, requestId, refetch: () => url && get(url, options) };
+  return { data, loading, error, correlationId, requestId, refetch: () => url && get(url, optionsRef.current) };
 }
 
 /**
@@ -251,6 +261,9 @@ export function useTracedGet<T = unknown>(url: string | null, options: UseTraced
 export function useTracedMutation<T = unknown>(options: UseTracedFetchOptions = {}) {
   const { data, loading, error, correlationId, requestId, post, put, patch, delete: del } = useTracedFetch<T>(options);
 
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   const mutate = useCallback(async (
     method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     url: string,
@@ -258,17 +271,17 @@ export function useTracedMutation<T = unknown>(options: UseTracedFetchOptions = 
   ) => {
     switch (method) {
       case 'POST':
-        return post(url, data, options);
+        return post(url, data, optionsRef.current);
       case 'PUT':
-        return put(url, data, options);
+        return put(url, data, optionsRef.current);
       case 'PATCH':
-        return patch(url, data, options);
+        return patch(url, data, optionsRef.current);
       case 'DELETE':
-        return del(url, options);
+        return del(url, optionsRef.current);
       default:
         throw new Error(`Unsupported mutation method: ${method}`);
     }
-  }, [post, put, patch, del, options]);
+  }, [post, put, patch, del]);
 
   return {
     data,
@@ -277,9 +290,9 @@ export function useTracedMutation<T = unknown>(options: UseTracedFetchOptions = 
     correlationId,
     requestId,
     mutate,
-    post: (url: string, data?: unknown) => post(url, data, options),
-    put: (url: string, data?: unknown) => put(url, data, options),
-    patch: (url: string, data?: unknown) => patch(url, data, options),
-    delete: (url: string) => del(url, options),
+    post: (url: string, data?: unknown) => post(url, data, optionsRef.current),
+    put: (url: string, data?: unknown) => put(url, data, optionsRef.current),
+    patch: (url: string, data?: unknown) => patch(url, data, optionsRef.current),
+    delete: (url: string) => del(url, optionsRef.current),
   };
 }

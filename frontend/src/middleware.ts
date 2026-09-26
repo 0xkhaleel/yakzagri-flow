@@ -22,6 +22,12 @@ import { getApiBaseUrl, getStellarRpcUrl } from "@/lib/api/env";
  * the `frame-src` allowlist below via WALLET_FRAME_ALLOWLIST (comma
  * separated origins) rather than relaxing the policy ad-hoc. Requires
  * security sign-off before merging an addition.
+ *
+ * PoD video (issue #127): the in-browser recorder captures via
+ * getUserMedia/MediaRecorder and plays back the recorded clip from a
+ * `blob:` object URL. `media-src` therefore allows `blob:` (and `'self'`
+ * for any same-origin media), and the Permissions-Policy below grants
+ * `camera`/`microphone` to same-origin so the recorder can request them.
  */
 
 function buildConnectSrc(): string {
@@ -55,6 +61,7 @@ function buildCsp(nonce: string): string {
     "script-src": `'self' 'nonce-${nonce}' 'strict-dynamic' https:`,
     "style-src": "'self' 'unsafe-inline'",
     "img-src": "'self' data: blob: https:",
+    "media-src": "'self' blob:",
     "font-src": "'self' data:",
     "connect-src": buildConnectSrc(),
     "frame-src": buildFrameSrc(),
@@ -95,7 +102,7 @@ export function middleware(request: NextRequest) {
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), payment=()",
+    "camera=(self), microphone=(self), geolocation=(), payment=()",
   );
 
   return response;
