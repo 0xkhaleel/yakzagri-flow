@@ -570,8 +570,8 @@ export default function VaultManagePage() {
                 />
                 <StatCard
                   label="Locked in Escrow"
-                  value={`$${totalLocked.toLocaleString()}`}
-                  sub="cNGN"
+                  value={`${totalLocked.toLocaleString()} cNGN`}
+                  sub="Across active trades"
                   accent
                 />
                 <StatCard

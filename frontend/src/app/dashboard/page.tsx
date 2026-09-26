@@ -134,7 +134,7 @@ export default function DashboardPage() {
           glowVariant="gold"
         >
           <div className="text-3xl font-bold text-text-primary mt-2">
-            {stats?.totalVolume ? `${stats.totalVolume.toLocaleString()} USDC` : "0 USDC"}
+            {`${(stats?.totalVolume ?? 0).toLocaleString()} cNGN`}
           </div>
           <div className="text-sm text-text-secondary mt-1">
             Total historical trade volume

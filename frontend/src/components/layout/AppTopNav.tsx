@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { NavLink } from "@/components/ui/Navigation";
 import { Badge } from "@/components/ui/Badge";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 interface AppTopNavProps {
   onToggleSidebar?: () => void;
@@ -74,6 +75,8 @@ export function AppTopNav({
 
       {/* Right side */}
       <div className="ml-auto flex items-center gap-3">
+        <GlobalSearch />
+
         {/* Admin role indicator */}
         {isAdmin && (
           <Badge variant="locked" size="sm">
