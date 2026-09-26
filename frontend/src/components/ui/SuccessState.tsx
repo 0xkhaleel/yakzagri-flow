@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useState } from "react";
 import { Copy, ExternalLink, ArrowRight, Download, Check } from "lucide-react";
@@ -138,14 +140,14 @@ function TransactionHash({ hash, explorerUrl }: TransactionHashProps) {
 
   return (
     <div className="pt-4 border-t border-border-default">
-      <p className="text-xs text-text-muted uppercase tracking-wider mb-2">Transaction Hash</p>
+      <p className="text-xs text-text-muted uppercase tracking-wider mb-2">{translateCopy("ui.transaction_hash_7534364")}</p>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <code className="text-sm font-mono text-text-secondary">{truncatedHash}</code>
           <button
             onClick={handleCopy}
             className="p-1 hover:bg-bg-elevated rounded transition-colors"
-            aria-label="Copy transaction hash"
+            aria-label={translateCopy("ui.copy_transaction_hash_964170c")}
           >
             {copied ? (
               <Check className="w-4 h-4 text-emerald" />
@@ -161,7 +163,7 @@ function TransactionHash({ hash, explorerUrl }: TransactionHashProps) {
             rel="noopener noreferrer"
             className="text-sm text-teal hover:text-emerald flex items-center gap-1 transition-colors"
           >
-            View on Explorer
+            {translateCopy("ui.view_on_explorer_fd41a34")}
             <ExternalLink className="w-3 h-3" />
           </a>
         )}
@@ -330,7 +332,7 @@ export function SuccessState({
             )}
             {transactionDetails.vaultStatus && (
               <div>
-                <p className="text-xs text-text-muted uppercase tracking-wider mb-1">Vault Status</p>
+                <p className="text-xs text-text-muted uppercase tracking-wider mb-1">{translateCopy("ui.vault_status_25fb1df")}</p>
                 <StatusBadge status={transactionDetails.vaultStatus} variant="success" />
               </div>
             )}

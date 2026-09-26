@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useEffect } from "react";
 import { useOffline } from "@/hooks/useOffline";
@@ -56,16 +58,16 @@ export function ConnectivityBanner() {
     return (
       <div role="status" aria-live="polite" className="fixed top-0 left-0 right-0 z-[100] bg-status-warning text-text-inverse px-4 py-2 text-sm text-center flex items-center justify-center gap-3">
         <span aria-hidden>●</span>
-        <span>You’re offline — actions will be queued and sent when reconnected.</span>
+        <span>{translateCopy("ui.you_re_offline_actions_will_be_q_7c3cdb0")}</span>
         {queue.length > 0 && (
-          <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-semibold">{queue.length} pending</span>
+          <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-semibold">{queue.length} {translateCopy("ui.pending_e225869")}</span>
         )}
         <button
           onClick={() => void retryOnline()}
           className="ml-2 underline hover:no-underline focus-visible:outline-2 focus-visible:outline-white rounded px-1"
-          aria-label="Retry connection"
+          aria-label={translateCopy("ui.retry_connection_a351235")}
         >
-          Retry
+          {translateCopy("common.retry")}
         </button>
       </div>
     );
@@ -74,7 +76,7 @@ export function ConnectivityBanner() {
   if (wasOffline && queue.length > 0) {
     return (
       <div role="status" aria-live="polite" className="fixed top-0 left-0 right-0 z-[100] bg-status-info text-white px-4 py-2 text-sm text-center">
-        Reconnecting — replaying {queue.length} queued action(s)…
+        {translateCopy("ui.reconnecting_replaying_50095e3")}{" "}{queue.length} {translateCopy("ui.queued_action_s_b2787c6")}
       </div>
     );
   }
@@ -91,7 +93,7 @@ export function PendingBadge() {
       className="inline-flex items-center gap-1 rounded-full bg-status-warning/20 text-status-warning border border-status-warning/30 px-2 py-1 text-xs font-semibold"
     >
       <span className="w-1.5 h-1.5 rounded-full bg-status-warning animate-pulse" aria-hidden />
-      {queue.length} pending
+      {queue.length} {translateCopy("ui.pending_e225869")}
     </span>
   );
 }

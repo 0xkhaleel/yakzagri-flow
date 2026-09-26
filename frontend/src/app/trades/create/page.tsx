@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 import { TradeProvider, useTrade } from "./TradeContext";
 import Step1Details from "./steps/Step1Details";
 import Step2Negotiation from "./steps/Step2Negotiation";
@@ -55,14 +57,14 @@ function CreateTradeInner() {
       <div className="w-full max-w-lg">
         <div className="mb-6">
           <Link href="/" className="text-text-muted text-sm hover:text-text-secondary transition-colors">
-            ← Back
+            {translateCopy("ui.back_c32ae9f")}
           </Link>
         </div>
 
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-text-primary">Create Trade</h1>
+          <h1 className="text-2xl font-bold text-text-primary">{translateCopy("ui.create_trade_2747e94")}</h1>
           <p className="text-text-secondary text-sm mt-1">
-            Lock agricultural commodity value into cNGN escrow via NGN Path Payment
+            {translateCopy("ui.lock_agricultural_commodity_valu_6207352")}
           </p>
         </div>
 

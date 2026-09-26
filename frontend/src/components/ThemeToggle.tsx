@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useTheme } from "@/hooks/useTheme";
 
@@ -16,7 +18,7 @@ export function ThemeToggle() {
   ];
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-border-default bg-surface-2 p-1" role="radiogroup" aria-label="Theme preference">
+    <div className="flex items-center gap-1 rounded-lg border border-border-default bg-surface-2 p-1" role="radiogroup" aria-label={translateCopy("ui.theme_preference_4169800")}>
       {options.map((opt) => {
         const isActive = themePreference === opt.value;
         return (

@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 import { useState } from "react";
 import { StrKey } from "@stellar/stellar-sdk";
 import { formatNaira, formatNumber } from "@/lib/i18n";
@@ -57,7 +59,7 @@ export default function Step1Details() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <label htmlFor="commodity" className="text-sm text-text-secondary">Commodity</label>
+        <label htmlFor="commodity" className="text-sm text-text-secondary">{translateCopy("trade.commodity")}</label>
         <select
           id="commodity"
           value={data.commodity}
@@ -65,7 +67,7 @@ export default function Step1Details() {
           onBlur={() => handleBlur("commodity")}
           className="bg-bg-input border border-border-default rounded-md px-4 py-3 text-text-primary focus:outline-none focus:border-border-focus"
         >
-          <option value="">Select commodity</option>
+          <option value="">{translateCopy("ui.select_commodity_942e76a")}</option>
           {COMMODITIES.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
@@ -75,12 +77,12 @@ export default function Step1Details() {
 
       <div className="flex gap-4">
         <div className="flex flex-col gap-1 flex-1">
-          <label htmlFor="quantity" className="text-sm text-text-secondary">Quantity</label>
+          <label htmlFor="quantity" className="text-sm text-text-secondary">{translateCopy("trade.quantity")}</label>
           <input
             id="quantity"
             type="number"
             min="0"
-            placeholder="e.g. 500"
+            placeholder={translateCopy("ui.e_g_500_bc628f9")}
             value={data.quantity}
             onChange={(e) => { update({ quantity: e.target.value }); setErrors((prev) => ({ ...prev, quantity: "" })); }}
             onBlur={() => handleBlur("quantity")}
@@ -89,7 +91,7 @@ export default function Step1Details() {
           {errors.quantity && touched.quantity && <p role="alert" aria-live="polite" className="text-status-danger text-xs mt-1">{errors.quantity}</p>}
         </div>
         <div className="flex flex-col gap-1 w-36">
-          <label htmlFor="unit" className="text-sm text-text-secondary">Unit</label>
+          <label htmlFor="unit" className="text-sm text-text-secondary">{translateCopy("trade.unit")}</label>
           <select
             id="unit"
             value={data.unit}
@@ -105,12 +107,12 @@ export default function Step1Details() {
 
       <div className="flex gap-4">
         <div className="flex flex-col gap-1 flex-1">
-          <label htmlFor="price-per-unit" className="text-sm text-text-secondary">Price per unit (NGN)</label>
+          <label htmlFor="price-per-unit" className="text-sm text-text-secondary">{translateCopy("ui.price_per_unit_ngn_bd3ba08")}</label>
           <input
             id="price-per-unit"
             type="number"
             min="0"
-            placeholder="e.g. 450"
+            placeholder={translateCopy("ui.e_g_450_812070a")}
             value={data.pricePerUnit}
             onChange={(e) => { update({ pricePerUnit: e.target.value }); setErrors((prev) => ({ ...prev, pricePerUnit: "" })); }}
             onBlur={() => handleBlur("pricePerUnit")}
@@ -119,7 +121,7 @@ export default function Step1Details() {
           {errors.pricePerUnit && touched.pricePerUnit && <p role="alert" aria-live="polite" className="text-status-danger text-xs mt-1">{errors.pricePerUnit}</p>}
         </div>
         <div className="flex flex-col gap-1 w-28">
-          <label htmlFor="currency" className="text-sm text-text-secondary">Currency</label>
+          <label htmlFor="currency" className="text-sm text-text-secondary">{translateCopy("trade.currency")}</label>
           <select
             id="currency"
             value={data.currency}
@@ -134,16 +136,16 @@ export default function Step1Details() {
 
       {/* Total preview */}
       <div className="flex items-center justify-between rounded-lg bg-bg-elevated px-4 py-3 border border-border-default">
-        <span className="text-sm text-text-secondary">Estimated Total</span>
+        <span className="text-sm text-text-secondary">{translateCopy("ui.estimated_total_1636f5a")}</span>
         <span className="text-gold font-semibold">{totalDisplay}</span>
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="seller-address" className="text-sm text-text-secondary">Seller Stellar Address</label>
+        <label htmlFor="seller-address" className="text-sm text-text-secondary">{translateCopy("ui.seller_stellar_address_89151ee")}</label>
         <input
           id="seller-address"
           type="text"
-          placeholder="G..."
+          placeholder={translateCopy("ui.g_36b6ba2")}
           value={data.sellerAddress}
           onChange={(e) => { update({ sellerAddress: e.target.value.trim() }); setErrors((prev) => ({ ...prev, sellerAddress: "" })); }}
           onBlur={() => handleBlur("sellerAddress")}
@@ -157,7 +159,7 @@ export default function Step1Details() {
         onClick={handleContinue}
         className="mt-2 h-12 rounded-full bg-gradient-gold-cta text-text-inverse font-semibold transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        Continue to Negotiation
+        {translateCopy("ui.continue_to_negotiation_e3ae13f")}
       </button>
     </div>
   );

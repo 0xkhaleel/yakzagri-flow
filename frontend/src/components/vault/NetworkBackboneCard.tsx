@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 import Image from 'next/image';
 import { BentoCard } from "@/components/ui/BentoCard";
 import { NetworkIcon } from "@/components/icons";
@@ -11,7 +13,7 @@ interface NetworkBackboneCardProps {
 export function NetworkBackboneCard({ description }: NetworkBackboneCardProps) {
   return (
     <BentoCard
-      title="Network Backbone"
+      title={translateCopy("ui.network_backbone_f04feb3")}
       icon={<NetworkIcon className="w-5 h-5" />}
       glowVariant="gold"
       className="h-full"
@@ -23,7 +25,7 @@ export function NetworkBackboneCard({ description }: NetworkBackboneCardProps) {
         <div className="flex items-center gap-2 mb-8">
          <Image
             src={StellarLogo}
-            alt="stellar logo"
+            alt={translateCopy("ui.stellar_logo_9277136")}
           />
         </div>
       </div>

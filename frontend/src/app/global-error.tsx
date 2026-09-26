@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 /**
  * Global error boundary (Next.js special file).
@@ -97,10 +99,10 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>
-              Application error
+              {translateCopy("ui.application_error_d272da6")}
             </h1>
             <p style={{ margin: 0, fontSize: "0.875rem", color: "#8BA89A" }}>
-              The app encountered a critical error. Your funds are safe.
+              {translateCopy("ui.the_app_encountered_a_critical_e_5ac6e0a")}
             </p>
           </div>
 
@@ -125,7 +127,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                 color: "#5A7A6A",
               }}
             >
-              Error reference
+              {translateCopy("ui.error_reference_eda2378")}
             </span>
             <code
               data-testid="global-correlation-id"
@@ -165,7 +167,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                 width: "100%",
               }}
             >
-              Try again
+              {translateCopy("wallet.rejectedCta")}
             </button>
             <a
               href="/dashboard"
@@ -181,7 +183,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                 display: "block",
               }}
             >
-              Back to dashboard
+              {translateCopy("ui.back_to_dashboard_b3963db")}
             </a>
           </div>
         </div>

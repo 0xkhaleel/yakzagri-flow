@@ -68,10 +68,19 @@ export function formatNaira(
 /** Plain grouped number — `1,234.5` — honouring the active locale. */
 export function formatNumber(
   value: Numeric,
-  options: { locale?: Locale; maximumFractionDigits?: number } = {},
+  options: {
+    locale?: Locale;
+    minimumFractionDigits?: number;
+    maximumFractionDigits?: number;
+  } = {},
 ): string {
-  const { locale = resolveLocale(), maximumFractionDigits = 7 } = options;
+  const {
+    locale = resolveLocale(),
+    minimumFractionDigits = 0,
+    maximumFractionDigits = 7,
+  } = options;
   return new Intl.NumberFormat(intlLocale(locale), {
+    minimumFractionDigits,
     maximumFractionDigits,
   }).format(toNumber(value));
 }

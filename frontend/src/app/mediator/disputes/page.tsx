@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
@@ -89,9 +91,9 @@ export default function MediatorDisputesPage() {
     return (
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="mediator-disputes-page">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-text-primary mb-4">Access Restricted</h1>
+          <h1 className="text-3xl font-bold text-text-primary mb-4">{translateCopy("ui.access_restricted_13a4143")}</h1>
           <p className="text-text-secondary">
-            This page is only accessible to authorized mediators.
+            {translateCopy("ui.this_page_is_only_accessible_to__b0ef294")}
           </p>
         </div>
       </div>
@@ -102,7 +104,7 @@ export default function MediatorDisputesPage() {
     return (
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="mediator-disputes-page">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-text-primary">Mediator Disputes</h1>
+          <h1 className="text-3xl font-bold text-text-primary">{translateCopy("ui.mediator_disputes_b55890b")}</h1>
         </div>
         <SkeletonList rows={PAGE_SIZE} />
       </div>
@@ -114,7 +116,7 @@ export default function MediatorDisputesPage() {
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="mediator-disputes-page">
         <ErrorState
           variant="card"
-          title="Couldn't load disputes"
+          title={translateCopy("ui.couldn_t_load_disputes_fa11756")}
           message={error}
           onRetry={fetchDisputes}
         />
@@ -126,7 +128,7 @@ export default function MediatorDisputesPage() {
     <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="mediator-disputes-page">
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-text-primary">Mediator Disputes</h1>
+        <h1 className="text-3xl font-bold text-text-primary">{translateCopy("ui.mediator_disputes_b55890b")}</h1>
       </div>
 
       {/* Filters */}
@@ -141,7 +143,7 @@ export default function MediatorDisputesPage() {
       <div className="space-y-4">
         {disputes.length === 0 ? (
           <div className="text-center py-12 text-text-secondary">
-            No disputes found
+            {translateCopy("ui.no_disputes_found_c7d5c32")}
           </div>
         ) : (
           disputes.map((dispute) => (
@@ -154,7 +156,7 @@ export default function MediatorDisputesPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-lg font-semibold text-text-primary">
-                      Trade {dispute.tradeId}
+                      {translateCopy("ui.trade_b0811e4")}{" "}{dispute.tradeId}
                     </span>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[dispute.status]}`}
@@ -163,16 +165,16 @@ export default function MediatorDisputesPage() {
                     </span>
                   </div>
                   <div className="text-sm text-text-secondary mb-2">
-                    Initiated by: {formatAddress(dispute.initiator)}
+                    {translateCopy("ui.initiated_by_a598de5")}{" "}{formatAddress(dispute.initiator)}
                   </div>
                   <div className="text-sm text-text-secondary mb-2">
-                    Buyer: {formatAddress(dispute.trade.buyerAddress)} | Seller: {formatAddress(dispute.trade.sellerAddress)}
+                    {translateCopy("ui.buyer_782e9a9")}{" "}{formatAddress(dispute.trade.buyerAddress)} {translateCopy("ui.seller_f38138b")}{" "}{formatAddress(dispute.trade.sellerAddress)}
                   </div>
                   <div className="text-sm text-text-secondary">
-                    Amount: ${dispute.trade.amountUsdc} USDC
+                    {translateCopy("ui.amount_5b84c03")}{dispute.trade.amountUsdc} USDC
                   </div>
                   <div className="text-sm text-text-secondary mt-1">
-                    Created: {formatDate(dispute.createdAt)}
+                    {translateCopy("ui.created_0c78dab")}{" "}{formatDate(dispute.createdAt)}
                   </div>
                 </div>
               </div>
@@ -190,10 +192,10 @@ export default function MediatorDisputesPage() {
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
           >
-            Previous
+            {translateCopy("ui.previous_50f9428")}
           </Button>
           <span className="px-3 py-1 text-sm text-text-secondary">
-            Page {page} of {totalPages}
+            {translateCopy("ui.page_fb06270")}{" "}{page} {translateCopy("ui.of_de04fa0")}{" "}{totalPages}
           </span>
           <Button
             variant="secondary"
@@ -201,7 +203,7 @@ export default function MediatorDisputesPage() {
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
           >
-            Next
+            {translateCopy("ui.next_bc98198")}
           </Button>
         </div>
       )}
