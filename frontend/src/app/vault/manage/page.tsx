@@ -8,10 +8,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatNumber } from "@/lib/i18n/format";
 import {
   api,
+  apiConfig,
   type TradeResponse,
   type TradeStatsResponse,
   ApiError,
 } from "@/lib/api";
+import { signTransaction } from "@stellar/freighter-api";
+import { broadcastTransaction } from "@/lib/stellar/broadcast";
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/idempotency";
 import {
   PaymentOverviewCard,
   AuditLogCard,
@@ -328,6 +332,7 @@ const DISPUTE_CATEGORIES = [
 export default function VaultManagePage() {
   const {
     token,
+    address,
     isAuthenticated,
     isWalletConnected,
     isLoading: authLoading,
@@ -405,34 +410,84 @@ export default function VaultManagePage() {
     submittingRef.current = true;
     setActionBusy(true);
     setActionError(null);
+
+    const scopeKey = `trade:${modal.trade.tradeId}:${modal.type}`;
+    const idempotencyKey = getOrCreateIdempotencyKey(address, scopeKey);
+
     try {
+      let unsignedXdr: string | undefined;
+      let actionLabel = "Action";
       if (modal.type === "deposit") {
-        await api.trades.deposit(token, modal.trade.tradeId);
-        setActionSuccess("Deposit transaction prepared — sign in Freighter.");
+        actionLabel = "Deposit";
+        const res = await api.trades.deposit(token, modal.trade.tradeId, { idempotencyKey });
+        unsignedXdr = res.unsignedXdr;
       } else if (modal.type === "release") {
-        await api.trades.releaseFunds(token, modal.trade.tradeId);
-        setActionSuccess("Release transaction prepared — sign in Freighter.");
+        actionLabel = "Release";
+        const res = await api.trades.releaseFunds(token, modal.trade.tradeId, { idempotencyKey });
+        unsignedXdr = res.unsignedXdr;
       } else if (modal.type === "dispute") {
-        await api.trades.initiateDispute(
+        actionLabel = "Dispute";
+        const res = await api.trades.initiateDispute(
           token,
           modal.trade.tradeId,
           disputeReason,
           disputeCategory,
+          { idempotencyKey },
         );
-        setActionSuccess("Dispute initiated successfully.");
+        unsignedXdr = res.unsignedXdr;
+      }
+
+      if (unsignedXdr) {
+        const signResult = await signTransaction(unsignedXdr, {
+          networkPassphrase: apiConfig.getStellarNetworkPassphrase(),
+          address: address ?? undefined,
+        });
+        if (signResult.error) {
+          throw new Error(signResult.error.message || "Transaction signing failed");
+        }
+        const signedTxXdr =
+          typeof signResult === "string" ? signResult : signResult?.signedTxXdr;
+        if (!signedTxXdr) {
+          throw new Error("No signed transaction returned from Freighter");
+        }
+
+        const { hash } = await broadcastTransaction(signedTxXdr);
+        clearIdempotencyKey(address, scopeKey);
+        setActionSuccess(
+          hash
+            ? `${actionLabel} submitted to Stellar! Hash: ${hash}`
+            : `${actionLabel} submitted to Stellar successfully.`
+        );
+      } else {
+        clearIdempotencyKey(address, scopeKey);
+        setActionSuccess(`${actionLabel} completed successfully.`);
       }
       setModal(null);
       setDisputeReason("");
       void fetchData();
       setTimeout(() => setActionSuccess(null), 4000);
     } catch (err) {
-      const msg =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
+      const isConflict =
+        (err instanceof ApiError && err.status === 409) ||
+        (typeof err === "object" && err !== null && ("status" in err && (err as { status: unknown }).status === 409)) ||
+        (err instanceof Error && /409|conflict|already[- ]processed/i.test(err.message));
+
+      if (isConflict) {
+        clearIdempotencyKey(address, scopeKey);
+        setActionSuccess("Action was already processed.");
+        setModal(null);
+        setDisputeReason("");
+        void fetchData();
+        setTimeout(() => setActionSuccess(null), 4000);
+      } else {
+        const msg =
+          err instanceof ApiError
             ? err.message
-            : "Action failed";
-      setActionError(msg);
+            : err instanceof Error
+              ? err.message
+              : "Action failed";
+        setActionError(msg);
+      }
     } finally {
       submittingRef.current = false;
       setActionBusy(false);

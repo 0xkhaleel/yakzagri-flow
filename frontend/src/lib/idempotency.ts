@@ -13,18 +13,76 @@ export function generateIdempotencyKey(): string {
 }
 
 const IDEMPOTENCY_STORAGE_PREFIX = "amana:idempotency:";
+const memoryFallback = new Map<string, string>();
 
-export function getOrCreateIdempotencyKey(scope: string): string {
-  if (typeof window === "undefined") return generateIdempotencyKey();
+export type IdempotencyScopeInput =
+  | string
+  | [string | null | undefined, string]
+  | { userId?: string | null; scope: string };
+
+export function resolveScope(
+  scopeOrUser: string | null | undefined | [string | null | undefined, string] | { userId?: string | null; scope: string },
+  maybeScope?: string,
+): string {
+  if (Array.isArray(scopeOrUser)) {
+    const [user, s] = scopeOrUser;
+    return user ? `${user}:${s}` : s;
+  }
+  if (typeof scopeOrUser === "object" && scopeOrUser !== null) {
+    const { userId, scope } = scopeOrUser;
+    return userId ? `${userId}:${scope}` : scope;
+  }
+  if (maybeScope !== undefined) {
+    return scopeOrUser ? `${scopeOrUser}:${maybeScope}` : maybeScope;
+  }
+  return typeof scopeOrUser === "string" ? scopeOrUser : "default";
+}
+
+export function getOrCreateIdempotencyKey(
+  scopeOrUser: string | null | undefined | [string | null | undefined, string] | { userId?: string | null; scope: string },
+  maybeScope?: string,
+): string {
+  const scope = resolveScope(scopeOrUser, maybeScope);
   const storageKey = `${IDEMPOTENCY_STORAGE_PREFIX}${scope}`;
-  const existing = sessionStorage.getItem(storageKey);
-  if (existing) return existing;
+
+  if (typeof window !== "undefined" && typeof sessionStorage !== "undefined") {
+    try {
+      const existing = sessionStorage.getItem(storageKey);
+      if (existing) return existing;
+      const fresh = generateIdempotencyKey();
+      sessionStorage.setItem(storageKey, fresh);
+      return fresh;
+    } catch {}
+  }
+
+  const mem = memoryFallback.get(storageKey);
+  if (mem) return mem;
   const fresh = generateIdempotencyKey();
-  sessionStorage.setItem(storageKey, fresh);
+  memoryFallback.set(storageKey, fresh);
   return fresh;
 }
 
-export function clearIdempotencyKey(scope: string): void {
-  if (typeof window === "undefined") return;
-  sessionStorage.removeItem(`${IDEMPOTENCY_STORAGE_PREFIX}${scope}`);
+export function clearIdempotencyKey(
+  scopeOrUser: string | null | undefined | [string | null | undefined, string] | { userId?: string | null; scope: string },
+  maybeScope?: string,
+): void {
+  const scope = resolveScope(scopeOrUser, maybeScope);
+  const storageKey = `${IDEMPOTENCY_STORAGE_PREFIX}${scope}`;
+
+  memoryFallback.delete(storageKey);
+
+  if (typeof window !== "undefined" && typeof sessionStorage !== "undefined") {
+    try {
+      sessionStorage.removeItem(storageKey);
+    } catch {}
+  }
+}
+
+export function _clearAllIdempotencyKeysForTests(): void {
+  memoryFallback.clear();
+  if (typeof window !== "undefined" && typeof sessionStorage !== "undefined") {
+    try {
+      sessionStorage.clear();
+    } catch {}
+  }
 }

@@ -10,10 +10,24 @@
  *
  * Format: `amana-<timestamp-base36>-<random-hex-8>`
  * Example: `amana-lzr9k2g4-a3f1c8b2`
+ *
+ * This module is the single source of truth for correlation-ID generation.
+ * All call sites (actionDedup, offlineQueueStore, Step3Review, traced-fetch,
+ * error boundaries) must route through `generateCorrelationId` so the backend
+ * correlation tracing only has to match one format.
  */
 
 /**
+ * Canonical correlation-ID format produced by `generateCorrelationId`.
+ * `amana-<timestamp-base36>-<random-hex-8>`
+ */
+export const CORRELATION_ID_PATTERN = /^amana-[0-9a-z]+-[0-9a-f]{8}$/;
+
+/**
  * Generate a new client-side correlation ID.
+ *
+ * This is the canonical generator; every other correlation-ID call site in
+ * the app should delegate here instead of hand-rolling its own format.
  */
 export function generateCorrelationId(): string {
   const ts = Date.now().toString(36);
@@ -21,6 +35,13 @@ export function generateCorrelationId(): string {
     .toString(16)
     .padStart(8, "0");
   return `amana-${ts}-${rand}`;
+}
+
+/**
+ * Type guard: does `value` match the canonical correlation-ID format?
+ */
+export function isCorrelationId(value: unknown): value is string {
+  return typeof value === "string" && CORRELATION_ID_PATTERN.test(value);
 }
 
 /**

@@ -35,8 +35,7 @@ export function getStellarRpcUrl(): string {
 export function getStellarNetworkPassphrase(): string {
   const network = readSavedNetwork();
   if (network === "mainnet") return "Public Global Stellar Network ; September 2015";
-  if (network === "testnet") return "Test SDF Network ; September 2015";
-  return (
+  const passphrase =
     process.env.NEXT_PUBLIC_STELLAR_NETWORK ||
     "Test SDF Network ; September 2015";
 

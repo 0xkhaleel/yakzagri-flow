@@ -1,6 +1,8 @@
-import { act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { useOfflineQueueStore } from "@/stores/offlineQueueStore";
-import { generateIdempotencyKey } from "@/lib/idempotency";
+import { generateIdempotencyKey, getOrCreateIdempotencyKey } from "@/lib/idempotency";
+import { ApiError } from "@/lib/api";
+import { useOffline } from "@/hooks/useOffline";
 
 describe("Offline queue — draft trades survive refresh/restart and send after reconnect", () => {
   beforeEach(() => {
@@ -49,6 +51,17 @@ describe("Offline queue — draft trades survive refresh/restart and send after 
     expect(useOfflineQueueStore.getState().queue).toHaveLength(0);
   });
 
+  it("preserves action idempotencyKey when provided and reuses canonical key", () => {
+    const customKey = "custom-key-999";
+    const action = useOfflineQueueStore.getState().enqueue({
+      type: "create-trade",
+      endpoint: "/trades",
+      method: "POST",
+      idempotencyKey: customKey,
+    });
+    expect(action.idempotencyKey).toBe(customKey);
+  });
+
   it("pending-state UX: queue length exposed for banner", () => {
     useOfflineQueueStore.getState().enqueue({ type: "deposit", endpoint: "/trades/t1/deposit", method: "POST" });
     useOfflineQueueStore.getState().enqueue({ type: "release", endpoint: "/trades/t1/release", method: "POST" });
@@ -61,6 +74,29 @@ describe("Offline queue — draft trades survive refresh/restart and send after 
     const result = await useOfflineQueueStore.getState().replay(executor);
     expect(result.failed).toHaveLength(1);
     expect(useOfflineQueueStore.getState().queue).toHaveLength(1); // not dequeued on failure
+  });
+
+  it("resolves queue entry on 409 retry instead of replaying forever (acceptance criteria)", async () => {
+    useOfflineQueueStore.getState().enqueue({
+      type: "create-trade",
+      endpoint: "/trades",
+      method: "POST",
+      body: { amountUsdc: "100" },
+    });
+
+    const conflictErr = new ApiError(409, "Conflict: Already processed");
+    const executor = jest.fn(async () => {
+      throw conflictErr;
+    });
+
+    const result = await act(async () => {
+      return await useOfflineQueueStore.getState().replay(executor);
+    });
+
+    expect(result.succeeded).toHaveLength(1);
+    expect(result.failed).toHaveLength(0);
+    // Queue entry is resolved and removed from queue, preventing infinite replay loop
+    expect(useOfflineQueueStore.getState().queue).toHaveLength(0);
   });
 
   it("E2E simulation: offline -> online mid-flow replays", async () => {
@@ -124,9 +160,6 @@ describe("useOffline adaptive cadence (#118)", () => {
     const fetchMock = jest.fn(async () => ({ ok: true, status: 200 } as any));
     global.fetch = fetchMock as any;
 
-    const { renderHook } = require("@testing-library/react");
-    const { useOffline } = require("@/hooks/useOffline");
-
     renderHook(() => useOffline());
 
     // First probe fires immediately on mount.
@@ -151,9 +184,6 @@ describe("useOffline adaptive cadence (#118)", () => {
     Object.defineProperty(navigator, "onLine", { configurable: true, get: () => false });
     const fetchMock = jest.fn(async () => ({ ok: true, status: 200 } as any));
     global.fetch = fetchMock as any;
-
-    const { renderHook } = require("@testing-library/react");
-    const { useOffline } = require("@/hooks/useOffline");
 
     renderHook(() => useOffline());
 

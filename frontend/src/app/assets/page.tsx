@@ -286,20 +286,24 @@ interface AssetTableProps {
 
 function AssetTableSkeleton() {
   return (
-    <div className="divide-y divide-border-default">
+    <tbody className="divide-y divide-border-default">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-4">
-          <div className="space-y-1.5">
-            <Skeleton className="h-3.5 w-32" />
-            <Skeleton className="h-3 w-20" />
-          </div>
-          <Skeleton className="h-3.5 w-20" />
-          <Skeleton className="h-3.5 w-24" />
-          <Skeleton className="h-5 w-16 rounded-full" />
-          <Skeleton className="h-3.5 w-10" />
-        </div>
+        <tr key={i}>
+          <td colSpan={5} className="px-6 py-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-[2fr_1fr_1fr_1fr_auto] md:items-center">
+              <div className="space-y-1.5">
+                <Skeleton className="h-3.5 w-32" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+              <Skeleton className="h-3.5 w-20" />
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-3.5 w-10" />
+            </div>
+          </td>
+        </tr>
       ))}
-    </div>
+    </tbody>
   );
 }
 
@@ -368,79 +372,110 @@ function AssetTable({
         </Link>
       </div>
 
-      {/* Table header */}
-      <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 bg-surface-2 text-xs font-medium text-text-muted uppercase tracking-wider border-b border-border-default">
-        <span>{translateCopy("ui.asset_trade_id_1e38d8e")}</span>
-        <span>{translateCopy("ui.amount_cngn_55587aa")}</span>
-        <span>{translateCopy("ui.counterparty_97b2be4")}</span>
-        <span>{translateCopy("ui.status_bae7d5b")}</span>
-        <span>{translateCopy("ui.action_97c89a4")}</span>
-      </div>
-
-      {/* Rows */}
-      {loading ? (
-        <AssetTableSkeleton />
-      ) : trades.length === 0 ? (
-        <div className="px-6 py-16 text-center">
-          <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border-default flex items-center justify-center mx-auto mb-4">
-            <Activity className="w-6 h-6 text-text-muted" />
-          </div>
-          <p className="text-sm font-medium text-text-primary">{translateCopy("ui.no_assets_found_92ac341")}</p>
-          <p className="text-xs text-text-secondary mt-1">
-            {search || statusFilter !== "all"
-              ? "Try adjusting your search or filter."
-              : "Create your first trade to register an asset."}
-          </p>
-        </div>
-      ) : (
-        <div className="divide-y divide-border-default">
-          {trades.map((trade) => {
-            const statusKey = trade.status.toLowerCase().replace(/_/g, "");
-            const pill = STATUS_STYLES[statusKey] ?? "text-text-muted bg-surface-2 border border-border-default";
-            const displayStatus = trade.status.toLowerCase().replace(/_/g, " ");
-
-            return (
-              <div
-                key={trade.tradeId}
-                className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-4 transition-colors hover:bg-surface-2/40"
-              >
-                <div className="min-w-0">
-                  <Link
-                    href={`/assets/${trade.tradeId}`}
-                    className="text-sm font-mono text-gold hover:underline underline-offset-4 truncate block"
-                  >
-                    {trade.tradeId.slice(0, 14)}…
-                  </Link>
-                  <p className="text-xs text-text-muted mt-0.5">
-                    {formatDate(trade.createdAt)}
+      <div className="overflow-x-auto">
+        <table role="table" className="w-full text-left">
+          <caption className="sr-only">{translateCopy("ui.asset_positions_9582d62")}</caption>
+          <thead className="sr-only bg-surface-2 text-xs font-medium text-text-muted uppercase tracking-wider md:not-sr-only md:table-header-group">
+            <tr>
+              <th scope="col" className="px-6 py-3">{translateCopy("ui.asset_trade_id_1e38d8e")}</th>
+              <th scope="col" className="px-6 py-3">{translateCopy("ui.amount_cngn_55587aa")}</th>
+              <th scope="col" className="px-6 py-3">{translateCopy("ui.counterparty_97b2be4")}</th>
+              <th scope="col" className="px-6 py-3">{translateCopy("ui.status_bae7d5b")}</th>
+              <th scope="col" className="px-6 py-3">{translateCopy("ui.action_97c89a4")}</th>
+            </tr>
+          </thead>
+          {loading ? (
+            <AssetTableSkeleton />
+          ) : trades.length === 0 ? (
+            <tbody>
+              <tr>
+                <td colSpan={5} className="px-6 py-16 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border-default flex items-center justify-center mx-auto mb-4">
+                    <Activity className="w-6 h-6 text-text-muted" />
+                  </div>
+                  <p className="text-sm font-medium text-text-primary">{translateCopy("ui.no_assets_found_92ac341")}</p>
+                  <p className="text-xs text-text-secondary mt-1">
+                    {search || statusFilter !== "all"
+                      ? "Try adjusting your search or filter."
+                      : "Create your first trade to register an asset."}
                   </p>
-                </div>
+                </td>
+              </tr>
+            </tbody>
+          ) : (
+            <tbody className="divide-y divide-border-default">
+              {trades.map((trade) => {
+                const statusKey = trade.status.toLowerCase().replace(/_/g, "");
+                const pill = STATUS_STYLES[statusKey] ?? "text-text-muted bg-surface-2 border border-border-default";
+                const displayStatus = trade.status.toLowerCase().replace(/_/g, " ");
 
-                <p className="text-sm font-semibold text-text-primary tabular-nums">
-                  {formatNumber(parseFloat(trade.amountCngn))}
-                </p>
+                return (
+                  <tr
+                    key={trade.tradeId}
+                    role="row"
+                    className="block transition-colors hover:bg-surface-2/40 md:table-row"
+                  >
+                    <th
+                      scope="row"
+                      className="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-4 px-6 pt-4 text-left md:table-cell md:py-4"
+                    >
+                      <span aria-hidden="true" className="text-xs font-medium text-text-muted md:hidden">{translateCopy("ui.asset_trade_id_1e38d8e")}</span>
+                      <div className="min-w-0">
+                        <Link
+                          href={`/assets/${trade.tradeId}`}
+                          className="text-sm font-mono text-gold hover:underline underline-offset-4 truncate block"
+                        >
+                          {trade.tradeId.slice(0, 14)}…
+                        </Link>
+                        <p className="text-xs text-text-muted mt-0.5">
+                          {formatDate(trade.createdAt)}
+                        </p>
+                      </div>
+                    </th>
 
-                <p className="text-sm text-text-secondary font-mono truncate">
-                  {trade.sellerAddress.slice(0, 6)}…{trade.sellerAddress.slice(-4)}
-                </p>
+                    <td
+                      className="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-4 px-6 py-2 text-sm font-semibold text-text-primary tabular-nums md:table-cell md:py-4"
+                    >
+                      <span aria-hidden="true" className="text-xs font-medium text-text-muted md:hidden">{translateCopy("ui.amount_cngn_55587aa")}</span>
+                      {formatNumber(parseFloat(trade.amountCngn))}
+                    </td>
 
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium capitalize w-fit ${pill}`}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" aria-hidden="true" />
-                  {displayStatus}
-                </span>
+                    <td
+                      className="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-4 px-6 py-2 text-sm text-text-secondary font-mono truncate md:table-cell md:py-4"
+                    >
+                      <span aria-hidden="true" className="text-xs font-medium text-text-muted md:hidden">{translateCopy("ui.counterparty_97b2be4")}</span>
+                      {trade.sellerAddress.slice(0, 6)}…{trade.sellerAddress.slice(-4)}
+                    </td>
 
-                <Link
-                  href={`/assets/${trade.tradeId}`}
-                  className="text-xs font-semibold text-text-secondary hover:text-gold transition-colors whitespace-nowrap"
-                  aria-label={`View asset ${trade.tradeId}`}
-                >
-                  {translateCopy("ui.view_cf3dbda")}
-                </Link>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                    <td
+                      className="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-4 px-6 py-2 md:table-cell md:py-4"
+                    >
+                      <span aria-hidden="true" className="text-xs font-medium text-text-muted md:hidden">{translateCopy("ui.status_bae7d5b")}</span>
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium capitalize w-fit ${pill}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" aria-hidden="true" />
+                        {displayStatus}
+                      </span>
+                    </td>
+
+                    <td
+                      className="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-4 px-6 pb-4 md:table-cell md:py-4"
+                    >
+                      <span aria-hidden="true" className="text-xs font-medium text-text-muted md:hidden">{translateCopy("ui.action_97c89a4")}</span>
+                      <Link
+                        href={`/assets/${trade.tradeId}`}
+                        className="text-xs font-semibold text-text-secondary hover:text-gold transition-colors whitespace-nowrap"
+                        aria-label={`View asset ${trade.tradeId}`}
+                      >
+                        {translateCopy("ui.view_cf3dbda")}
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          )}
+        </table>
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (

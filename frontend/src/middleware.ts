@@ -1,21 +1,31 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getApiBaseUrl, getStellarRpcUrl } from "@/lib/api/env";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 /**
- * Per-request CSP nonce + security headers.
- *
- * Addresses issue #202 (Content-Security-Policy with nonces on Next.js
- * frontend). A fresh cryptographically random nonce is generated for every
- * request and forwarded to the app via the `x-nonce` request header so
- * Server Components can attach it to any inline `<script>` tags. Next.js
- * itself automatically applies the nonce (read back off the CSP response
- * header) to the scripts/styles it injects for the app router — see
- * https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
- *
- * Rollout: controlled by CSP_ENFORCE. Defaults to report-only so violation
- * telemetry (via /api/csp-report) can be observed for a burn-in period
- * before flipping to enforcing mode. Set CSP_ENFORCE=true once telemetry
- * shows zero high-severity violations.
+ * Origins allowed to be embedded as frames and connected to (wallet providers).
+ * Drives both `connect-src` and `frame-src` below.
+ */
+const WALLET_FRAME_ALLOWLIST = [
+  "https://walletconnect.com",
+  "https://*.walletconnect.com",
+  "https://verify.walletconnect.com",
+  "https://*.walletconnect.org",
+];
+
+/**
+ * IPFS/storage origins used for video proof upload and playback.
+ * `gateway.pinata.cloud` serves pinned proof videos; `api.pinata.cloud`
+ * receives the upload from VideoUploadCard.
+ */
+const IPFS_MEDIA_ORIGINS = [
+  "https://gateway.pinata.cloud",
+  "https://*.mypinata.cloud",
+  "https://ipfs.io",
+  "https://*.ipfs.io",
+];
+
+/**
+ * Build the Content-Security-Policy for a given request.
  *
  * Wallet-frame exemption process: third-party wallet UIs that must be
  * embedded in an iframe (e.g. a hosted signing widget) should be added to
@@ -29,31 +39,18 @@ import { getApiBaseUrl, getStellarRpcUrl } from "@/lib/api/env";
  * for any same-origin media), and the Permissions-Policy below grants
  * `camera`/`microphone` to same-origin so the recorder can request them.
  */
+function buildCsp(nonce: string): string {
+  const directives: Record<string, string[]> = {
+    // Fallback for directives that are not declared explicitly.
+    "default-src": ["'self'"],
 
-function buildConnectSrc(): string {
-  const origins = new Set<string>(["'self'"]);
-  for (const raw of [getApiBaseUrl(), getStellarRpcUrl()]) {
-    try {
-      origins.add(new URL(raw).origin);
-    } catch {
-      // ignore unparsable/relative values
-    }
-  }
-  // WebSocket upgrades share the same origins as their HTTP counterparts.
-  for (const origin of Array.from(origins)) {
-    if (origin.startsWith("https://")) origins.add(`wss://${origin.slice("https://".length)}`);
-    if (origin.startsWith("http://")) origins.add(`ws://${origin.slice("http://".length)}`);
-  }
-  return Array.from(origins).join(" ");
-}
+    // Scripts: Next.js requires a per-request nonce; 'strict-dynamic' lets
+    // nonce-trusted scripts load their own dependencies.
+    "script-src": ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"],
 
-function buildFrameSrc(): string {
-  const allowlist = (process.env.WALLET_FRAME_ALLOWLIST ?? "")
-    .split(",")
-    .map((v) => v.trim())
-    .filter(Boolean);
-  return ["'self'", ...allowlist].join(" ");
-}
+    // Styles: 'unsafe-inline' is required by the toast library, which injects
+    // inline <style> tags at runtime.
+    "style-src": ["'self'", "'unsafe-inline'"],
 
 function buildCsp(nonce: string): string {
   const directives: Record<string, string> = {
@@ -74,17 +71,13 @@ function buildCsp(nonce: string): string {
   };
 
   return Object.entries(directives)
-    .map(([key, value]) => (value ? `${key} ${value}` : key))
+    .map(([key, values]) => `${key} ${values.join(" ")}`)
     .join("; ");
 }
 
 export function middleware(request: NextRequest) {
-  const nonce = Buffer.from(crypto.randomUUID().replace(/-/g, "")).toString("base64");
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = buildCsp(nonce);
-  const enforce = process.env.CSP_ENFORCE === "true";
-  const headerName = enforce
-    ? "Content-Security-Policy"
-    : "Content-Security-Policy-Report-Only";
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
@@ -110,12 +103,12 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, manifest.json (metadata files)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|manifest.json).*)",
+    {
+      source: "/((?!api|_next/static|_next/image|favicon.ico).*)",
+      missing: [
+        { type: "header", key: "next-router-prefetch" },
+        { type: "header", key: "purpose", value: "prefetch" },
+      ],
+    },
   ],
 };
