@@ -8,7 +8,14 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # Direct dependencies are pinned in package.json, so updates change the
+    # manifest and lockfile together to keep installs reproducible.
+    versioning-strategy: increase
     open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
     labels:
       - dependencies
       - frontend
