@@ -9,8 +9,7 @@
  *     (fail-safe) is returned — kill-switch semantics.
  *
  * The flag names in FLAG_CATALOG MUST stay in sync with the backend's
- * feature-flags service. A CI script (`scripts/check-flag-catalog-drift.ts`)
- * enforces this by comparing against the backend endpoint.
+ * feature-flags service.
  */
 
 // ---------------------------------------------------------------------------
