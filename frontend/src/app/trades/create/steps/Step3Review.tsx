@@ -15,8 +15,9 @@ import { useOffline } from "@/hooks/useOffline";
 import { useOfflineQueueStore } from "@/stores/offlineQueueStore";
 import { useToast } from "@/hooks/useToast";
 import { shouldDedup, registerAction } from "@/lib/actionDedup";
-import { generateIdempotencyKey } from "@/lib/idempotency";
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/idempotency";
 import { generateCorrelationId } from "@/lib/correlationId";
+import { formatNumber } from "@/lib/i18n/format";
 
 type Row = { label: string; value: string };
 
@@ -100,7 +101,7 @@ export function Step3Review({ draft, onBack }: Step3ReviewProps) {
     }
 
     const correlationId = generateCorrelationId();
-    const idempotencyKey = generateIdempotencyKey();
+    const idempotencyKey = getOrCreateIdempotencyKey(address, dedupKey);
     registerAction(dedupKey, correlationId, idempotencyKey);
 
     // Offline queue: queue idempotent action locally while offline (draft trades survive refresh)
@@ -138,6 +139,7 @@ export function Step3Review({ draft, onBack }: Step3ReviewProps) {
         correlationId,
       });
 
+      clearIdempotencyKey(address, dedupKey);
       setTradeId(submission.tradeId);
       setTxHash(submission.transactionHash);
       updateToast(correlationId, { type: "success", title: "Success", message: "Trade created — funds locked.", duration: 5000 });

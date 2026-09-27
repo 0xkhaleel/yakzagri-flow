@@ -26,6 +26,7 @@ import {
   type TradeStatsResponse,
   type TradeListResponse,
 } from "@/lib/api";
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/idempotency";
 
 const FOOTER_CONTENT = {
   version: "V4.8.2",
@@ -55,6 +56,7 @@ export default function VaultPage() {
   const router = useRouter();
   const {
     shortAddress,
+    address,
     token,
     isAuthenticated,
     isWalletConnected,
@@ -157,16 +159,24 @@ export default function VaultPage() {
     manifestSubmittingRef.current = true;
     setManifestStatus(null);
 
+    const scopeKey = `trade:${manifestTrade.tradeId}:manifest`;
+    const idempotencyKey = getOrCreateIdempotencyKey(address, scopeKey);
+
     try {
       const expectedDeliveryAt =
         manifestTrade.eta ?? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      const response = await api.trades.submitManifest(token, manifestTrade.tradeId, {
-        driverName: data.driverName,
-        driverPhone: data.driverPhone,
-        vehicleRegistration: data.licensePlate,
-        routeDescription: "Driver manifest submitted from vault.",
-        expectedDeliveryAt,
-      });
+      const response = await api.trades.submitManifest(
+        token,
+        manifestTrade.tradeId,
+        {
+          driverName: data.driverName,
+          driverPhone: data.driverPhone,
+          vehicleRegistration: data.licensePlate,
+          routeDescription: "Driver manifest submitted from vault.",
+          expectedDeliveryAt,
+        },
+        { idempotencyKey },
+      );
 
       const signResult = await signTransaction(response.unsignedXdr, {
         networkPassphrase: apiConfig.getStellarNetworkPassphrase(),
@@ -195,15 +205,27 @@ export default function VaultPage() {
         throw new Error(submitResult.error.message || "Manifest transaction submission failed");
       }
 
+      clearIdempotencyKey(address, scopeKey);
       setManifestData(data);
       setManifestStatus(`Manifest submitted for trade ${manifestTrade.tradeId}.`);
       setIsManifestOpen(false);
     } catch (err) {
-      setManifestStatus(
-        err instanceof ApiError || err instanceof Error
-          ? err.message
-          : "Failed to submit manifest",
-      );
+      const isConflict =
+        (err instanceof ApiError && err.status === 409) ||
+        (typeof err === "object" && err !== null && ("status" in err && (err as { status: unknown }).status === 409)) ||
+        (err instanceof Error && /409|conflict|already[- ]processed/i.test(err.message));
+
+      if (isConflict) {
+        clearIdempotencyKey(address, scopeKey);
+        setManifestStatus(`Manifest was already submitted for trade ${manifestTrade.tradeId}.`);
+        setIsManifestOpen(false);
+      } else {
+        setManifestStatus(
+          err instanceof ApiError || err instanceof Error
+            ? err.message
+            : "Failed to submit manifest",
+        );
+      }
     } finally {
       manifestSubmittingRef.current = false;
     }
