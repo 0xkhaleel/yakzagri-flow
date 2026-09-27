@@ -40,7 +40,7 @@ jobs:
           filters: |
             frontend:
               - 'frontend/**'
-              - 'frontend/package-lock.json'
+              - 'frontend/pnpm-lock.yaml'
 
   frontend:
     name: Frontend Required Gate
@@ -80,18 +80,7 @@ jobs:
 
       - name: Test
         if: needs.changes.outputs.frontend == 'true'
-        run: pnpm test -- --json --outputFile=jest-results.json || true
-
-      - name: Fail if tests failed (deferred from --json run)
-        if: needs.changes.outputs.frontend == 'true'
-        run: |
-          node -e "
-            const r = require('./jest-results.json');
-            if (r.success === false || r.numFailedTests > 0) {
-              console.error('Tests failed: ' + r.numFailedTests + ' failure(s)');
-              process.exit(1);
-            }
-          "
+        run: pnpm test --ci --json
 
       - name: A11y axe audit (blocking)
         if: needs.changes.outputs.frontend == 'true'
