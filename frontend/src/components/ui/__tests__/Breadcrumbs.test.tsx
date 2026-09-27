@@ -80,6 +80,25 @@ describe("Breadcrumbs component", () => {
     expect(container.firstChild).toBeNull();
   });
 
+  it("renders an optional admin action link", () => {
+    render(
+      <Breadcrumbs
+        items={ADMIN_STREAMS_CRUMBS}
+        adminAction={{
+          label: "Manage Stream",
+          href: "/admin/streams/stream-123",
+          icon: <svg data-testid="admin-icon" aria-hidden="true" />,
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("admin-icon")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Manage Stream" })).toHaveAttribute(
+      "href",
+      "/admin/streams/stream-123",
+    );
+  });
+
   it("works with a single item (current page only)", () => {
     render(<Breadcrumbs items={SINGLE_CRUMB} />);
 

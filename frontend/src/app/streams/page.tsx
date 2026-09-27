@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { api, ApiError, type AdminStreamSummary } from "@/lib/api";
-import { Breadcrumb } from "@/components/ui";
+import { Breadcrumbs } from "@/components/ui";
 
 export default function StreamsPage() {
   const { token, isAuthenticated, isWalletConnected, isLoading: authLoading, connectWallet, authenticate } = useAuth();
@@ -52,7 +52,7 @@ export default function StreamsPage() {
     <section className="min-h-full bg-bg-primary px-6 py-8 lg:px-10">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} />
+        <Breadcrumbs items={breadcrumbItems} />
 
         {/* Page header */}
         <div className="flex items-center justify-between">
@@ -65,6 +65,8 @@ export default function StreamsPage() {
         </div>
 
         {/* Coming soon placeholder */}
+        {!canAccessAdmin ? (
+          <>
         <div className="rounded-2xl border border-border-default bg-card p-8 text-center">
           <svg
             className="mx-auto h-12 w-12 text-text-muted"
@@ -109,6 +111,8 @@ export default function StreamsPage() {
               View Stream Ledger
             </Link>
           </div>
+        </div>
+          </>
         ) : (
           <>
             <div className="overflow-hidden rounded-lg border border-border-default bg-card">

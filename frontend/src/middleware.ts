@@ -24,6 +24,8 @@ const IPFS_MEDIA_ORIGINS = [
   "https://*.ipfs.io",
 ];
 
+const CSP_HEADER = "Content-Security-Policy";
+
 /**
  * Build the Content-Security-Policy for a given request.
  *
@@ -41,37 +43,24 @@ const IPFS_MEDIA_ORIGINS = [
  */
 function buildCsp(nonce: string): string {
   const directives: Record<string, string[]> = {
-    // Fallback for directives that are not declared explicitly.
     "default-src": ["'self'"],
-
-    // Scripts: Next.js requires a per-request nonce; 'strict-dynamic' lets
-    // nonce-trusted scripts load their own dependencies.
-    "script-src": ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"],
-
-    // Styles: 'unsafe-inline' is required by the toast library, which injects
-    // inline <style> tags at runtime.
+    "script-src": ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'", "https:"],
     "style-src": ["'self'", "'unsafe-inline'"],
-
-function buildCsp(nonce: string): string {
-  const directives: Record<string, string> = {
-    "default-src": "'self'",
-    "script-src": `'self' 'nonce-${nonce}' 'strict-dynamic' https:`,
-    "style-src": "'self' 'unsafe-inline'",
-    "img-src": "'self' data: blob: https:",
-    "media-src": "'self' blob:",
-    "font-src": "'self' data:",
-    "connect-src": buildConnectSrc(),
-    "frame-src": buildFrameSrc(),
-    "object-src": "'none'",
-    "base-uri": "'self'",
-    "form-action": "'self'",
-    "frame-ancestors": "'none'",
-    "upgrade-insecure-requests": "",
-    "report-uri": "/api/csp-report",
+    "img-src": ["'self'", "data:", "blob:", "https:"],
+    "media-src": ["'self'", "blob:", ...IPFS_MEDIA_ORIGINS],
+    "font-src": ["'self'", "data:"],
+    "connect-src": ["'self'", ...WALLET_FRAME_ALLOWLIST, "https://api.pinata.cloud"],
+    "frame-src": ["'self'", ...WALLET_FRAME_ALLOWLIST],
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "form-action": ["'self'"],
+    "frame-ancestors": ["'none'"],
+    "upgrade-insecure-requests": [],
+    "report-uri": ["/api/csp-report"],
   };
 
   return Object.entries(directives)
-    .map(([key, values]) => `${key} ${values.join(" ")}`)
+    .map(([name, values]) => (values.length ? `${name} ${values.join(" ")}` : name))
     .join("; ");
 }
 
@@ -86,7 +75,7 @@ export function middleware(request: NextRequest) {
     request: { headers: requestHeaders },
   });
 
-  response.headers.set(headerName, csp);
+  response.headers.set(CSP_HEADER, csp);
   response.headers.set("x-nonce", nonce);
 
   // Defense-in-depth headers that pair naturally with the CSP rollout.

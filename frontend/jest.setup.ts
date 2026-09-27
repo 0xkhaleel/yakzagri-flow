@@ -22,12 +22,20 @@ if (typeof global.ReadableStream === 'undefined') {
   } catch {}
 }
 
-try {
-  const { Response, Request, Headers } = require('undici');
-  if (typeof global.Response === 'undefined') global.Response = Response;
-  if (typeof global.Request === 'undefined') global.Request = Request;
-  if (typeof global.Headers === 'undefined') global.Headers = Headers;
-} catch {
-  // fallback if undici is not available
+if (typeof globalThis.fetch === 'undefined' && typeof fetch === 'function') {
+  globalThis.fetch = fetch;
+}
+if (typeof global.fetch === 'undefined' && typeof globalThis.fetch === 'function') {
+  global.fetch = globalThis.fetch;
+}
+
+if (typeof globalThis.Response === 'undefined' && typeof Response !== 'undefined') {
+  globalThis.Response = Response;
+}
+if (typeof globalThis.Request === 'undefined' && typeof Request !== 'undefined') {
+  globalThis.Request = Request;
+}
+if (typeof globalThis.Headers === 'undefined' && typeof Headers !== 'undefined') {
+  globalThis.Headers = Headers;
 }
 

@@ -23,6 +23,7 @@ import {
   ModalBody,
   ModalFooter,
 } from "@/components/ui/Modal";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 function formatDate(dateString: string) {
   return formatDateTime(dateString);
@@ -51,23 +52,7 @@ function InfoCard({
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    FUNDED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    SETTLED: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    DISPUTED: "bg-red-500/15 text-red-400 border-red-500/30",
-    CANCELLED: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
-  };
-  const cls = colors[status.toUpperCase()] ?? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30";
-  return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${cls}`}>
-      {status}
-    </span>
-  );
-}
-
-type UserRole = "buyer" | "seller" | "observer";
+type UserRole = "buyer" | "seller" | "mediator" | "observer";
 type DisputeCategory = "quality" | "delivery" | "payment" | "fraud" | "other";
 
 function deriveRole(
@@ -77,8 +62,14 @@ function deriveRole(
 ): UserRole {
   if (!walletAddress) return "observer";
   const addr = walletAddress.toLowerCase();
+  const mediatorAllowlist = (process.env.NEXT_PUBLIC_MEDIATOR_WALLETS ?? "")
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean);
+
   if (addr === buyerAddress.toLowerCase()) return "buyer";
   if (addr === sellerAddress.toLowerCase()) return "seller";
+  if (mediatorAllowlist.includes(addr)) return "mediator";
   return "observer";
 }
 
@@ -108,7 +99,7 @@ export default function TradeDetailPage() {
   async function runAction(
     label: string,
     action: string,
-    apiCall: () => Promise<{ unsignedXdr: string }>,
+    apiCall: (opts?: { idempotencyKey?: string }) => Promise<{ unsignedXdr: string }>,
   ) {
     if (!token || actionLoading) return;
 
@@ -117,15 +108,11 @@ export default function TradeDetailPage() {
     setActionSuccess(null);
     setActionTxHash(null);
 
-    const idempotencyKey = scopeKey
-      ? getOrCreateIdempotencyKey(address, scopeKey)
-      : undefined;
+    const scopeKey = `trade:${tradeId}:${action}`;
+    const idempotencyKey = getOrCreateIdempotencyKey(address, scopeKey);
 
     try {
-      const { unsignedXdr } = await withIdempotency(
-        () => apiCall(),
-        { key: `${action}:${tradeId}` },
-      );
+      const { unsignedXdr } = await apiCall({ idempotencyKey });
       const networkPassphrase = apiConfig.getStellarNetworkPassphrase();
 
       const result = await signTransaction(unsignedXdr, {
@@ -184,17 +171,17 @@ export default function TradeDetailPage() {
   }
 
   function handleDeposit() {
-    void runAction("Deposit", "deposit", () => api.trades.deposit(token!, tradeId));
+    void runAction("Deposit", "deposit", (opts) => api.trades.deposit(token!, tradeId, opts));
   }
 
   function handleConfirmDelivery() {
-    void runAction("Confirm Delivery", "confirm-delivery", () =>
-      api.trades.confirmDelivery(token!, tradeId),
+    void runAction("Confirm Delivery", "confirm-delivery", (opts) =>
+      api.trades.confirmDelivery(token!, tradeId, opts),
     );
   }
 
   function handleReleaseFunds() {
-    void runAction("Release Funds", "release-funds", () => api.trades.releaseFunds(token!, tradeId));
+    void runAction("Release Funds", "release-funds", (opts) => api.trades.releaseFunds(token!, tradeId, opts));
   }
 
   function handleInitiateDispute() {
@@ -206,8 +193,8 @@ export default function TradeDetailPage() {
     setDisputeError(null);
     void runAction(
       "Initiate Dispute",
+      "dispute",
       (opts) => api.trades.initiateDispute(token!, tradeId, reason, disputeCategory, opts),
-      `trade:${tradeId}:dispute`,
     );
   }
 
@@ -258,7 +245,7 @@ export default function TradeDetailPage() {
                 <p className="mt-1 text-xs text-text-muted">{translateCopy("ui.updated_702cad2")}{" "}{formatDate(trade.updatedAt)}</p>
               </div>
               <div className="flex flex-col items-start sm:items-end gap-2">
-                <StatusBadge status={trade.status} />
+                <StatusBadge status={trade.status} size="sm" showIcon={false} />
                 {role !== "observer" && (
                   <span className="text-xs text-text-muted capitalize">{translateCopy("ui.your_role_83a4169")}{" "}{role}</span>
                 )}

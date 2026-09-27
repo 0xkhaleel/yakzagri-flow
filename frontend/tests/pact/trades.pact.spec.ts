@@ -1,7 +1,9 @@
+/** @jest-environment node */
+
 import { PactV3, MatchersV3 } from '@pact-foundation/pact';
 import { tradesApi } from '@/lib/api/trades';
 
-const { like, eachLike, term, datetime } = MatchersV3;
+const { like, eachLike, regex, datetime } = MatchersV3;
 
 describe('Trades API Pact Consumer Tests', () => {
   const provider = new PactV3({
@@ -19,7 +21,7 @@ describe('Trades API Pact Consumer Tests', () => {
         .uponReceiving('a request to create a trade')
         .withRequest({
           method: 'POST',
-          path: '/trades',
+          path: '/api/v1/trades',
           headers: {
             Authorization: `Bearer ${mockToken}`,
             'Content-Type': 'application/json',
@@ -35,20 +37,16 @@ describe('Trades API Pact Consumer Tests', () => {
           status: 201,
           headers: { 'Content-Type': 'application/json' },
           body: {
-            tradeId: term({
-              matcher: '\\d+',
-              generate: '4294967297',
-            }),
-            unsignedXdr: term({
-              matcher: '[A-Za-z0-9+/=]+',
-              generate: 'AAAAAXNvbWUtY3JlYXRlLXRyYWRlLXhkcg==',
-            }),
+            tradeId: regex('\\d+', '4294967297'),
+            unsignedXdr: regex('[A-Za-z0-9+/=]+', 'AAAAAXNvbWUtY3JlYXRlLXRyYWRlLXhkcg=='),
           },
         });
 
       await provider.executeTest(async (mockServer) => {
-        const originalBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        process.env.NEXT_PUBLIC_API_BASE_URL = mockServer.url;
+        const originalBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const originalVersionPrefix = process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
+        process.env.NEXT_PUBLIC_API_URL = mockServer.url;
+        process.env.NEXT_PUBLIC_API_VERSION_PREFIX = '/api/v1';
 
         const result = await tradesApi.create(mockToken, {
           sellerAddress: 'GA4T33YK6H6D5E7ZQY5W3J2L7F8K9B0N1M2P3Q4R5S6T7U8V9W0X1Y2Z3',
@@ -61,9 +59,15 @@ describe('Trades API Pact Consumer Tests', () => {
         expect(result).toHaveProperty('unsignedXdr');
 
         if (originalBaseUrl) {
-          process.env.NEXT_PUBLIC_API_BASE_URL = originalBaseUrl;
+          process.env.NEXT_PUBLIC_API_URL = originalBaseUrl;
         } else {
-          delete process.env.NEXT_PUBLIC_API_BASE_URL;
+          delete process.env.NEXT_PUBLIC_API_URL;
+        }
+
+        if (originalVersionPrefix) {
+          process.env.NEXT_PUBLIC_API_VERSION_PREFIX = originalVersionPrefix;
+        } else {
+          delete process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
         }
       });
     });
@@ -76,35 +80,38 @@ describe('Trades API Pact Consumer Tests', () => {
         .uponReceiving('a request to build a deposit transaction')
         .withRequest({
           method: 'POST',
-          path: '/trades/4294967297/deposit',
+          path: '/api/v1/trades/4294967297/deposit',
           headers: {
             Authorization: `Bearer ${mockToken}`,
-            'Content-Type': 'application/json',
           },
-          body: {},
         })
         .willRespondWith({
           status: 200,
           headers: { 'Content-Type': 'application/json' },
           body: {
-            unsignedXdr: term({
-              matcher: '[A-Za-z0-9+/=]+',
-              generate: 'AAAAAXNvbWUtZGVwb3NpdC10eC14ZHI=',
-            }),
+            unsignedXdr: regex('[A-Za-z0-9+/=]+', 'AAAAAXNvbWUtZGVwb3NpdC10eC14ZHI='),
           },
         });
 
       await provider.executeTest(async (mockServer) => {
-        const originalBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        process.env.NEXT_PUBLIC_API_BASE_URL = mockServer.url;
+        const originalBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const originalVersionPrefix = process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
+        process.env.NEXT_PUBLIC_API_URL = mockServer.url;
+        process.env.NEXT_PUBLIC_API_VERSION_PREFIX = '/api/v1';
 
         const result = await tradesApi.deposit(mockToken, '4294967297');
         expect(result).toHaveProperty('unsignedXdr');
 
         if (originalBaseUrl) {
-          process.env.NEXT_PUBLIC_API_BASE_URL = originalBaseUrl;
+          process.env.NEXT_PUBLIC_API_URL = originalBaseUrl;
         } else {
-          delete process.env.NEXT_PUBLIC_API_BASE_URL;
+          delete process.env.NEXT_PUBLIC_API_URL;
+        }
+
+        if (originalVersionPrefix) {
+          process.env.NEXT_PUBLIC_API_VERSION_PREFIX = originalVersionPrefix;
+        } else {
+          delete process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
         }
       });
     });
@@ -117,35 +124,38 @@ describe('Trades API Pact Consumer Tests', () => {
         .uponReceiving('a request to confirm delivery')
         .withRequest({
           method: 'POST',
-          path: '/trades/4294967297/confirm',
+          path: '/api/v1/trades/4294967297/confirm',
           headers: {
             Authorization: `Bearer ${mockToken}`,
-            'Content-Type': 'application/json',
           },
-          body: {},
         })
         .willRespondWith({
           status: 200,
           headers: { 'Content-Type': 'application/json' },
           body: {
-            unsignedXdr: term({
-              matcher: '[A-Za-z0-9+/=]+',
-              generate: 'AAAAAXNvbWUtY29uZmlybS14ZHI=',
-            }),
+            unsignedXdr: regex('[A-Za-z0-9+/=]+', 'AAAAAXNvbWUtY29uZmlybS14ZHI='),
           },
         });
 
       await provider.executeTest(async (mockServer) => {
-        const originalBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        process.env.NEXT_PUBLIC_API_BASE_URL = mockServer.url;
+        const originalBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const originalVersionPrefix = process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
+        process.env.NEXT_PUBLIC_API_URL = mockServer.url;
+        process.env.NEXT_PUBLIC_API_VERSION_PREFIX = '/api/v1';
 
         const result = await tradesApi.confirmDelivery(mockToken, '4294967297');
         expect(result).toHaveProperty('unsignedXdr');
 
         if (originalBaseUrl) {
-          process.env.NEXT_PUBLIC_API_BASE_URL = originalBaseUrl;
+          process.env.NEXT_PUBLIC_API_URL = originalBaseUrl;
         } else {
-          delete process.env.NEXT_PUBLIC_API_BASE_URL;
+          delete process.env.NEXT_PUBLIC_API_URL;
+        }
+
+        if (originalVersionPrefix) {
+          process.env.NEXT_PUBLIC_API_VERSION_PREFIX = originalVersionPrefix;
+        } else {
+          delete process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
         }
       });
     });
@@ -158,35 +168,38 @@ describe('Trades API Pact Consumer Tests', () => {
         .uponReceiving('a request to release funds')
         .withRequest({
           method: 'POST',
-          path: '/trades/4294967297/release',
+          path: '/api/v1/trades/4294967297/release',
           headers: {
             Authorization: `Bearer ${mockToken}`,
-            'Content-Type': 'application/json',
           },
-          body: {},
         })
         .willRespondWith({
           status: 200,
           headers: { 'Content-Type': 'application/json' },
           body: {
-            unsignedXdr: term({
-              matcher: '[A-Za-z0-9+/=]+',
-              generate: 'AAAAAXNvbWUtcmVsZWFzZS14ZHI=',
-            }),
+            unsignedXdr: regex('[A-Za-z0-9+/=]+', 'AAAAAXNvbWUtcmVsZWFzZS14ZHI='),
           },
         });
 
       await provider.executeTest(async (mockServer) => {
-        const originalBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        process.env.NEXT_PUBLIC_API_BASE_URL = mockServer.url;
+        const originalBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const originalVersionPrefix = process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
+        process.env.NEXT_PUBLIC_API_URL = mockServer.url;
+        process.env.NEXT_PUBLIC_API_VERSION_PREFIX = '/api/v1';
 
         const result = await tradesApi.releaseFunds(mockToken, '4294967297');
         expect(result).toHaveProperty('unsignedXdr');
 
         if (originalBaseUrl) {
-          process.env.NEXT_PUBLIC_API_BASE_URL = originalBaseUrl;
+          process.env.NEXT_PUBLIC_API_URL = originalBaseUrl;
         } else {
-          delete process.env.NEXT_PUBLIC_API_BASE_URL;
+          delete process.env.NEXT_PUBLIC_API_URL;
+        }
+
+        if (originalVersionPrefix) {
+          process.env.NEXT_PUBLIC_API_VERSION_PREFIX = originalVersionPrefix;
+        } else {
+          delete process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
         }
       });
     });
@@ -199,7 +212,7 @@ describe('Trades API Pact Consumer Tests', () => {
         .uponReceiving('a request to initiate a dispute')
         .withRequest({
           method: 'POST',
-          path: '/trades/4294967297/dispute',
+          path: '/api/v1/trades/4294967297/dispute',
           headers: {
             Authorization: `Bearer ${mockToken}`,
             'Content-Type': 'application/json',
@@ -213,16 +226,15 @@ describe('Trades API Pact Consumer Tests', () => {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
           body: {
-            unsignedXdr: term({
-              matcher: '[A-Za-z0-9+/=]+',
-              generate: 'AAAAAXNvbWUtZGlzcHV0ZS14ZHI=',
-            }),
+            unsignedXdr: regex('[A-Za-z0-9+/=]+', 'AAAAAXNvbWUtZGlzcHV0ZS14ZHI='),
           },
         });
 
       await provider.executeTest(async (mockServer) => {
-        const originalBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        process.env.NEXT_PUBLIC_API_BASE_URL = mockServer.url;
+        const originalBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const originalVersionPrefix = process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
+        process.env.NEXT_PUBLIC_API_URL = mockServer.url;
+        process.env.NEXT_PUBLIC_API_VERSION_PREFIX = '/api/v1';
 
         const result = await tradesApi.initiateDispute(
           mockToken,
@@ -233,9 +245,15 @@ describe('Trades API Pact Consumer Tests', () => {
         expect(result).toHaveProperty('unsignedXdr');
 
         if (originalBaseUrl) {
-          process.env.NEXT_PUBLIC_API_BASE_URL = originalBaseUrl;
+          process.env.NEXT_PUBLIC_API_URL = originalBaseUrl;
         } else {
-          delete process.env.NEXT_PUBLIC_API_BASE_URL;
+          delete process.env.NEXT_PUBLIC_API_URL;
+        }
+
+        if (originalVersionPrefix) {
+          process.env.NEXT_PUBLIC_API_VERSION_PREFIX = originalVersionPrefix;
+        } else {
+          delete process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
         }
       });
     });
@@ -248,7 +266,7 @@ describe('Trades API Pact Consumer Tests', () => {
         .uponReceiving('a request to get a trade by id')
         .withRequest({
           method: 'GET',
-          path: '/trades/4294967297',
+          path: '/api/v1/trades/4294967297',
           headers: {
             Authorization: `Bearer ${mockToken}`,
           },
@@ -270,8 +288,10 @@ describe('Trades API Pact Consumer Tests', () => {
         });
 
       await provider.executeTest(async (mockServer) => {
-        const originalBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        process.env.NEXT_PUBLIC_API_BASE_URL = mockServer.url;
+        const originalBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const originalVersionPrefix = process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
+        process.env.NEXT_PUBLIC_API_URL = mockServer.url;
+        process.env.NEXT_PUBLIC_API_VERSION_PREFIX = '/api/v1';
 
         const result = await tradesApi.get(mockToken, '4294967297');
         expect(result.tradeId).toBe('4294967297');
@@ -280,9 +300,15 @@ describe('Trades API Pact Consumer Tests', () => {
         expect(result).toHaveProperty('status');
 
         if (originalBaseUrl) {
-          process.env.NEXT_PUBLIC_API_BASE_URL = originalBaseUrl;
+          process.env.NEXT_PUBLIC_API_URL = originalBaseUrl;
         } else {
-          delete process.env.NEXT_PUBLIC_API_BASE_URL;
+          delete process.env.NEXT_PUBLIC_API_URL;
+        }
+
+        if (originalVersionPrefix) {
+          process.env.NEXT_PUBLIC_API_VERSION_PREFIX = originalVersionPrefix;
+        } else {
+          delete process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
         }
       });
     });
@@ -295,7 +321,7 @@ describe('Trades API Pact Consumer Tests', () => {
         .uponReceiving('a request to list trades')
         .withRequest({
           method: 'GET',
-          path: '/trades',
+          path: '/api/v1/trades',
           query: { page: '1', limit: '10' },
           headers: {
             Authorization: `Bearer ${mockToken}`,
@@ -326,17 +352,25 @@ describe('Trades API Pact Consumer Tests', () => {
         });
 
       await provider.executeTest(async (mockServer) => {
-        const originalBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        process.env.NEXT_PUBLIC_API_BASE_URL = mockServer.url;
+        const originalBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const originalVersionPrefix = process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
+        process.env.NEXT_PUBLIC_API_URL = mockServer.url;
+        process.env.NEXT_PUBLIC_API_VERSION_PREFIX = '/api/v1';
 
         const result = await tradesApi.list(mockToken, { page: 1, limit: 10 });
         expect(result.items).toBeDefined();
         expect(result.pagination).toBeDefined();
 
         if (originalBaseUrl) {
-          process.env.NEXT_PUBLIC_API_BASE_URL = originalBaseUrl;
+          process.env.NEXT_PUBLIC_API_URL = originalBaseUrl;
         } else {
-          delete process.env.NEXT_PUBLIC_API_BASE_URL;
+          delete process.env.NEXT_PUBLIC_API_URL;
+        }
+
+        if (originalVersionPrefix) {
+          process.env.NEXT_PUBLIC_API_VERSION_PREFIX = originalVersionPrefix;
+        } else {
+          delete process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
         }
       });
     });
@@ -349,7 +383,7 @@ describe('Trades API Pact Consumer Tests', () => {
         .uponReceiving('a request to get trade stats')
         .withRequest({
           method: 'GET',
-          path: '/trades/stats',
+          path: '/api/v1/trades/stats',
           headers: {
             Authorization: `Bearer ${mockToken}`,
           },
@@ -365,8 +399,10 @@ describe('Trades API Pact Consumer Tests', () => {
         });
 
       await provider.executeTest(async (mockServer) => {
-        const originalBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        process.env.NEXT_PUBLIC_API_BASE_URL = mockServer.url;
+        const originalBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const originalVersionPrefix = process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
+        process.env.NEXT_PUBLIC_API_URL = mockServer.url;
+        process.env.NEXT_PUBLIC_API_VERSION_PREFIX = '/api/v1';
 
         const result = await tradesApi.getStats(mockToken);
         expect(result).toHaveProperty('totalTrades');
@@ -374,9 +410,15 @@ describe('Trades API Pact Consumer Tests', () => {
         expect(result).toHaveProperty('openTrades');
 
         if (originalBaseUrl) {
-          process.env.NEXT_PUBLIC_API_BASE_URL = originalBaseUrl;
+          process.env.NEXT_PUBLIC_API_URL = originalBaseUrl;
         } else {
-          delete process.env.NEXT_PUBLIC_API_BASE_URL;
+          delete process.env.NEXT_PUBLIC_API_URL;
+        }
+
+        if (originalVersionPrefix) {
+          process.env.NEXT_PUBLIC_API_VERSION_PREFIX = originalVersionPrefix;
+        } else {
+          delete process.env.NEXT_PUBLIC_API_VERSION_PREFIX;
         }
       });
     });

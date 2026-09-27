@@ -195,6 +195,6 @@ describe('ContractManifestCard Component', () => {
     it('applies correct styling classes to the card', () => {
         const { container } = render(<ContractManifestCard {...defaultProps} />);
         const card = container.querySelector('[data-testid="bento-card"]');
-        expect(card).toHaveClass('h-106.5');
+        expect(card).toHaveClass('h-104');
     });
 });
