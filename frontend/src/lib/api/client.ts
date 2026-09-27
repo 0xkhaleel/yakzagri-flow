@@ -44,7 +44,14 @@ export const IDEMPOTENCY_LOCK_TTL_MS = IDEMPOTENCY_LOCK_TTL_SECONDS * 1000;
 
 function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
-  return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  const token = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  if (!token) return null;
+  if (!isTokenValid(token)) {
+    // Expired or malformed token: drop it so it can't be reused.
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    return null;
+  }
+  return token;
 }
 
 export const navigationHelpers = {

@@ -20,6 +20,9 @@ import { useFreighterIdentity } from "@/hooks/useFreighterIdentity";
 const TOKEN_STORAGE_KEY = "amana_jwt";
 const TOKEN_ADDRESS_STORAGE_KEY = "amana_jwt_address";
 
+// Refresh the session this long before the backend-issued JWT actually expires.
+const REFRESH_BUFFER_MS = 60 * 1000;
+
 interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
@@ -42,7 +45,11 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
-  return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  try {
+    return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
 }
 
 const TOKEN_KEY = 'auth_token';
@@ -63,15 +70,52 @@ function getTokenAddress(token: string): string | null {
   }
 }
 
-function isTokenExpired(token: string): boolean {
+/**
+ * Decode a JWT payload without ever throwing. Returns null for malformed
+ * tokens (bad structure, invalid base64, non-JSON payload) so callers can
+ * treat them as unauthenticated instead of crashing.
+ */
+function decodeTokenPayload(token: string): Record<string, unknown> | null {
+  if (typeof token !== "string") return null;
+  const parts = token.split(".");
+  if (parts.length !== 3 || !parts[1]) return null;
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const exp = payload.exp;
-    if (!exp) return true;
-    return Date.now() >= exp * 1000;
+    const normalized = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(
+      normalized.length + ((4 - (normalized.length % 4)) % 4),
+      "="
+    );
+    const decoded = atob(padded);
+    const payload = JSON.parse(decoded);
+    if (!payload || typeof payload !== "object") return null;
+    return payload as Record<string, unknown>;
   } catch {
-    return true;
+    return null;
   }
+}
+
+/**
+ * Returns the token's expiry in epoch milliseconds, or null when the token is
+ * malformed or carries no numeric `exp` claim. Aligns with the backend's
+ * standard JWT `exp` (seconds since epoch).
+ */
+function getTokenExpiryMs(token: string): number | null {
+  const payload = decodeTokenPayload(token);
+  if (!payload) return null;
+  const exp = payload.exp;
+  if (typeof exp !== "number" || !Number.isFinite(exp)) return null;
+  return exp * 1000;
+}
+
+/**
+ * A token is only usable when it is well-formed and not past its expiry.
+ * Malformed or expired tokens are treated as unauthenticated (no bypass).
+ */
+function isTokenValid(token: string | null): token is string {
+  if (!token) return false;
+  const expiryMs = getTokenExpiryMs(token);
+  if (expiryMs === null) return false;
+  return Date.now() < expiryMs;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -92,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let token: string | null = null;
       let isAuthenticated = false;
 
-      if (storedToken && !isTokenExpired(storedToken)) {
+      if (isTokenValid(storedToken)) {
         token = storedToken;
         isAuthenticated = true;
       } else if (storedToken) {
@@ -145,6 +189,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ? signedMessage 
         : Buffer.from(signedMessage).toString("base64url");
       const { token } = await api.auth.verify(identity.address, signedChallenge);
+
+      // Never trust a token we can't parse/validate; treat it as a failed auth.
+      if (!isTokenValid(token)) {
+        clearStoredToken();
+        throw new Error("Received an invalid session token");
+      }
 
       setStoredToken(token);
       sessionStorage.setItem(TOKEN_ADDRESS_STORAGE_KEY, identity.address);
