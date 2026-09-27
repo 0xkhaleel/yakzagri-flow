@@ -242,6 +242,8 @@ const messages = {
     "appearance_41def7a": "Appearance",
     "your_preference_is_saved_locally_5120f9e": "Your preference is saved locally and persists across sessions. System mode follows your operating system setting.",
     "notifications_753a22b": "Notifications",
+    top_nav_open_notifications: "Open notifications",
+    top_nav_open_account_settings: "Open account settings",
     "application_preferences_41d8dfa": "Application Preferences",
     "save_preferences_d8ab74e": "Save preferences",
     "saved_c0ae8f6": "Saved",
