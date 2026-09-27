@@ -95,6 +95,7 @@ export default function TradeDetailPage() {
 
   async function runAction(
     label: string,
+    action: string,
     apiCall: () => Promise<{ unsignedXdr: string }>,
   ) {
     if (!token) return;
@@ -104,7 +105,10 @@ export default function TradeDetailPage() {
     setActionSuccess(null);
 
     try {
-      const { unsignedXdr } = await apiCall();
+      const { unsignedXdr } = await withIdempotency(
+        () => apiCall(),
+        { key: `${action}:${tradeId}` },
+      );
       const networkPassphrase = apiConfig.getStellarNetworkPassphrase();
 
       const result = await signTransaction(unsignedXdr, {
@@ -133,15 +137,17 @@ export default function TradeDetailPage() {
   }
 
   function handleDeposit() {
-    void runAction("Deposit", () => api.trades.deposit(token!, tradeId));
+    void runAction("Deposit", "deposit", () => api.trades.deposit(token!, tradeId));
   }
 
   function handleConfirmDelivery() {
-    void runAction("Confirm Delivery", () => api.trades.confirmDelivery(token!, tradeId));
+    void runAction("Confirm Delivery", "confirm-delivery", () =>
+      api.trades.confirmDelivery(token!, tradeId),
+    );
   }
 
   function handleReleaseFunds() {
-    void runAction("Release Funds", () => api.trades.releaseFunds(token!, tradeId));
+    void runAction("Release Funds", "release-funds", () => api.trades.releaseFunds(token!, tradeId));
   }
 
   function handleInitiateDispute() {
