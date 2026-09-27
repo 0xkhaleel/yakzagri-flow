@@ -80,7 +80,7 @@ jobs:
 
       - name: Test
         if: needs.changes.outputs.frontend == 'true'
-        run: pnpm test -- --json --outputFile=jest-results.json || true
+        run: pnpm test -- --coverage --json --outputFile=jest-results.json || true
 
       - name: Fail if tests failed (deferred from --json run)
         if: needs.changes.outputs.frontend == 'true'
@@ -92,10 +92,6 @@ jobs:
               process.exit(1);
             }
           "
-
-      - name: A11y axe audit (blocking)
-        if: needs.changes.outputs.frontend == 'true'
-        run: pnpm test -- src/__tests__/accessibility --verbose
 
       - name: Upload coverage report
         if: needs.changes.outputs.frontend == 'true'
@@ -114,7 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [changes, frontend]
     if: needs.changes.outputs.frontend == 'true'
-    timeout-minutes: 8
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -139,6 +135,12 @@ jobs:
 
       - name: Install Playwright browsers (Chromium only)
         run: pnpm exec playwright install chromium --with-deps
+
+      - name: Route smoke and accessibility audit
+        run: pnpm exec playwright test --project=e2e-chromium tests/e2e/routes-accessibility.spec.ts
+        env:
+          CI: true
+          NEXT_PUBLIC_API_URL: http://localhost:4000
 
       - name: Build Next.js app
         run: pnpm build

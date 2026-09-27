@@ -30,7 +30,7 @@ import { getApiBaseUrl, getStellarRpcUrl } from "@/lib/api/env";
  * `camera`/`microphone` to same-origin so the recorder can request them.
  */
 
-function buildConnectSrc(): string {
+export function buildConnectSrc(): string {
   const origins = new Set<string>(["'self'"]);
   for (const raw of [getApiBaseUrl(), getStellarRpcUrl()]) {
     try {
@@ -47,7 +47,7 @@ function buildConnectSrc(): string {
   return Array.from(origins).join(" ");
 }
 
-function buildFrameSrc(): string {
+export function buildFrameSrc(): string {
   const allowlist = (process.env.WALLET_FRAME_ALLOWLIST ?? "")
     .split(",")
     .map((v) => v.trim())
@@ -55,7 +55,7 @@ function buildFrameSrc(): string {
   return ["'self'", ...allowlist].join(" ");
 }
 
-function buildCsp(nonce: string): string {
+export function buildCsp(nonce: string): string {
   const directives: Record<string, string> = {
     "default-src": "'self'",
     "script-src": `'self' 'nonce-${nonce}' 'strict-dynamic' https:`,
