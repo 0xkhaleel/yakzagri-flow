@@ -22,8 +22,8 @@
 
 import { NextResponse } from 'next/server';
 import { FLAG_CATALOG, type FlagName, type FeatureFlags } from '@/lib/featureFlags';
+import { getApiBaseUrl } from '@/lib/api/env';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
 const BACKEND_TIMEOUT_MS = 2_000; // tight timeout — client must not wait long
 
 /** Fetch live flags from the backend admin feature service. */
@@ -31,6 +31,7 @@ async function fetchBackendFlags(
   authToken?: string,
 ): Promise<Partial<FeatureFlags>> {
   try {
+    const BACKEND_URL = getApiBaseUrl();
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), BACKEND_TIMEOUT_MS);
 

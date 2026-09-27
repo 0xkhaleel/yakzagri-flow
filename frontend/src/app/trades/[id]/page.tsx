@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
@@ -9,16 +11,10 @@ import { useTradeDetail } from "@/hooks/useTradeDetail";
 import { useWallet } from "@/hooks/useWallet";
 import { api, ApiError } from "@/lib/api";
 import { apiConfig } from "@/lib/api";
-import { withIdempotency } from "@/lib/api/client";
+import { formatDateTime } from "@/lib/i18n/format";
 
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDateTime(dateString);
 }
 
 function formatAddress(address: string) {
@@ -60,7 +56,8 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-type UserRole = "buyer" | "seller" | "mediator" | "observer";
+type UserRole = "buyer" | "seller" | "observer";
+type DisputeCategory = "quality" | "delivery" | "payment" | "fraud" | "other";
 
 function deriveRole(
   walletAddress: string | null,
@@ -85,6 +82,10 @@ export default function TradeDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [disputeCategory, setDisputeCategory] = useState<DisputeCategory>("delivery");
+  const [disputeError, setDisputeError] = useState<string | null>(null);
 
   const role: UserRole = trade
     ? deriveRole(address, trade.buyerAddress, trade.sellerAddress)
@@ -120,6 +121,7 @@ export default function TradeDetailPage() {
       }
 
       setActionSuccess(`${label} signed successfully. Submit the transaction to Stellar to finalize.`);
+      if (label === "Initiate Dispute") setDisputeOpen(false);
       void refetch();
     } catch (err) {
       const message =
@@ -149,25 +151,26 @@ export default function TradeDetailPage() {
   }
 
   function handleInitiateDispute() {
-    const reason = window.prompt("Enter dispute reason (min 10 characters):");
-    if (!reason || reason.length < 10) {
-      setActionError("Dispute reason must be at least 10 characters.");
+    const reason = disputeReason.trim();
+    if (reason.length < 10 || reason.length > 500) {
+      setDisputeError("Enter a reason between 10 and 500 characters.");
       return;
     }
-    void runAction("Initiate Dispute", "initiate-dispute", () =>
-      api.trades.initiateDispute(token!, tradeId, reason, "other"),
+    setDisputeError(null);
+    void runAction("Initiate Dispute", () =>
+      api.trades.initiateDispute(token!, tradeId, reason, disputeCategory),
     );
   }
 
   return (
     <div className="px-6 py-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-text-primary">Trade Details</h1>
+        <h1 className="text-2xl font-semibold text-text-primary">{translateCopy("ui.trade_details_b712b25")}</h1>
         <Link
           href="/trades"
           className="px-3 py-1.5 rounded-md border border-border-default hover:border-border-hover text-text-secondary hover:text-text-primary transition-colors"
         >
-          Back to Trades
+          {translateCopy("ui.back_to_trades_3b42f9d")}
         </Link>
       </div>
 
@@ -188,7 +191,7 @@ export default function TradeDetailPage() {
             onClick={() => void refetch()}
             className="mt-2 text-xs underline text-text-secondary hover:text-text-primary"
           >
-            Retry
+            {translateCopy("common.retry")}
           </button>
         </div>
       )}
@@ -200,15 +203,15 @@ export default function TradeDetailPage() {
           <div className="rounded-lg border border-border-default bg-bg-card p-5">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-wide text-text-muted">Trade ID</p>
+                <p className="text-xs uppercase tracking-wide text-text-muted">{translateCopy("ui.trade_id_153d513")}</p>
                 <p className="mt-2 text-xl font-semibold text-text-primary font-mono">{trade.tradeId}</p>
-                <p className="mt-2 text-xs text-text-muted">Created: {formatDate(trade.createdAt)}</p>
-                <p className="mt-1 text-xs text-text-muted">Updated: {formatDate(trade.updatedAt)}</p>
+                <p className="mt-2 text-xs text-text-muted">{translateCopy("ui.created_0c78dab")}{" "}{formatDate(trade.createdAt)}</p>
+                <p className="mt-1 text-xs text-text-muted">{translateCopy("ui.updated_702cad2")}{" "}{formatDate(trade.updatedAt)}</p>
               </div>
               <div className="flex flex-col items-start sm:items-end gap-2">
                 <StatusBadge status={trade.status} />
                 {role !== "observer" && (
-                  <span className="text-xs text-text-muted capitalize">Your role: {role}</span>
+                  <span className="text-xs text-text-muted capitalize">{translateCopy("ui.your_role_83a4169")}{" "}{role}</span>
                 )}
               </div>
             </div>
@@ -217,7 +220,7 @@ export default function TradeDetailPage() {
           {/* Wallet balance */}
           {isAuthenticated && balance !== null && (
             <div className="rounded-lg border border-border-default bg-bg-card p-4 flex items-center justify-between">
-              <p className="text-xs uppercase tracking-wide text-text-muted">Wallet Balance</p>
+              <p className="text-xs uppercase tracking-wide text-text-muted">{translateCopy("ui.wallet_balance_3b5c956")}</p>
               <p className="text-sm font-semibold text-text-primary">
                 {balance} {asset}
               </p>
@@ -226,9 +229,212 @@ export default function TradeDetailPage() {
 
           {/* On-chain + off-chain status panel */}
           <div className="rounded-lg border border-border-default bg-bg-card p-5 space-y-3">
-            <p className="text-xs uppercase tracking-wide text-text-muted mb-3">Contract State</p>
+            <p className="text-xs uppercase tracking-wide text-text-muted mb-3">{translateCopy("ui.contract_state_8b2df78")}</p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-tex
+                <span className="text-text-muted">{translateCopy("ui.off_chain_prisma_1e8032e")}</span>{" "}
+                <span className="font-medium text-text-primary capitalize">{trade.status.toLowerCase()}</span>
+              </div>
+              <div>
+                <span className="text-text-muted">{translateCopy("ui.on_chain_soroban_b831232")}</span>{" "}
+                <span className="font-medium text-text-primary capitalize">{trade.status.toLowerCase()}</span>
+              </div>
+            </div>
+          </div>
 
-/* … truncated 5591 chars — edit only what you need near the top … */
+          {/* Financial summary */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <InfoCard title={translateCopy("ui.amount_43dc853")} value={`${trade.amountCngn} cNGN`} helper="Total trade value" />
+            <InfoCard title={translateCopy("ui.buyer_4186c93")} value={formatAddress(trade.buyerAddress)} helper="Buyer wallet address" />
+            <InfoCard title={translateCopy("ui.seller_ec3ef05")} value={formatAddress(trade.sellerAddress)} helper="Seller wallet address" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InfoCard
+              title={translateCopy("ui.buyer_loss_ratio_68e34f6")}
+              value={`${(trade.buyerLossBps / 100).toFixed(2)}%`}
+              helper="Buyer's share of loss"
+            />
+            <InfoCard
+              title={translateCopy("ui.seller_loss_ratio_9e434b1")}
+              value={`${(trade.sellerLossBps / 100).toFixed(2)}%`}
+              helper="Seller's share of loss"
+            />
+          </div>
+
+          {/* Action feedback */}
+          {actionError && (
+            <div className="rounded-lg border border-status-danger/20 bg-red-500/10 px-4 py-3 text-sm text-status-danger">
+              {actionError}
+            </div>
+          )}
+          {actionSuccess && (
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+              {actionSuccess}
+            </div>
+          )}
+
+          {/* Role-based action buttons */}
+          {isAuthenticated && (
+            <div className="rounded-lg border border-border-default bg-bg-card p-5">
+              <p className="text-xs uppercase tracking-wide text-text-muted mb-4">{translateCopy("ui.actions_c3cd636")}</p>
+              <div className="flex flex-wrap gap-3">
+                {role === "buyer" && status === "PENDING" && (
+                  <button
+                    onClick={handleDeposit}
+                    disabled={actionLoading}
+                    data-testid="action-deposit"
+                    className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse transition-colors hover:bg-gold-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {actionLoading ? "Processing…" : "Deposit Funds"}
+                  </button>
+                )}
+
+                {role === "buyer" && status === "FUNDED" && (
+                  <button
+                    onClick={handleConfirmDelivery}
+                    disabled={actionLoading}
+                    data-testid="action-confirm-delivery"
+                    className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse transition-colors hover:bg-gold-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {actionLoading ? "Processing…" : "Confirm Delivery"}
+                  </button>
+                )}
+
+                {role === "seller" && (status === "FUNDED" || status === "CONFIRMED") && (
+                  <button
+                    onClick={handleReleaseFunds}
+                    disabled={actionLoading}
+                    data-testid="action-release-funds"
+                    className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse transition-colors hover:bg-gold-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {actionLoading ? "Processing…" : "Release Funds"}
+                  </button>
+                )}
+
+                {(role === "buyer" || role === "seller") && status === "FUNDED" && (
+                  <button
+                    onClick={() => {
+                      setDisputeReason("");
+                      setDisputeCategory("delivery");
+                      setDisputeError(null);
+                      setDisputeOpen(true);
+                    }}
+                    disabled={actionLoading}
+                    data-testid="action-dispute"
+                    className="rounded-lg border border-red-500/50 px-4 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {translateCopy("ui.initiate_dispute_1e100ec")}
+                  </button>
+                )}
+
+                {role === "mediator" && status === "DISPUTED" && (
+                  <p className="text-sm text-text-secondary">
+                    {translateCopy("ui.mediation_controls_are_available_e48a46b")}{" "}
+                    <Link href="/mediator/disputes" className="underline text-gold hover:text-gold-hover">
+                      {translateCopy("ui.mediator_panel_00fec92")}
+                    </Link>
+                    .
+                  </p>
+                )}
+
+                {role === "observer" && (
+                  <p className="text-sm text-text-muted">{translateCopy("ui.no_actions_available_you_are_not_24eb27a")}</p>
+                )}
+
+                {(status === "SETTLED" || status === "CANCELLED") && (
+                  <p className="text-sm text-text-muted">{translateCopy("ui.this_trade_is_cdcb070")}{" "}{status.toLowerCase()} {translateCopy("ui.and_no_further_actions_are_avail_f7e2030")}</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Not found */}
+      {!loading && !error && !trade && (
+        <div className="rounded-lg border border-border-default bg-bg-card dark:bg-surface-1 p-8 text-center">
+          <p className="text-text-muted">{translateCopy("ui.trade_not_found_d9178ec")}</p>
+        </div>
+      )}
+
+      <Modal open={disputeOpen} onOpenChange={setDisputeOpen}>
+        <ModalContent mobileFullScreen={false}>
+          <ModalHeader>
+            <ModalTitle>Initiate dispute</ModalTitle>
+            <ModalDescription>
+              Choose a category and explain the issue. The reason must be 10 to 500 characters.
+            </ModalDescription>
+          </ModalHeader>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleInitiateDispute();
+            }}
+          >
+            <ModalBody className="space-y-4">
+              <div>
+                <label htmlFor="dispute-category" className="mb-1 block text-sm font-medium text-text-primary">
+                  Category
+                </label>
+                <select
+                  id="dispute-category"
+                  value={disputeCategory}
+                  onChange={(event) => setDisputeCategory(event.target.value as DisputeCategory)}
+                  className="w-full rounded-lg border border-border-default bg-bg-input px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-border-focus"
+                >
+                  <option value="quality">Quality</option>
+                  <option value="delivery">Delivery</option>
+                  <option value="payment">Payment</option>
+                  <option value="fraud">Fraud</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="dispute-reason" className="mb-1 block text-sm font-medium text-text-primary">
+                  Reason
+                </label>
+                <textarea
+                  id="dispute-reason"
+                  value={disputeReason}
+                  onChange={(event) => {
+                    setDisputeReason(event.target.value);
+                    setDisputeError(null);
+                  }}
+                  minLength={10}
+                  maxLength={500}
+                  required
+                  aria-invalid={Boolean(disputeError)}
+                  aria-describedby={disputeError ? "dispute-reason-error" : undefined}
+                  rows={4}
+                  className="w-full resize-y rounded-lg border border-border-default bg-bg-input px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-border-focus"
+                />
+                {disputeError && (
+                  <p id="dispute-reason-error" role="alert" className="mt-1 text-sm text-status-danger">
+                    {disputeError}
+                  </p>
+                )}
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <button
+                type="button"
+                onClick={() => setDisputeOpen(false)}
+                className="rounded-lg border border-border-default px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={actionLoading}
+                className="rounded-lg bg-status-danger px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {actionLoading ? "Processing..." : "Submit dispute"}
+              </button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
+    </div>
+  );
+}

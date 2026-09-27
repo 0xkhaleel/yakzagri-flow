@@ -59,6 +59,7 @@ const mockSignTransaction = signTransaction as jest.MockedFunction<typeof signTr
 const mockDeposit = api.trades.deposit as jest.MockedFunction<typeof api.trades.deposit>;
 const mockConfirmDelivery = api.trades.confirmDelivery as jest.MockedFunction<typeof api.trades.confirmDelivery>;
 const mockReleaseFunds = api.trades.releaseFunds as jest.MockedFunction<typeof api.trades.releaseFunds>;
+const mockInitiateDispute = api.trades.initiateDispute as jest.MockedFunction<typeof api.trades.initiateDispute>;
 
 const BUYER_ADDRESS = "GBUYER123456789012345678901234567890123456789012345678";
 const SELLER_ADDRESS = "GSELLER12345678901234567890123456789012345678901234567";
@@ -284,6 +285,50 @@ describe("Trade Detail — role-based action buttons", () => {
 // ── Signing flow ───────────────────────────────────────────────────────────────
 
 describe("Trade Detail — Freighter signing flow", () => {
+  it("submits a dispute with the selected category and entered reason", async () => {
+    mockAuth(BUYER_ADDRESS);
+    mockUseTradeDetail.mockReturnValue({
+      trade: makeTrade("FUNDED"),
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    mockInitiateDispute.mockResolvedValue({ unsignedXdr: "dispute-xdr" });
+
+    render(<TradeDetailPage />);
+    await userEvent.click(screen.getByTestId("action-dispute"));
+    await userEvent.selectOptions(screen.getByLabelText("Category"), "fraud");
+    await userEvent.type(screen.getByLabelText("Reason"), "The payment receipt is fraudulent.");
+    await userEvent.click(screen.getByRole("button", { name: "Submit dispute" }));
+
+    await waitFor(() =>
+      expect(mockInitiateDispute).toHaveBeenCalledWith(
+        "jwt-token",
+        "trade-123",
+        "The payment receipt is fraudulent.",
+        "fraud",
+      ),
+    );
+  });
+
+  it("requires a valid dispute reason before submitting", async () => {
+    mockAuth(BUYER_ADDRESS);
+    mockUseTradeDetail.mockReturnValue({
+      trade: makeTrade("FUNDED"),
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    render(<TradeDetailPage />);
+    await userEvent.click(screen.getByTestId("action-dispute"));
+    await userEvent.type(screen.getByLabelText("Reason"), "          ");
+    await userEvent.click(screen.getByRole("button", { name: "Submit dispute" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("between 10 and 500 characters");
+    expect(mockInitiateDispute).not.toHaveBeenCalled();
+  });
+
   it("calls deposit API and signTransaction when Deposit is clicked", async () => {
     mockAuth(BUYER_ADDRESS);
     mockUseTradeDetail.mockReturnValue({

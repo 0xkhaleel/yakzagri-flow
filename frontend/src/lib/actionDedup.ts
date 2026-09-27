@@ -11,7 +11,7 @@
  * locked. The backend lock TTL is 30s; keep this in sync with it.
  */
 
-import { generateCorrelationId } from './correlationId';
+import { generateCorrelationId } from "./correlationId";
 
 export interface DedupEntry {
   key: string;

@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -379,12 +381,11 @@ export default function MediatorPanelClient({ disputeId }: Props) {
       {/* Page header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-text-primary">
-          Mediator Panel
+          {translateCopy("ui.mediator_panel_00fec92")}
         </h1>
         <p className="text-text-secondary mt-1">
-          Dispute{" "}
-          <span className="font-mono text-text-primary">{disputeId}</span> —
-          Review evidence and resolve on-chain.
+          {translateCopy("ui.dispute_3e05bb7")}{" "}
+          <span className="font-mono text-text-primary">{disputeId}</span> {translateCopy("ui.review_evidence_and_resolve_on_c_64bc054")}
         </p>
       </div>
 
@@ -407,7 +408,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                     d="M12 9v3m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p className="text-white font-medium">Evidence unavailable</p>
+                <p className="text-white font-medium">{translateCopy("ui.evidence_unavailable_0e55ae7")}</p>
                 <p className="text-gray-400 text-sm max-w-md">
                   {cidSource === "loading" ? "Loading evidence..." : cidMessage}
                 </p>
@@ -427,9 +428,9 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                     d="M12 9v3m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p className="text-white font-medium">Evidence unavailable</p>
+                <p className="text-white font-medium">{translateCopy("ui.evidence_unavailable_0e55ae7")}</p>
                 <p className="text-gray-400 text-sm">
-                  All IPFS gateways failed to load this file.
+                  {translateCopy("ui.all_ipfs_gateways_failed_to_load_0d063eb")}
                 </p>
                 <button
                   onClick={() => {
@@ -438,7 +439,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                   }}
                   className="mt-2 px-4 py-2 bg-bg-elevated border border-border-default text-text-primary text-sm rounded-md hover:bg-bg-input transition-colors"
                 >
-                  Retry from first gateway
+                  {translateCopy("ui.retry_from_first_gateway_bb038ef")}
                 </button>
               </div>
             ) : (
@@ -448,7 +449,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                     <div className="flex flex-col items-center gap-2">
                       <div className="animate-spin w-8 h-8 border-2 border-gold border-t-transparent rounded-full" />
                       <span className="text-gray-300 text-xs">
-                        Loading via gateway {activeGatewayIndex + 1}/
+                        {translateCopy("ui.loading_via_gateway_2460fac")}{" "}{activeGatewayIndex + 1}/
                         {PINATA_GATEWAYS.length}…
                       </span>
                     </div>
@@ -470,13 +471,13 @@ export default function MediatorPanelClient({ disputeId }: Props) {
           {/* Video meta */}
           <div className="mt-3 text-sm text-text-secondary space-y-2">
             <div>
-              Dispute ID:{" "}
+              {translateCopy("ui.dispute_id_4d79a1b")}{" "}
               <span className="font-mono text-text-primary">{disputeId}</span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {pinataUrl && videoLoadState !== "terminal-failure" && (
                 <span className="text-xs text-text-muted">
-                  Gateway {activeGatewayIndex + 1}/{PINATA_GATEWAYS.length}
+                  {translateCopy("ui.gateway_5a0e181")}{" "}{activeGatewayIndex + 1}/{PINATA_GATEWAYS.length}
                 </span>
               )}
               {pinataUrl &&
@@ -486,13 +487,13 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                     onClick={switchGateway}
                     className="text-xs text-gold hover:underline underline-offset-2"
                   >
-                    Switch gateway
+                    {translateCopy("ui.switch_gateway_162f42d")}
                   </button>
                 )}
               {isMediator ? (
-                <Badge variant="success">Authorized Mediator</Badge>
+                <Badge variant="success">{translateCopy("ui.authorized_mediator_4271d07")}</Badge>
               ) : (
-                <Badge variant="danger">Unauthorized</Badge>
+                <Badge variant="danger">{translateCopy("ui.unauthorized_740b831")}</Badge>
               )}
             </div>
           </div>
@@ -500,17 +501,17 @@ export default function MediatorPanelClient({ disputeId }: Props) {
           {/* Dev-only: IPFS debug info */}
           {isDev && (
             <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs space-y-1">
-              <div className="font-semibold text-yellow-700">DEV</div>
-              <div>Pinata CID: {resolvedCid ?? "Unavailable"}</div>
-              <div>CID source: {cidSource}</div>
-              {cidMessage && <div>Message: {cidMessage}</div>}
+              <div className="font-semibold text-yellow-700">{translateCopy("ui.dev_2fada46")}</div>
+              <div>{translateCopy("ui.pinata_cid_dcc00d0")}{" "}{resolvedCid ?? "Unavailable"}</div>
+              <div>{translateCopy("ui.cid_source_97ea985")}{" "}{cidSource}</div>
+              {cidMessage && <div>{translateCopy("ui.message_9e02959")}{" "}{cidMessage}</div>}
               <div>
-                Gateway:{" "}
+                {translateCopy("ui.gateway_7946db5")}{" "}
                 <Badge variant="info">
                   {PINATA_GATEWAYS[activeGatewayIndex]}
                 </Badge>
               </div>
-              <div>Wallet: {address ?? "Not connected"}</div>
+              <div>{translateCopy("ui.wallet_9ab9249")}{" "}{address ?? "Not connected"}</div>
             </div>
           )}
         </div>
@@ -520,16 +521,16 @@ export default function MediatorPanelClient({ disputeId }: Props) {
           <div className="bg-bg-card rounded-xl shadow-card p-5 space-y-4">
             <div>
               <h3 className="text-lg font-semibold text-text-primary">
-                Resolve Dispute
+                {translateCopy("ui.resolve_dispute_a495c38")}
               </h3>
               <p className="text-sm text-text-secondary mt-1">
-                Select a loss-ratio split to settle this trade on-chain.
+                {translateCopy("ui.select_a_loss_ratio_split_to_set_508a2d7")}
               </p>
             </div>
 
             <div className="rounded-md border border-border-default bg-bg-elevated p-3">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">
-                Connected wallet
+                {translateCopy("ui.connected_wallet_0563ce9")}
               </p>
               {address ? (
                 <WalletAddressBadge
@@ -540,7 +541,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                   explorerNetwork={explorerNetwork}
                 />
               ) : (
-                <p className="text-sm text-text-muted">No wallet connected.</p>
+                <p className="text-sm text-text-muted">{translateCopy("ui.no_wallet_connected_19e0f9b")}</p>
               )}
             </div>
 
@@ -556,7 +557,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
 
             {isAuthorized && !isMediator && (
               <Badge variant="danger">
-                Unauthorized wallet. Access is restricted to mediator addresses.
+                {translateCopy("ui.unauthorized_wallet_access_is_re_26ca3e7")}
               </Badge>
             )}
 
@@ -567,7 +568,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                 onClick={() => openConfirmationModal(5000, "50/50")}
                 className="w-full rounded-md bg-emerald-700 text-white px-3 py-2.5 text-sm font-medium disabled:opacity-50 hover:bg-emerald-800 transition"
               >
-                Resolve — Equal Split (50/50)
+                {translateCopy("ui.resolve_equal_split_50_50_8b3305d")}
               </button>
 
               <button
@@ -575,7 +576,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                 onClick={() => openConfirmationModal(7000, "70/30")}
                 className="w-full rounded-md bg-emerald-700 text-white px-3 py-2.5 text-sm font-medium disabled:opacity-50 hover:bg-emerald-800 transition"
               >
-                Resolve — Seller Favoured (70/30)
+                {translateCopy("ui.resolve_seller_favoured_70_30_3711ff4")}
               </button>
             </div>
 
@@ -590,7 +591,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
             {isDev && (
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded space-y-2">
                 <p className="text-xs font-semibold text-yellow-700">
-                  DEV — Exec String Builder
+                  {translateCopy("ui.dev_exec_string_builder_9796dcd")}
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -598,14 +599,14 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                     onClick={() => buildExec("50-50")}
                     className="flex-1 rounded border px-2 py-1 text-xs disabled:opacity-50"
                   >
-                    Build 50/50
+                    {translateCopy("ui.build_50_50_774eb85")}
                   </button>
                   <button
                     disabled={!isMediator}
                     onClick={() => buildExec("70-30")}
                     className="flex-1 rounded border px-2 py-1 text-xs disabled:opacity-50"
                   >
-                    Build 70/30
+                    {translateCopy("ui.build_70_30_612609e")}
                   </button>
                 </div>
                 <textarea
@@ -619,7 +620,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                     onClick={() => navigator.clipboard?.writeText(execString)}
                     className="px-2 py-1 bg-blue-600 text-white rounded text-xs disabled:opacity-50"
                   >
-                    Copy
+                    {translateCopy("ui.copy_af74f7c")}
                   </button>
                   <a
                     href={execString || "#"}
@@ -628,7 +629,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                     }}
                     className="px-2 py-1 bg-gray-100 rounded text-xs"
                   >
-                    Preview
+                    {translateCopy("ui.preview_f1fbb2b")}
                   </a>
                 </div>
               </div>
@@ -653,13 +654,13 @@ export default function MediatorPanelClient({ disputeId }: Props) {
               id="modal-title"
               className="text-lg sm:text-xl font-bold text-text-primary"
             >
-              Confirm Resolution
+              {translateCopy("ui.confirm_resolution_1c8af18")}
             </h2>
 
             <div className="border border-border-default rounded-lg bg-bg-elevated p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-text-secondary">
-                  Trade ID:
+                  {translateCopy("ui.trade_id_b32a8bb")}
                 </span>
                 <span className="text-sm font-mono text-text-primary">
                   {disputeId}
@@ -668,7 +669,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
               <div className="border-t border-border-default" />
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-text-secondary">
-                  Split:
+                  {translateCopy("ui.split_208adf5")}
                 </span>
                 <span className="text-sm font-semibold text-text-primary">
                   {modal.splitLabel}
@@ -677,7 +678,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
               <div className="border-t border-border-default" />
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-text-secondary">
-                  Seller Receives:
+                  {translateCopy("ui.seller_receives_f80dbbe")}
                 </span>
                 <span className="text-sm font-semibold text-status-success">
                   {(modal.sellerGetsBps / 100).toFixed(2)}%
@@ -685,7 +686,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-text-secondary">
-                  Buyer Receives:
+                  {translateCopy("ui.buyer_receives_6af6881")}
                 </span>
                 <span className="text-sm font-semibold text-gold">
                   {(getBuyerSplit(modal.sellerGetsBps) / 100).toFixed(2)}%
@@ -695,9 +696,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
 
             <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3">
               <p className="text-xs text-yellow-800">
-                <span className="font-semibold">Warning:</span> This action is
-                irreversible and will be recorded on-chain. Please review the
-                split details before confirming.
+                <span className="font-semibold">{translateCopy("ui.warning_3217f29")}</span> {translateCopy("ui.this_action_is_irreversible_and__629365e")}
               </p>
             </div>
 
@@ -706,9 +705,9 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                 onClick={closeModal}
                 disabled={isSubmittingTx}
                 className="px-3 sm:px-4 py-2.5 border border-border-default text-text-primary text-sm font-medium rounded-md hover:bg-bg-elevated disabled:opacity-50 transition"
-                aria-label="Cancel resolution"
+                aria-label={translateCopy("ui.cancel_resolution_4acad72")}
               >
-                Cancel
+                {translateCopy("common.cancel")}
               </button>
               <button
                 onClick={() => {
@@ -718,7 +717,7 @@ export default function MediatorPanelClient({ disputeId }: Props) {
                 }}
                 disabled={isSubmittingTx}
                 className="px-3 sm:px-4 py-2.5 bg-emerald-700 text-white text-sm font-medium rounded-md hover:bg-emerald-800 disabled:opacity-50 transition"
-                aria-label="Confirm and sign resolution"
+                aria-label={translateCopy("ui.confirm_and_sign_resolution_2d0dc86")}
               >
                 {isSubmittingTx ? "Processing..." : "Confirm & Sign"}
               </button>

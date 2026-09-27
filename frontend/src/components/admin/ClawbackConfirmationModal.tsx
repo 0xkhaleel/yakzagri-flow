@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 import {
   Modal,
@@ -16,26 +18,24 @@ export interface ClawbackConfirmationModalProps {
   streamId: string;
   amount: string;
   remainingVested: string;
-  onConfirm: () => void;
+  onPreview: () => void;
   onCancel: () => void;
-  /** true while the confirmed clawback request is in flight. */
-  confirming?: boolean;
+  /** true while the read-only preview request is in flight. */
+  previewing?: boolean;
 }
 
 /**
- * Confirmation gate for admin clawback submissions (#56). Requires an
- * explicit "Confirm clawback" click before anything is sent — dismissing the
- * modal (Cancel, overlay click, Escape) always routes through `onCancel`,
- * never submits.
+ * Review gate for the read-only clawback preview. Dismissing the modal never
+ * sends a request.
  */
 export function ClawbackConfirmationModal({
   open,
   streamId,
   amount,
   remainingVested,
-  onConfirm,
+  onPreview,
   onCancel,
-  confirming = false,
+  previewing = false,
 }: ClawbackConfirmationModalProps) {
   return (
     <Modal
@@ -46,25 +46,24 @@ export function ClawbackConfirmationModal({
     >
       <ModalContent mobileFullScreen={false}>
         <ModalHeader>
-          <ModalTitle>Confirm clawback</ModalTitle>
+          <ModalTitle>{translateCopy("ui.confirm_clawback_57d9d44")}</ModalTitle>
           <ModalDescription>
-            This immediately reduces the stream&apos;s vested balance and cannot be undone.
-            Review the details before confirming.
+            {translateCopy("ui.this_immediately_reduces_the_str_1e72f81")}
           </ModalDescription>
         </ModalHeader>
 
         <ModalBody>
           <dl className="space-y-3 text-sm">
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-text-secondary">Stream ID</dt>
+              <dt className="text-text-secondary">{translateCopy("ui.stream_id_ca9cac7")}</dt>
               <dd className="font-medium text-text-primary break-all text-right">{streamId}</dd>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-text-secondary">Requested amount</dt>
+              <dt className="text-text-secondary">{translateCopy("ui.requested_amount_fc34a66")}</dt>
               <dd className="font-medium text-text-primary">{amount}</dd>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-text-secondary">Remaining vested</dt>
+              <dt className="text-text-secondary">{translateCopy("ui.remaining_vested_b10806c")}</dt>
               <dd className="font-medium text-text-primary">{remainingVested}</dd>
             </div>
           </dl>
@@ -72,10 +71,10 @@ export function ClawbackConfirmationModal({
 
         <ModalFooter>
           <Button variant="secondary" onClick={onCancel} disabled={confirming}>
-            Cancel
+            {translateCopy("common.cancel")}
           </Button>
-          <Button variant="primary" onClick={onConfirm} disabled={confirming}>
-            {confirming ? "Confirming…" : "Confirm clawback"}
+          <Button variant="primary" onClick={onPreview} disabled={previewing}>
+            {previewing ? "Loading preview…" : "Run preview"}
           </Button>
         </ModalFooter>
       </ModalContent>

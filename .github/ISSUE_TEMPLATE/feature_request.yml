@@ -1,0 +1,48 @@
+name: Feature request
+about: Suggest an idea or enhancement for this project
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a feature! Please fill out the sections below.
+        Before opening a PR, review [CONTRIBUTING.md](../../CONTRIBUTING.md) for setup, branch conventions, and the required CI gates.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem does this feature solve? What is the motivation?
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the solution you'd like.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or features you've considered.
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add any other context, screenshots, or references here.
+    validations:
+      required: false
+  - type: checkboxes
+    id: gates
+    attributes:
+      label: Contribution checklist
+      description: PRs must pass the required CI gates described in CONTRIBUTING.md.
+      options:
+        - label: I have read CONTRIBUTING.md and understand the required CI gates (lint, tests, build).
+          required: true
+        - label: I am willing to open a PR for this feature following the branch conventions.
+          required: false

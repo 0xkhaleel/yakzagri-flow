@@ -5,8 +5,22 @@
 export const DEFAULT_LOCALE = "en-NG";
 export const DEFAULT_CURRENCY = "NGN";
 
-export const SUPPORTED_LOCALES = ["en-NG", "en-US", "pseudo"] as const;
+export const SUPPORTED_LOCALES = [
+  "en-NG",
+  "en-US",
+  "ha-NG",
+  "yo-NG",
+  "ig-NG",
+  "pseudo",
+] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
+
+let activeLocale: Locale | undefined;
+
+/** Set by LocaleProvider when a user selects a language. */
+export function setActiveLocale(locale: Locale | undefined): void {
+  activeLocale = locale;
+}
 
 /**
  * Pseudo-localization surfaces hardcoded strings (they stay ASCII while
@@ -23,6 +37,7 @@ export function isPseudoLocaleEnabled(): boolean {
 export function resolveLocale(explicit?: Locale): Locale {
   if (explicit) return explicit;
   if (isPseudoLocaleEnabled()) return "pseudo";
+  if (activeLocale) return activeLocale;
   const env = process.env.NEXT_PUBLIC_LOCALE as Locale | undefined;
   if (env && SUPPORTED_LOCALES.includes(env)) return env;
   return DEFAULT_LOCALE;

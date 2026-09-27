@@ -5,6 +5,9 @@
  *   t("wallet.wrongNetworkBody", { expected: "Testnet" }); // → "Switch Freighter to Testnet…"
  */
 import en from "./messages/en";
+import ha from "./messages/ha";
+import yo from "./messages/yo";
+import ig from "./messages/ig";
 import { pseudoLocalize } from "./pseudo";
 import { resolveLocale, type Locale } from "./config";
 
@@ -12,7 +15,12 @@ export * from "./config";
 export * from "./format";
 export { pseudoLocalize } from "./pseudo";
 
-type Messages = typeof en;
+type Widen<T> = T extends string ? string : { [K in keyof T]: Widen<T[K]> };
+type Messages = Widen<typeof en>;
+type PartialMessages<T> = T extends string
+  ? string
+  : { [K in keyof T]?: PartialMessages<T[K]> };
+type Catalog = PartialMessages<Messages>;
 
 // Recursively derive dot-path keys ("wallet.connect", "common.retry", …).
 type Join<K, P> = K extends string
@@ -27,9 +35,16 @@ type Paths<T> = {
 
 export type MessageKey = Paths<Messages>;
 
-const CATALOGS: Record<string, Messages> = { "en-NG": en, "en-US": en, pseudo: en };
+const CATALOGS: Record<Locale, Catalog> = {
+  "en-NG": en,
+  "en-US": en,
+  "ha-NG": ha,
+  "yo-NG": yo,
+  "ig-NG": ig,
+  pseudo: en,
+};
 
-function lookup(catalog: Messages, key: string): string | undefined {
+function lookup(catalog: Catalog, key: string): string | undefined {
   return key
     .split(".")
     .reduce<unknown>((node, part) => (node as Record<string, unknown>)?.[part], catalog) as
