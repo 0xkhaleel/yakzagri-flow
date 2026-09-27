@@ -74,6 +74,10 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      - name: Verify generated design tokens
+        if: needs.changes.outputs.frontend == 'true'
+        run: pnpm tokens:check
+
       - name: Lint
         if: needs.changes.outputs.frontend == 'true'
         run: pnpm lint

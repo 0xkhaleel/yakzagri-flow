@@ -82,7 +82,7 @@ export function TradeHeader({ trade, onConfirmDelivery, confirmingDelivery = fal
           <a href="#trade-contract" className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:border-border-hover hover:text-text-primary transition-all">
             <FileText className="w-4 h-4" />
             {translateCopy("ui.view_contract_809ec07")}
-          </button>
+          </a>
           <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-gold-cta text-text-inverse text-sm font-semibold hover:shadow-glow-gold transition-all">
             <svg
               className="w-4 h-4"

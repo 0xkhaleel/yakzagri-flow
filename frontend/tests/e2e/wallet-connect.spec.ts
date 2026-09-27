@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { mockApiRoute } from './api-route';
 
 const BUYER_ADDRESS = 'GDNM7WSJ7VIUVK2TSZ2OQES5XR2663TZEIBFXRDT56B5IRLHERVWSXMU';
 
@@ -55,7 +56,7 @@ test.describe('Wallet Connection Flow', () => {
       { addr: BUYER_ADDRESS },
     );
 
-    await page.route('http://localhost:4000/auth/challenge', async (route) => {
+    await mockApiRoute(page, '/auth/challenge', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -63,7 +64,7 @@ test.describe('Wallet Connection Flow', () => {
       });
     });
 
-    await page.route('http://localhost:4000/auth/verify', async (route) => {
+    await mockApiRoute(page, '/auth/verify', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

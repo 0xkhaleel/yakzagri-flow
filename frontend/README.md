@@ -76,6 +76,10 @@ npm run start
 npm run lint
 ```
 
+### Design tokens
+
+`amana-figma-variables.json` is the source of truth. After updating the Figma variable export, run `pnpm tokens:build` to regenerate the compatibility JSON and CSS. CI runs `pnpm tokens:check` to reject stale generated files.
+
 ### Tests
 
 ```bash

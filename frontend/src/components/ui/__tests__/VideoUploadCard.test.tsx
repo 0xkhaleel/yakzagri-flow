@@ -36,6 +36,19 @@ const mockXhr: Record<string, unknown> = {
 
 global.XMLHttpRequest = jest.fn(() => mockXhr) as unknown as typeof XMLHttpRequest;
 
+async function triggerXhrHandler(name: "onload" | "onerror") {
+    await waitFor(() => expect(mockXhr[name]).toEqual(expect.any(Function)));
+    (mockXhr[name] as () => void)();
+}
+
+async function triggerUploadProgress() {
+    await waitFor(() => {
+        expect((mockXhr.upload as { onprogress?: unknown }).onprogress).toEqual(expect.any(Function));
+    });
+    const onprogress = (mockXhr.upload as { onprogress: (event: { lengthComputable: boolean; loaded: number; total: number }) => void }).onprogress;
+    onprogress({ lengthComputable: true, loaded: 50, total: 100 });
+}
+
 describe('VideoUploadCard Component', () => {
     const defaultProps = {
         onUpload: jest.fn(),
@@ -112,11 +125,7 @@ describe('VideoUploadCard Component', () => {
         fireEvent.change(fileInput);
 
         // Simulate successful upload
-        await waitFor(() => {
-            if (mockXhr.onload) {
-                (mockXhr.onload as () => void)();
-            }
-        });
+        await triggerXhrHandler('onload');
 
         await waitFor(() => {
             const submitButton = screen.getByText('Submit Proof');
@@ -137,12 +146,7 @@ describe('VideoUploadCard Component', () => {
         fireEvent.change(fileInput);
 
         // Simulate progress
-        await waitFor(() => {
-            const upload = mockXhr.upload as { onprogress?: (ev: { lengthComputable: boolean; loaded: number; total: number }) => void };
-            if (upload.onprogress) {
-                upload.onprogress({ lengthComputable: true, loaded: 50, total: 100 });
-            }
-        });
+        await triggerUploadProgress();
 
         await waitFor(() => {
             expect(screen.getByText('Uploading to IPFS…')).toBeInTheDocument();
@@ -163,11 +167,7 @@ describe('VideoUploadCard Component', () => {
         fireEvent.change(fileInput);
 
         // Simulate successful upload
-        await waitFor(() => {
-            if (mockXhr.onload) {
-                (mockXhr.onload as () => void)();
-            }
-        });
+        await triggerXhrHandler('onload');
 
         await waitFor(() => {
             expect(screen.getByText('QmTest123')).toBeInTheDocument();
@@ -188,11 +188,7 @@ describe('VideoUploadCard Component', () => {
         fireEvent.change(fileInput);
 
         // Simulate successful upload
-        await waitFor(() => {
-            if (mockXhr.onload) {
-                (mockXhr.onload as () => void)();
-            }
-        });
+        await triggerXhrHandler('onload');
 
         await waitFor(() => {
             expect(onUpload).toHaveBeenCalledWith('QmTest123');
@@ -212,11 +208,7 @@ describe('VideoUploadCard Component', () => {
 
         fireEvent.change(fileInput);
 
-        await waitFor(() => {
-            if (mockXhr.onload) {
-                (mockXhr.onload as () => void)();
-            }
-        });
+        await triggerXhrHandler('onload');
 
         await waitFor(() => {
             const submitButton = screen.getByRole('button', { name: /submit proof/i });
@@ -242,11 +234,7 @@ describe('VideoUploadCard Component', () => {
         fireEvent.change(fileInput);
 
         // Simulate failed upload
-        await waitFor(() => {
-            if (mockXhr.onload) {
-                (mockXhr.onload as () => void)();
-            }
-        });
+        await triggerXhrHandler('onload');
 
         await waitFor(() => {
             expect(screen.getByText(/Upload failed/)).toBeInTheDocument();
@@ -266,11 +254,7 @@ describe('VideoUploadCard Component', () => {
         fireEvent.change(fileInput);
 
         // Simulate network error
-        await waitFor(() => {
-            if (mockXhr.onerror) {
-                (mockXhr.onerror as () => void)();
-            }
-        });
+        await triggerXhrHandler('onerror');
 
         await waitFor(() => {
             expect(screen.getByText('Network error during upload')).toBeInTheDocument();
@@ -329,11 +313,7 @@ describe('VideoUploadCard Component', () => {
         fireEvent.change(fileInput);
 
         // Simulate successful upload
-        await waitFor(() => {
-            if (mockXhr.onload) {
-                (mockXhr.onload as () => void)();
-            }
-        });
+        await triggerXhrHandler('onload');
 
         await waitFor(() => {
             const link = screen.getByLabelText('View on IPFS');

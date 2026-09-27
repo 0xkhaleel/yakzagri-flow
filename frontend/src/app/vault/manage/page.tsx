@@ -5,6 +5,7 @@ import { t as translateCopy } from "@/lib/i18n";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { formatDate as formatLocalizedDate } from "@/lib/i18n";
 import { formatNumber } from "@/lib/i18n/format";
 import {
   api,

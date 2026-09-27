@@ -11,6 +11,7 @@ import { useTradeDetail } from "@/hooks/useTradeDetail";
 import { useWallet } from "@/hooks/useWallet";
 import { api, ApiError } from "@/lib/api";
 import { apiConfig } from "@/lib/api";
+import { getMediatorAddresses, isMediatorAddress } from "@/app/mediator/disputes/helpers";
 import { formatDateTime } from "@/lib/i18n/format";
 import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/idempotency";
 import { broadcastTransaction } from "@/lib/stellar/broadcast";
@@ -67,7 +68,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-type UserRole = "buyer" | "seller" | "observer";
+type UserRole = "buyer" | "seller" | "observer" | "mediator";
 type DisputeCategory = "quality" | "delivery" | "payment" | "fraud" | "other";
 
 function deriveRole(
@@ -76,6 +77,7 @@ function deriveRole(
   sellerAddress: string,
 ): UserRole {
   if (!walletAddress) return "observer";
+  if (isMediatorAddress(walletAddress, getMediatorAddresses())) return "mediator";
   const addr = walletAddress.toLowerCase();
   if (addr === buyerAddress.toLowerCase()) return "buyer";
   if (addr === sellerAddress.toLowerCase()) return "seller";
@@ -93,7 +95,6 @@ export default function TradeDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-  const [actionTxHash, setActionTxHash] = useState<string | null>(null);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
   const [disputeCategory, setDisputeCategory] = useState<DisputeCategory>("delivery");
@@ -108,24 +109,19 @@ export default function TradeDetailPage() {
   async function runAction(
     label: string,
     action: string,
-    apiCall: () => Promise<{ unsignedXdr: string }>,
+    apiCall: (options: { idempotencyKey?: string }) => Promise<{ unsignedXdr: string }>,
   ) {
     if (!token || actionLoading) return;
 
     setActionLoading(true);
     setActionError(null);
     setActionSuccess(null);
-    setActionTxHash(null);
 
-    const idempotencyKey = scopeKey
-      ? getOrCreateIdempotencyKey(address, scopeKey)
-      : undefined;
+    const scopeKey = `trade:${tradeId}:${action}`;
+    const idempotencyKey = getOrCreateIdempotencyKey(address, scopeKey);
 
     try {
-      const { unsignedXdr } = await withIdempotency(
-        () => apiCall(),
-        { key: `${action}:${tradeId}` },
-      );
+      const { unsignedXdr } = await apiCall({ idempotencyKey });
       const networkPassphrase = apiConfig.getStellarNetworkPassphrase();
 
       const result = await signTransaction(unsignedXdr, {
@@ -149,7 +145,6 @@ export default function TradeDetailPage() {
       const { hash: txHash } = await broadcastTransaction(signedTxXdr);
 
       if (scopeKey) clearIdempotencyKey(address, scopeKey);
-      if (txHash) setActionTxHash(txHash);
       setActionSuccess(
         txHash
           ? `${label} completed successfully. Transaction: ${txHash}`
@@ -184,17 +179,17 @@ export default function TradeDetailPage() {
   }
 
   function handleDeposit() {
-    void runAction("Deposit", "deposit", () => api.trades.deposit(token!, tradeId));
+    void runAction("Deposit", "deposit", (options) => api.trades.deposit(token!, tradeId, options));
   }
 
   function handleConfirmDelivery() {
-    void runAction("Confirm Delivery", "confirm-delivery", () =>
-      api.trades.confirmDelivery(token!, tradeId),
+    void runAction("Confirm Delivery", "confirm-delivery", (options) =>
+      api.trades.confirmDelivery(token!, tradeId, options),
     );
   }
 
   function handleReleaseFunds() {
-    void runAction("Release Funds", "release-funds", () => api.trades.releaseFunds(token!, tradeId));
+    void runAction("Release Funds", "release-funds", (options) => api.trades.releaseFunds(token!, tradeId, options));
   }
 
   function handleInitiateDispute() {
@@ -206,8 +201,8 @@ export default function TradeDetailPage() {
     setDisputeError(null);
     void runAction(
       "Initiate Dispute",
-      (opts) => api.trades.initiateDispute(token!, tradeId, reason, disputeCategory, opts),
-      `trade:${tradeId}:dispute`,
+      "dispute",
+      (options) => api.trades.initiateDispute(token!, tradeId, reason, disputeCategory, options),
     );
   }
 
@@ -410,9 +405,9 @@ export default function TradeDetailPage() {
       <Modal open={disputeOpen} onOpenChange={setDisputeOpen}>
         <ModalContent mobileFullScreen={false}>
           <ModalHeader>
-            <ModalTitle>Initiate dispute</ModalTitle>
+            <ModalTitle>{translateCopy("ui.initiate_dispute_title")}</ModalTitle>
             <ModalDescription>
-              Choose a category and explain the issue. The reason must be 10 to 500 characters.
+              {translateCopy("ui.initiate_dispute_description")}
             </ModalDescription>
           </ModalHeader>
           <form
@@ -424,7 +419,7 @@ export default function TradeDetailPage() {
             <ModalBody className="space-y-4">
               <div>
                 <label htmlFor="dispute-category" className="mb-1 block text-sm font-medium text-text-primary">
-                  Category
+                  {translateCopy("ui.category_a3c686e")}
                 </label>
                 <select
                   id="dispute-category"
@@ -432,16 +427,16 @@ export default function TradeDetailPage() {
                   onChange={(event) => setDisputeCategory(event.target.value as DisputeCategory)}
                   className="w-full rounded-lg border border-border-default bg-bg-input px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-border-focus"
                 >
-                  <option value="quality">Quality</option>
-                  <option value="delivery">Delivery</option>
-                  <option value="payment">Payment</option>
-                  <option value="fraud">Fraud</option>
-                  <option value="other">Other</option>
+                  <option value="quality">{translateCopy("ui.dispute_quality")}</option>
+                  <option value="delivery">{translateCopy("ui.dispute_delivery")}</option>
+                  <option value="payment">{translateCopy("ui.dispute_payment")}</option>
+                  <option value="fraud">{translateCopy("ui.dispute_fraud")}</option>
+                  <option value="other">{translateCopy("ui.other_6e6a6f2")}</option>
                 </select>
               </div>
               <div>
                 <label htmlFor="dispute-reason" className="mb-1 block text-sm font-medium text-text-primary">
-                  Reason
+                  {translateCopy("ui.reason_f219cc0")}
                 </label>
                 <textarea
                   id="dispute-reason"
@@ -471,14 +466,14 @@ export default function TradeDetailPage() {
                 onClick={() => setDisputeOpen(false)}
                 className="rounded-lg border border-border-default px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
               >
-                Cancel
+                {translateCopy("common.cancel")}
               </button>
               <button
                 type="submit"
                 disabled={actionLoading}
                 className="rounded-lg bg-status-danger px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
-                {actionLoading ? "Processing..." : "Submit dispute"}
+                {actionLoading ? translateCopy("ui.processing") : translateCopy("ui.dispute_submit")}
               </button>
             </ModalFooter>
           </form>

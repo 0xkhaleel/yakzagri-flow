@@ -24,6 +24,21 @@ const IPFS_MEDIA_ORIGINS = [
   "https://*.ipfs.io",
 ];
 
+const CSP_HEADER = "Content-Security-Policy";
+
+function buildConnectSrc(): string[] {
+  return [
+    "'self'",
+    ...WALLET_FRAME_ALLOWLIST,
+    ...IPFS_MEDIA_ORIGINS,
+    "https://api.pinata.cloud",
+  ];
+}
+
+function buildFrameSrc(): string[] {
+  return ["'self'", ...WALLET_FRAME_ALLOWLIST];
+}
+
 /**
  * Build the Content-Security-Policy for a given request.
  *
@@ -51,27 +66,21 @@ function buildCsp(nonce: string): string {
     // Styles: 'unsafe-inline' is required by the toast library, which injects
     // inline <style> tags at runtime.
     "style-src": ["'self'", "'unsafe-inline'"],
-
-function buildCsp(nonce: string): string {
-  const directives: Record<string, string> = {
-    "default-src": "'self'",
-    "script-src": `'self' 'nonce-${nonce}' 'strict-dynamic' https:`,
-    "style-src": "'self' 'unsafe-inline'",
-    "img-src": "'self' data: blob: https:",
-    "media-src": "'self' blob:",
-    "font-src": "'self' data:",
+    "img-src": ["'self'", "data:", "blob:", "https:"],
+    "media-src": ["'self'", "blob:"],
+    "font-src": ["'self'", "data:"],
     "connect-src": buildConnectSrc(),
     "frame-src": buildFrameSrc(),
-    "object-src": "'none'",
-    "base-uri": "'self'",
-    "form-action": "'self'",
-    "frame-ancestors": "'none'",
-    "upgrade-insecure-requests": "",
-    "report-uri": "/api/csp-report",
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "form-action": ["'self'"],
+    "frame-ancestors": ["'none'"],
+    "upgrade-insecure-requests": [],
+    "report-uri": ["/api/csp-report"],
   };
 
   return Object.entries(directives)
-    .map(([key, values]) => `${key} ${values.join(" ")}`)
+    .map(([key, values]) => values.length ? `${key} ${values.join(" ")}` : key)
     .join("; ");
 }
 
@@ -86,7 +95,7 @@ export function middleware(request: NextRequest) {
     request: { headers: requestHeaders },
   });
 
-  response.headers.set(headerName, csp);
+  response.headers.set(CSP_HEADER, csp);
   response.headers.set("x-nonce", nonce);
 
   // Defense-in-depth headers that pair naturally with the CSP rollout.
