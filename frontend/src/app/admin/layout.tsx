@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useAdmin } from "@/hooks/useAdmin";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 /**
@@ -11,6 +10,9 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
  * unauthenticated/non-admin callers away before admin content renders) and
  * the ErrorBoundary so an unexpected error on an admin page shows a
  * recoverable fallback instead of crashing the app shell.
+ *
+ * Gating uses the consolidated `useAdmin` hook (identity + allowlist +
+ * feature flag) so admin access has a single source of truth.
  */
 export default function AdminLayout({
   children,
@@ -18,17 +20,16 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
-  const isAdmin = useIsAdmin();
+  const { isAdmin, isLoading } = useAdmin();
 
   useEffect(() => {
     if (isLoading) return;
-    if (!isAuthenticated || !isAdmin) {
+    if (!isAdmin) {
       router.replace("/access-denied");
     }
-  }, [isLoading, isAuthenticated, isAdmin, router]);
+  }, [isLoading, isAdmin, router]);
 
-  if (isLoading || !isAuthenticated || !isAdmin) {
+  if (isLoading || !isAdmin) {
     return null;
   }
 
