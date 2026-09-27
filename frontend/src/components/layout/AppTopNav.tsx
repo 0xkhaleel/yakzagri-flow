@@ -7,7 +7,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { NavLink } from "@/components/ui/Navigation";
 import { Badge } from "@/components/ui/Badge";
+import { GlobalSearch } from "@/components/GlobalSearch";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { PREFERENCES_CHANGED_EVENT, readPreferences } from "@/lib/preferences";
 import { useNotificationStore } from "@/stores/notificationStore";
 
 interface AppTopNavProps {
@@ -106,9 +108,10 @@ export function AppTopNav({
         {/* Notification bell */}
         <button
           type="button"
-          aria-label="Open notifications"
+          aria-label={translateCopy("ui.top_nav_open_notifications")}
+          disabled={!notificationsEnabled}
           onClick={() => void useNotificationStore.getState().fetch()}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-elevated transition-all"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-elevated transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-text-secondary disabled:hover:bg-transparent"
         >
           <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M8 1a5 5 0 015 5v3l1.5 2.5H1.5L3 9V6a5 5 0 015-5z" />
@@ -119,7 +122,7 @@ export function AppTopNav({
         {/* Avatar */}
         <button
           type="button"
-          aria-label="Open account settings"
+          aria-label={translateCopy("ui.top_nav_open_account_settings")}
           onClick={() => router.push("/settings")}
           className="w-8 h-8 rounded-full bg-elevated border border-border-default flex items-center justify-center text-text-secondary hover:text-text-primary transition-all"
         >
