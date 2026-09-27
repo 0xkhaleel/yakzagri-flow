@@ -40,7 +40,6 @@ jobs:
           filters: |
             frontend:
               - 'frontend/**'
-              - 'frontend/package-lock.json'
 
   frontend:
     name: Frontend Required Gate
@@ -52,6 +51,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Enforce pnpm-only lockfile
+        working-directory: frontend
+        run: |
+          if [[ -f package-lock.json || -f npm-shrinkwrap.json || -f yarn.lock ]]; then
+            echo "Only pnpm-lock.yaml may be committed in frontend/."
+            exit 1
+          fi
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
