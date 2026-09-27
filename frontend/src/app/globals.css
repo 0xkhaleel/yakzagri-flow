@@ -232,6 +232,21 @@ html.theme-transition *::after {
   }
 }
 
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.toast-progress {
+  animation-name: toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
 @layer base {
   /* Scrollbar styling */
   ::-webkit-scrollbar {

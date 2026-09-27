@@ -27,9 +27,17 @@ const IPFS_MEDIA_ORIGINS = [
 /**
  * Build the Content-Security-Policy for a given request.
  *
- * Every directive/source is documented so the policy can be reviewed and
- * tightened without guesswork. Keep this strict: no broad wildcards, and
- * only add a source when a concrete feature requires it.
+ * Wallet-frame exemption process: third-party wallet UIs that must be
+ * embedded in an iframe (e.g. a hosted signing widget) should be added to
+ * the `frame-src` allowlist below via WALLET_FRAME_ALLOWLIST (comma
+ * separated origins) rather than relaxing the policy ad-hoc. Requires
+ * security sign-off before merging an addition.
+ *
+ * PoD video (issue #127): the in-browser recorder captures via
+ * getUserMedia/MediaRecorder and plays back the recorded clip from a
+ * `blob:` object URL. `media-src` therefore allows `blob:` (and `'self'`
+ * for any same-origin media), and the Permissions-Policy below grants
+ * `camera`/`microphone` to same-origin so the recorder can request them.
  */
 function buildCsp(nonce: string): string {
   const directives: Record<string, string[]> = {
@@ -44,35 +52,22 @@ function buildCsp(nonce: string): string {
     // inline <style> tags at runtime.
     "style-src": ["'self'", "'unsafe-inline'"],
 
-    // Images: local assets plus data: URIs and IPFS gateways for proof media.
-    "img-src": ["'self'", "data:", "blob:", ...IPFS_MEDIA_ORIGINS],
-
-    // Media: video proof upload/playback. `blob:` is required for the local
-    // preview created via URL.createObjectURL in VideoUploadCard; the IPFS
-    // origins allow playback of pinned proof videos.
-    "media-src": ["'self'", "blob:", ...IPFS_MEDIA_ORIGINS],
-
-    // Fonts: self-hosted only.
-    "font-src": ["'self'"],
-
-    // Connections: self, wallet providers, and IPFS upload/gateway origins.
-    "connect-src": [
-      "'self'",
-      ...WALLET_FRAME_ALLOWLIST,
-      ...IPFS_MEDIA_ORIGINS,
-    ],
-
-    // Frames: wallet provider iframes only.
-    "frame-src": ["'self'", ...WALLET_FRAME_ALLOWLIST],
-
-    // Workers: self only.
-    "worker-src": ["'self'", "blob:"],
-
-    // Lock down embedding and base/form targets.
-    "object-src": ["'none'"],
-    "base-uri": ["'self'"],
-    "form-action": ["'self'"],
-    "frame-ancestors": ["'none'"],
+function buildCsp(nonce: string): string {
+  const directives: Record<string, string> = {
+    "default-src": "'self'",
+    "script-src": `'self' 'nonce-${nonce}' 'strict-dynamic' https:`,
+    "style-src": "'self' 'unsafe-inline'",
+    "img-src": "'self' data: blob: https:",
+    "media-src": "'self' blob:",
+    "font-src": "'self' data:",
+    "connect-src": buildConnectSrc(),
+    "frame-src": buildFrameSrc(),
+    "object-src": "'none'",
+    "base-uri": "'self'",
+    "form-action": "'self'",
+    "frame-ancestors": "'none'",
+    "upgrade-insecure-requests": "",
+    "report-uri": "/api/csp-report",
   };
 
   return Object.entries(directives)
@@ -91,9 +86,17 @@ export function middleware(request: NextRequest) {
     request: { headers: requestHeaders },
   });
 
-  // Report-only during the rollover window (#202); flip to the enforcing
-  // `Content-Security-Policy` header once violations are clean.
-  response.headers.set("Content-Security-Policy-Report-Only", csp);
+  response.headers.set(headerName, csp);
+  response.headers.set("x-nonce", nonce);
+
+  // Defense-in-depth headers that pair naturally with the CSP rollout.
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(self), microphone=(self), geolocation=(), payment=()",
+  );
 
   return response;
 }

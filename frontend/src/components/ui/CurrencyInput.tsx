@@ -1,3 +1,5 @@
+
+import { t as translateCopy } from "@/lib/i18n";
 import { type InputHTMLAttributes } from "react";
 import type { AssetInfo } from "@/lib/stellar/assets";
 
@@ -87,7 +89,7 @@ export function CurrencyInput({
       {/* Decimal precision info */}
       {!error && (
         <p id={precisionId} className="text-xs text-text-muted">
-          Precision: {asset.decimals} decimal places ({asset.name})
+          {translateCopy("ui.precision_ee8d809")}{" "}{asset.decimals} {translateCopy("ui.decimal_places_f76d265")}{asset.name})
         </p>
       )}
     </div>

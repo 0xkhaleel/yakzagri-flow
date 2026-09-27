@@ -1,4 +1,6 @@
 "use client";
+import { t as translateCopy } from "@/lib/i18n";
+
 
 /**
  * Breadcrumbs — page-level navigation trail.
@@ -30,7 +32,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
   if (items.length === 0) return null;
 
   return (
-    <nav aria-label="Breadcrumb" className={clsx("flex items-center", className)}>
+    <nav aria-label={translateCopy("ui.breadcrumb_c766e66")} className={clsx("flex items-center", className)}>
       <ol className="flex items-center flex-wrap gap-y-1 text-sm">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;

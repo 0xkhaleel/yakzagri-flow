@@ -1,3 +1,6 @@
+
+import { t as translateCopy } from "@/lib/i18n";
+import { formatDateTime } from "@/lib/i18n";
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -13,6 +16,7 @@ import {
   ApiError,
 } from "@/lib/api";
 import { Breadcrumb, LoadingState, ErrorState, CurrencyInput } from "@/components/ui";
+import { formatDateTime } from "@/lib/i18n/format";
 import {
   getAssetInfo,
   stroopsToAmount,
@@ -173,7 +177,7 @@ export default function AdminStreamManagementPage() {
       <section className="min-h-full bg-bg-primary px-6 py-8 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <ErrorState
-            title="Feature Not Available"
+            title={translateCopy("ui.feature_not_available_7c53250")}
             message="Admin features are currently not available."
           />
           <div className="mt-6 text-center">
@@ -181,7 +185,7 @@ export default function AdminStreamManagementPage() {
               href={`/streams/${streamId}`}
               className="inline-flex rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-gold-hover transition-colors"
             >
-              View Stream Details
+              {translateCopy("ui.view_stream_details_ae8447c")}
             </Link>
           </div>
         </div>
@@ -194,7 +198,7 @@ export default function AdminStreamManagementPage() {
       <section className="min-h-full bg-bg-primary px-6 py-8 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <ErrorState
-            title="Access Denied"
+            title={translateCopy("ui.access_denied_1647b9d")}
             message="You must be an admin to access this page."
           />
           <div className="mt-6 text-center">
@@ -202,7 +206,7 @@ export default function AdminStreamManagementPage() {
               href={`/streams/${streamId}`}
               className="inline-flex rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-gold-hover transition-colors"
             >
-              View Stream Details
+              {translateCopy("ui.view_stream_details_ae8447c")}
             </Link>
           </div>
         </div>
@@ -219,9 +223,9 @@ export default function AdminStreamManagementPage() {
         {/* Page header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-text-primary">Admin Stream Management</h1>
+            <h1 className="text-xl font-bold text-text-primary">{translateCopy("ui.admin_stream_management_f101d21")}</h1>
             <p className="mt-0.5 text-xs text-text-secondary">
-              Manage stream clawback, suspension, and resumption
+              {translateCopy("ui.manage_stream_clawback_suspensio_d7fc11e")}
             </p>
           </div>
           <Link
@@ -231,7 +235,7 @@ export default function AdminStreamManagementPage() {
             <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M10 12l-4-4 4-4" />
             </svg>
-            View Stream
+            {translateCopy("ui.view_stream_efec345")}
           </Link>
         </div>
 
@@ -241,7 +245,7 @@ export default function AdminStreamManagementPage() {
         {/* Error state */}
         {error && !loading && (
           <ErrorState
-            title="Failed to load stream"
+            title={translateCopy("ui.failed_to_load_stream_c24032d")}
             message={error}
           />
         )}
@@ -253,41 +257,41 @@ export default function AdminStreamManagementPage() {
             <div className="rounded-2xl border border-border-default bg-card p-5">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-xs uppercase tracking-[0.22em] text-text-secondary">
-                  Stream Overview
+                  {translateCopy("ui.stream_overview_d1b96e9")}
                 </p>
                 <div className="rounded-full bg-bg-elevated px-3 py-1">
                   <span className="text-xs font-semibold text-text-primary">
                     {assetInfo.symbol}
                   </span>
                   <span className="ml-1 text-xs text-text-muted">
-                    ({decimals} decimals)
+                    ({decimals} {translateCopy("ui.decimals_5e8b1a0")}
                   </span>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <p className="text-xs text-text-muted">Total Vested</p>
+                  <p className="text-xs text-text-muted">{translateCopy("ui.total_vested_84ca85a")}</p>
                   <p className="mt-1 text-lg font-bold text-text-primary">
                     {stroopsToAmount(streamData.totalVested, decimals)}
                   </p>
                   <p className="text-xs text-text-muted">{assetInfo.symbol}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-text-muted">Claimed</p>
+                  <p className="text-xs text-text-muted">{translateCopy("ui.claimed_83c8788")}</p>
                   <p className="mt-1 text-lg font-bold text-status-success">
                     {stroopsToAmount(streamData.claimed, decimals)}
                   </p>
                   <p className="text-xs text-text-muted">{assetInfo.symbol}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-text-muted">Unclaimed</p>
+                  <p className="text-xs text-text-muted">{translateCopy("ui.unclaimed_fca0eb7")}</p>
                   <p className="mt-1 text-lg font-bold text-gold">
                     {stroopsToAmount(streamData.unclaimed, decimals)}
                   </p>
                   <p className="text-xs text-text-muted">{assetInfo.symbol}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-text-muted">Pending Clawback</p>
+                  <p className="text-xs text-text-muted">{translateCopy("ui.pending_clawback_dc060c4")}</p>
                   <p className="mt-1 text-lg font-bold text-status-warning">
                     {stroopsToAmount(streamData.pendingClawback, decimals)}
                   </p>
@@ -312,7 +316,7 @@ export default function AdminStreamManagementPage() {
             {/* Clawback preview */}
             <div className="rounded-2xl border border-border-default bg-card p-5">
               <p className="text-xs uppercase tracking-[0.22em] text-text-secondary mb-4">
-                Clawback Preview
+                {translateCopy("ui.clawback_preview_e8edf9c")}
               </p>
               <div className="space-y-4">
                 <CurrencyInput
@@ -322,7 +326,7 @@ export default function AdminStreamManagementPage() {
                   asset={{ ...assetInfo, decimals }}
                   error={clawbackInput.error}
                   helperText={`Maximum: ${stroopsToAmount(streamData.unclaimed, decimals)} ${assetInfo.symbol}`}
-                  placeholder="Enter amount to clawback"
+                  placeholder={translateCopy("ui.enter_amount_to_clawback_2e10f7d")}
                 />
                 
                 <button
@@ -335,30 +339,30 @@ export default function AdminStreamManagementPage() {
 
                 {clawbackPreview && (
                   <div className="mt-4 rounded-lg border border-border-default bg-bg-elevated p-4 space-y-2">
-                    <p className="text-xs text-text-muted">Preview Results</p>
+                    <p className="text-xs text-text-muted">{translateCopy("ui.preview_results_7707856")}</p>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <p className="text-text-muted">Remaining Vested</p>
+                        <p className="text-text-muted">{translateCopy("ui.remaining_vested_83b8369")}</p>
                         <p className="font-medium text-text-primary">
                           {stroopsToAmount(clawbackPreview.remainingVested, decimals)} {assetInfo.symbol}
                         </p>
                       </div>
                       <div>
-                        <p className="text-text-muted">Requested Clawback</p>
+                        <p className="text-text-muted">{translateCopy("ui.requested_clawback_12e9e2b")}</p>
                         <p className="font-medium text-status-warning">
                           {stroopsToAmount(clawbackPreview.requestedClawback, decimals)} {assetInfo.symbol}
                         </p>
                       </div>
                       <div>
-                        <p className="text-text-muted">Post-Clawback Balance</p>
+                        <p className="text-text-muted">{translateCopy("ui.post_clawback_balance_6f396cc")}</p>
                         <p className="font-medium text-text-primary">
                           {stroopsToAmount(clawbackPreview.postClawbackBalance, decimals)} {assetInfo.symbol}
                         </p>
                       </div>
                       <div>
-                        <p className="text-text-muted">Timestamp</p>
+                        <p className="text-text-muted">{translateCopy("ui.timestamp_19eabc9")}</p>
                         <p className="font-medium text-text-secondary">
-                          {new Date(clawbackPreview.timestamp).toLocaleString()}
+                          {formatDateTime(clawbackPreview.timestamp)}
                         </p>
                       </div>
                     </div>
@@ -370,18 +374,18 @@ export default function AdminStreamManagementPage() {
             {/* Suspend stream */}
             <div className="rounded-2xl border border-border-default bg-card p-5">
               <p className="text-xs uppercase tracking-[0.22em] text-text-secondary mb-4">
-                Suspend Stream
+                {translateCopy("ui.suspend_stream_50822f9")}
               </p>
               <div className="space-y-4">
                 <div>
                   <label htmlFor="suspendReason" className="block text-sm font-medium text-text-primary mb-2">
-                    Reason (optional)
+                    {translateCopy("ui.reason_optional_f6826f8")}
                   </label>
                   <textarea
                     id="suspendReason"
                     value={suspendReason}
                     onChange={(e) => setSuspendReason(e.target.value)}
-                    placeholder="Enter reason for suspension"
+                    placeholder={translateCopy("ui.enter_reason_for_suspension_1bf8eff")}
                     rows={3}
                     className="w-full rounded-lg border border-border-default bg-bg-elevated px-4 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-gold focus:outline-none resize-none"
                   />
@@ -399,18 +403,18 @@ export default function AdminStreamManagementPage() {
             {/* Resume stream */}
             <div className="rounded-2xl border border-border-default bg-card p-5">
               <p className="text-xs uppercase tracking-[0.22em] text-text-secondary mb-4">
-                Resume Stream
+                {translateCopy("ui.resume_stream_b9c8aa5")}
               </p>
               <div className="space-y-4">
                 <div>
                   <label htmlFor="resumeNote" className="block text-sm font-medium text-text-primary mb-2">
-                    Note (optional)
+                    {translateCopy("ui.note_optional_4e39567")}
                   </label>
                   <textarea
                     id="resumeNote"
                     value={resumeNote}
                     onChange={(e) => setResumeNote(e.target.value)}
-                    placeholder="Enter note for resumption"
+                    placeholder={translateCopy("ui.enter_note_for_resumption_5a0504a")}
                     rows={3}
                     className="w-full rounded-lg border border-border-default bg-bg-elevated px-4 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-gold focus:outline-none resize-none"
                   />

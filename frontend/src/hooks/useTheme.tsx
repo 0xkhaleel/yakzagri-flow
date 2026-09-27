@@ -23,6 +23,11 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 const STORAGE_KEY = "amana-theme-preference";
 
+// Legacy storage key from the removed uiStore theme mechanism. Cleaned up on
+// mount so the single surviving mechanism (this hook) is the only source of
+// truth for theme persistence.
+const LEGACY_STORAGE_KEY = "amana-ui-storage";
+
 function getSystemPreference(): "light" | "dark" {
   if (typeof window === "undefined") return "dark";
   return window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -42,6 +47,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Read persisted preference and apply it (no flash — applied before paint via
   // the inline script in <head> below).
   useEffect(() => {
+    // Drop the dead uiStore storage key so only `amana-theme-preference`
+    // remains as the persisted theme source.
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
     const pref = stored ?? "system";
     setThemePreference(pref);

@@ -100,3 +100,68 @@ describe("Banner states accurate during transition windows", () => {
     expect(useOfflineQueueStore.getState().queue.length).toBe(1);
   });
 });
+
+describe("useOffline adaptive cadence (#118)", () => {
+  const originalFetch = global.fetch;
+  const originalOnLine = Object.getOwnPropertyDescriptor(Navigator.prototype, "onLine");
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.resetModules();
+    // Default to online so the hook probes the network.
+    Object.defineProperty(navigator, "onLine", { configurable: true, get: () => true });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    global.fetch = originalFetch;
+    if (originalOnLine) {
+      Object.defineProperty(Navigator.prototype, "onLine", originalOnLine);
+    }
+  });
+
+  it("backs off probe frequency once the connection is stable", async () => {
+    const fetchMock = jest.fn(async () => ({ ok: true, status: 200 } as any));
+    global.fetch = fetchMock as any;
+
+    const { renderHook } = require("@testing-library/react");
+    const { useOffline } = require("@/hooks/useOffline");
+
+    renderHook(() => useOffline());
+
+    // First probe fires immediately on mount.
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const initialCalls = fetchMock.mock.calls.length;
+    expect(initialCalls).toBeGreaterThanOrEqual(1);
+
+    // Advance a short window: with backoff, far fewer probes than the old 5s cadence.
+    await act(async () => {
+      jest.advanceTimersByTime(60_000);
+      await Promise.resolve();
+    });
+
+    const callsAfterMinute = fetchMock.mock.calls.length;
+    // Old behavior would be ~12 probes/min; adaptive cadence must be well under that.
+    expect(callsAfterMinute).toBeLessThan(12);
+  });
+
+  it("skips network probes while navigator reports offline", async () => {
+    Object.defineProperty(navigator, "onLine", { configurable: true, get: () => false });
+    const fetchMock = jest.fn(async () => ({ ok: true, status: 200 } as any));
+    global.fetch = fetchMock as any;
+
+    const { renderHook } = require("@testing-library/react");
+    const { useOffline } = require("@/hooks/useOffline");
+
+    renderHook(() => useOffline());
+
+    await act(async () => {
+      jest.advanceTimersByTime(30_000);
+      await Promise.resolve();
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});

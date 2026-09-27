@@ -160,9 +160,20 @@ describe("trade detail component coverage", () => {
     expect(screen.getAllByText("Tema").length).toBeGreaterThan(0);
   });
 
+  it("provides contract navigation and disables unsupported actions with explanations", () => {
+    render(<TradeDetailPanel trade={{ ...baseTrade, status: "IN TRANSIT" }} />);
+
+    expect(screen.getByRole("link", { name: "View Contract" })).toHaveAttribute("href", "#trade-contract");
+    expect(screen.getByRole("button", { name: "PoD Verification" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "PoD Verification" })).toHaveAttribute("title");
+    expect(screen.getByRole("button", { name: "Open Ticket" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Open Ticket" })).toHaveAttribute("title");
+  });
+
   it("hides and shows ActionBar buttons based on trade status", async () => {
     const user = userEvent.setup();
     const onConfirmDelivery = jest.fn();
+    const onReleaseFunds = jest.fn();
     const { rerender } = render(
       <ActionBar
         trade={{ ...baseTrade, status: "PENDING" }}
@@ -187,12 +198,25 @@ describe("trade detail component coverage", () => {
 
     rerender(
       <ActionBar
-        trade={{ ...baseTrade, status: "SETTLED" }}
+        trade={{ ...baseTrade, status: "IN TRANSIT" }}
         onConfirmDelivery={onConfirmDelivery}
+        onReleaseFunds={onReleaseFunds}
         confirmingDelivery={false}
       />,
     );
     expect(screen.getByText("Release Funds")).toBeInTheDocument();
+    await user.click(screen.getByText("Release Funds"));
+    expect(onReleaseFunds).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <ActionBar
+        trade={{ ...baseTrade, status: "SETTLED" }}
+        onConfirmDelivery={onConfirmDelivery}
+        onReleaseFunds={onReleaseFunds}
+        confirmingDelivery={false}
+      />,
+    );
+    expect(screen.queryByText("Release Funds")).not.toBeInTheDocument();
     expect(screen.queryByText("Raise Dispute")).not.toBeInTheDocument();
   });
 

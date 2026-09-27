@@ -29,45 +29,18 @@ export class ApiError extends Error {
 const TOKEN_STORAGE_KEY = "amana_jwt";
 
 /**
- * Decode a JWT payload without throwing. Returns null for malformed tokens
- * (bad base64, bad JSON, non-object payloads) so callers can treat them as
- * unauthenticated instead of crashing.
+ * Backend idempotency lock TTL (seconds). The client dedup window must agree
+ * with this value so a double-submit cannot slip past client dedup while the
+ * backend key is still locked. Kept in sync with the server's lock TTL.
  */
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const padded = base64.padEnd(
-      base64.length + ((4 - (base64.length % 4)) % 4),
-      "=",
-    );
-    const json =
-      typeof atob === "function"
-        ? atob(padded)
-        : Buffer.from(padded, "base64").toString("binary");
-    const payload = JSON.parse(json);
-    if (!payload || typeof payload !== "object") return null;
-    return payload as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
+export const IDEMPOTENCY_LOCK_TTL_SECONDS = 30;
 
 /**
- * Returns true when the token is structurally valid and not expired.
- * Malformed tokens and tokens without a usable `exp` are treated as invalid
- * so they can never be used to bypass auth.
+ * Backend idempotency lock TTL in milliseconds. Consumers (e.g. actionDedup)
+ * should derive their window from this so client dedup and the backend lock
+ * always agree.
  */
-export function isTokenValid(token: string | null | undefined): boolean {
-  if (!token || typeof token !== "string") return false;
-  const payload = decodeJwtPayload(token);
-  if (!payload) return false;
-  const exp = payload.exp;
-  if (typeof exp !== "number" || !Number.isFinite(exp)) return false;
-  // `exp` is seconds since epoch (backend JWT semantics); compare in ms.
-  return exp * 1000 > Date.now();
-}
+export const IDEMPOTENCY_LOCK_TTL_MS = IDEMPOTENCY_LOCK_TTL_SECONDS * 1000;
 
 function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -92,10 +65,16 @@ export const navigationHelpers = {
 function createHeaders(
   headers?: HeadersInit,
   token?: string | null,
+  hasBody?: boolean,
 ): Record<string, string> {
-  const resolvedHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const resolvedHeaders: Record<string, string> = {};
+
+  // Only advertise a JSON content type when a request body is actually sent.
+  // Setting it on bodyless requests (GET/HEAD/DELETE) forces CORS preflights
+  // for cross-origin calls and needlessly widens the preflight surface.
+  if (hasBody) {
+    resolvedHeaders["Content-Type"] = "application/json";
+  }
 
   if (headers instanceof Headers) {
     headers.forEach((value, key) => {
@@ -122,20 +101,68 @@ function createHeaders(
 /**
  * Helper to build headers with idempotency + correlation IDs (unified toast contract).
  * Use for mutations that require exactly-once semantics and toast correlation.
+ *
+ * When no explicit idempotencyKey is provided, a stable key is derived from the
+ * method + endpoint + body so repeated submissions of the same mutation within
+ * the backend lock TTL reuse the same key (and are deduped server-side).
  */
-export function withIdempotency(headers?: HeadersInit, opts?: { idempotencyKey?: string; correlationId?: string }): Record<string, string> {
+export function withIdempotency(
+  headers?: HeadersInit,
+  opts?: {
+    idempotencyKey?: string;
+    correlationId?: string;
+    method?: string;
+    endpoint?: string;
+    body?: unknown;
+  },
+): Record<string, string> {
   const out: Record<string, string> = {};
   if (headers instanceof Headers) {
     headers.forEach((v, k) => { out[k] = v; });
   } else if (Array.isArray(headers)) {
     for (const [k, v] of headers) out[k] = v;
   } else if (headers) Object.assign(out, headers as Record<string, string>);
-  if (opts?.idempotencyKey) out["Idempotency-Key"] = opts.idempotencyKey;
+
+  const idempotencyKey =
+    opts?.idempotencyKey ??
+    (opts?.method && opts?.endpoint
+      ? deriveIdempotencyKey(opts.method, opts.endpoint, opts.body)
+      : undefined);
+
+  if (idempotencyKey) out["Idempotency-Key"] = idempotencyKey;
   if (opts?.correlationId) {
     out["X-Correlation-Id"] = opts.correlationId;
     out["X-Request-Id"] = opts.correlationId;
   }
   return out;
+}
+
+/**
+ * Derive a stable idempotency key from a mutation's method, endpoint and body.
+ * Stable across retries/double-submits of the same logical action so the
+ * backend lock (IDEMPOTENCY_LOCK_TTL_MS) can dedupe them.
+ */
+export function deriveIdempotencyKey(
+  method: string,
+  endpoint: string,
+  body?: unknown,
+): string {
+  let bodyPart = "";
+  if (body !== undefined) {
+    try {
+      bodyPart = typeof body === "string" ? body : JSON.stringify(body);
+    } catch {
+      bodyPart = String(body);
+    }
+  }
+  const raw = `${method.toUpperCase()}:${endpoint}:${bodyPart}`;
+  // FNV-1a hash keeps the key short and deterministic without extra deps.
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < raw.length; i++) {
+    hash ^= raw.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `idem-${(hash >>> 0).toString(16)}`;
 }
 
 export function createQueryString(
@@ -174,18 +201,29 @@ export function resolveApiUrl(endpoint: string): string {
     : `${getApiBaseUrl()}${getApiVersionPrefix()}${endpoint}`;
 }
 
+export type RequestOptions<T> = FetchOptions & {
+  /**
+   * Optional zod schema used to validate the live response payload. When
+   * provided, schema drift (backend returning an unexpected shape) is caught
+   * and surfaced as an ApiError instead of silently flowing into the UI.
+   */
+  schema?: z.ZodSchema<T>;
+};
+
 export async function request<T>(
   endpoint: string,
-  options: FetchOptions = {},
+  options: RequestOptions<T> = {},
 ): Promise<T> {
-  const { token, skipAuth, headers, ...fetchOptions } = options;
+  const { token, skipAuth, headers, schema, ...fetchOptions } = options;
 
   const authToken = token ?? (!skipAuth ? getStoredToken() : null);
+
+  const hasBody = fetchOptions.body != null;
 
   try {
     const response = await fetch(resolveApiUrl(endpoint), {
       ...fetchOptions,
-      headers: createHeaders(headers, authToken),
+      headers: createHeaders(headers, authToken, hasBody),
     });
 
     const data = await response.json().catch(() => null);
@@ -199,6 +237,22 @@ export async function request<T>(
         (data as { error?: string })?.error || response.statusText,
         data,
       );
+    }
+
+    if (schema) {
+      const validationResult = schema.safeParse(data);
+      if (!validationResult.success) {
+        trackApiFailure(endpoint, response.status, {
+          method: fetchOptions.method ?? "GET",
+          error: "Response validation failed",
+        });
+        throw new ApiError(
+          500,
+          "Response validation failed",
+          validationResult.error,
+        );
+      }
+      return validationResult.data;
     }
 
     return data as T;
@@ -223,19 +277,7 @@ export async function requestWithResult<T>(
   options: FetchOptions = {},
 ): Promise<ApiResult<T>> {
   try {
-    const data = await request<T>(endpoint, options);
-
-    if (schema) {
-      const validationResult = schema.safeParse(data);
-      if (!validationResult.success) {
-        throw new ApiError(
-          500,
-          "Response validation failed",
-          validationResult.error,
-        );
-      }
-      return { success: true, data: validationResult.data };
-    }
+    const data = await request<T>(endpoint, { ...options, schema });
 
     return { success: true, data };
   } catch (error) {

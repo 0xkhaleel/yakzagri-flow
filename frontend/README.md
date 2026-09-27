@@ -25,7 +25,7 @@ This folder is the user-facing interface for buyers, sellers, and mediators inte
 - Tailwind CSS styling
 - Playwright visual regression testing
 - Jest unit/integration testing
-- Stellar wallet integration via Freighter
+- Stellar wallet integration via Freighter only
 - Privacy-first analytics instrumentation
 
 ## Getting Started

@@ -6,7 +6,6 @@ type CurrencyDisplay = "USDC" | "NGN";
 interface UIState {
   sidebarCollapsed: boolean;
   currencyDisplay: CurrencyDisplay;
-  theme: "dark";
   toggleSidebar: () => void;
   setCurrency: (currency: CurrencyDisplay) => void;
   resetDefaults: () => void;
@@ -15,7 +14,6 @@ interface UIState {
 const defaultState = {
   sidebarCollapsed: false,
   currencyDisplay: "USDC" as CurrencyDisplay,
-  theme: "dark" as const,
 };
 
 export const useUIStore = create<UIState>()(

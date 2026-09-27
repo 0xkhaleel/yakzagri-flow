@@ -28,7 +28,13 @@ describe("UI Store", () => {
       const parsed = JSON.parse(stored);
       expect(parsed.state.sidebarCollapsed).toBe(true);
       expect(parsed.state.currencyDisplay).toBe("NGN");
+      expect(parsed.state.theme).toBeUndefined();
     }
+  });
+
+  it("should not expose a theme mechanism", () => {
+    expect((useUIStore.getState() as Record<string, unknown>).theme).toBeUndefined();
+    expect((useUIStore.getState() as Record<string, unknown>).setTheme).toBeUndefined();
   });
 
   it("should reset to defaults", () => {
