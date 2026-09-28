@@ -1,8 +1,10 @@
 /**
- * Tests for GlobalSearch component (#773)
+ * Tests for GlobalSearch component (#773, #51)
  *
  * Covers: keyboard trigger, search input, results display,
- *         empty results, navigation on select, error state.
+ *         empty results, navigation on select, error state,
+ *         the ARIA combobox contract, and focus management
+ *         (focus into the dialog, Tab containment, focus return).
  */
 
 import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
@@ -81,6 +83,16 @@ function pressEscape() {
   fireEvent.keyDown(document, { key: "Escape" });
 }
 
+/**
+ * Types a query into the search field and waits out the 300ms debounce under
+ * real timers, so the test never has to reason about fake-timer flushing.
+ */
+async function typeQuery(query: string) {
+  const user = userEvent.setup();
+  await user.type(screen.getByRole("combobox"), query);
+  await waitFor(() => expect(mockSearch).toHaveBeenCalled());
+}
+
 // ── Keyboard trigger ──────────────────────────────────────────────────────────
 
 describe("GlobalSearch — keyboard trigger", () => {
@@ -143,7 +155,7 @@ describe("GlobalSearch — search input", () => {
   it("shows the search input when open", () => {
     render(<GlobalSearch />);
     pressMetaK();
-    expect(screen.getByRole("searchbox")).toBeInTheDocument();
+    expect(screen.getByRole("combobox")).toBeInTheDocument();
   });
 
   it("shows idle hint text before typing", () => {
@@ -159,7 +171,7 @@ describe("GlobalSearch — search input", () => {
     render(<GlobalSearch />);
     pressMetaK();
 
-    await user.type(screen.getByRole("searchbox"), "maize");
+    await user.type(screen.getByRole("combobox"), "maize");
     expect(mockSearch).not.toHaveBeenCalled();
 
     act(() => jest.advanceTimersByTime(300));
@@ -175,8 +187,8 @@ describe("GlobalSearch — search input", () => {
     render(<GlobalSearch />);
     pressMetaK();
 
-    await user.type(screen.getByRole("searchbox"), "m");
-    await user.clear(screen.getByRole("searchbox"));
+    await user.type(screen.getByRole("combobox"), "m");
+    await user.clear(screen.getByRole("combobox"));
     act(() => jest.advanceTimersByTime(300));
     expect(mockSearch).not.toHaveBeenCalled();
 
@@ -184,40 +196,161 @@ describe("GlobalSearch — search input", () => {
   });
 });
 
+// ── Combobox ARIA contract ────────────────────────────────────────────────────
+
+describe("GlobalSearch — combobox semantics", () => {
+  it("declares the combobox popup contract on the search field", () => {
+    render(<GlobalSearch />);
+    pressMetaK();
+
+    const combobox = screen.getByRole("combobox");
+    expect(combobox).toHaveAttribute("aria-autocomplete", "list");
+    expect(combobox).toHaveAttribute("aria-haspopup", "listbox");
+  });
+
+  it("collapses the popup and describes the field by the hint while empty", () => {
+    render(<GlobalSearch />);
+    pressMetaK();
+
+    const combobox = screen.getByRole("combobox");
+    expect(combobox).toHaveAttribute("aria-expanded", "false");
+    expect(combobox).not.toHaveAttribute("aria-controls");
+    expect(combobox).toHaveAttribute("aria-describedby", "global-search-hint");
+    expect(document.getElementById("global-search-hint")).not.toBeNull();
+  });
+
+  it("keeps status copy outside the listbox so it only ever contains options", () => {
+    render(<GlobalSearch />);
+    pressMetaK();
+
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.getByText(/type to search/i)).toBeInTheDocument();
+  });
+
+  it("links the active option to the combobox accessibly", async () => {
+    render(<GlobalSearch />);
+    pressMetaK();
+    await typeQuery("trade");
+    await waitFor(() => expect(screen.getByText("Trade #001")).toBeInTheDocument());
+
+    const combobox = screen.getByRole("combobox");
+    expect(combobox).toHaveAttribute("aria-expanded", "true");
+    expect(combobox).toHaveAttribute("aria-controls", "global-search-results");
+    expect(screen.getByRole("listbox", { name: /search results/i })).toHaveAttribute(
+      "id",
+      "global-search-results",
+    );
+    fireEvent.keyDown(combobox, { key: "ArrowDown" });
+    expect(combobox).toHaveAttribute("aria-activedescendant", "search-result-0");
+  });
+
+  it("exposes result rows as non-tabbable options tracked by aria-activedescendant", async () => {
+    render(<GlobalSearch />);
+    pressMetaK();
+    await typeQuery("trade");
+    await waitFor(() => expect(screen.getByText("Trade #001")).toBeInTheDocument());
+
+    const options = screen.getAllByRole("option") as HTMLElement[];
+    expect(options).toHaveLength(4);
+    options.forEach((option: HTMLElement) => {
+      expect(option).toHaveAttribute("tabindex", "-1");
+    });
+  });
+
+  it("jumps through the results with Home, End and PageDown", async () => {
+    render(<GlobalSearch />);
+    pressMetaK();
+    await typeQuery("trade");
+    await waitFor(() => expect(screen.getByText("Trade #001")).toBeInTheDocument());
+
+    const combobox = screen.getByRole("combobox");
+
+    fireEvent.keyDown(combobox, { key: "End" });
+    expect(combobox).toHaveAttribute("aria-activedescendant", "search-result-3");
+
+    fireEvent.keyDown(combobox, { key: "Home" });
+    expect(combobox).toHaveAttribute("aria-activedescendant", "search-result-0");
+
+    fireEvent.keyDown(combobox, { key: "PageDown" });
+    expect(combobox).toHaveAttribute("aria-activedescendant", "search-result-3");
+  });
+
+  it("reports the empty-result message through a status region", async () => {
+    mockSearch.mockResolvedValue({ trades: [], users: [], contracts: [] });
+    render(<GlobalSearch />);
+    pressMetaK();
+    await typeQuery("xyznotfound");
+
+    await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+});
+
+// ── Focus management ──────────────────────────────────────────────────────────
+
+describe("GlobalSearch — focus management", () => {
+  it("moves focus into the search field when opened", async () => {
+    render(<GlobalSearch />);
+    pressMetaK();
+
+    await waitFor(() => expect(screen.getByRole("combobox")).toHaveFocus());
+  });
+
+  it("keeps Tab cycling inside the dialog", async () => {
+    const user = userEvent.setup();
+    render(<GlobalSearch />);
+    pressMetaK();
+
+    const combobox = screen.getByRole("combobox");
+    const closeButton = screen.getByRole("button", { name: /close search/i });
+    await waitFor(() => expect(combobox).toHaveFocus());
+
+    await user.tab();
+    expect(closeButton).toHaveFocus();
+
+    await user.tab();
+    expect(combobox).toHaveFocus();
+
+    await user.tab({ shift: true });
+    expect(closeButton).toHaveFocus();
+  });
+
+  it("closes on backdrop click and restores focus to the trigger", async () => {
+    const user = userEvent.setup();
+    render(<GlobalSearch />);
+    await user.click(screen.getByRole("button", { name: /open global search/i }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("dialog"));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /open global search/i })).toHaveFocus(),
+    );
+  });
+});
+
 // ── Results display ───────────────────────────────────────────────────────────
 
 describe("GlobalSearch — results display", () => {
   it("renders grouped results after a successful search", async () => {
-    jest.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-
     render(<GlobalSearch />);
     pressMetaK();
-    await user.type(screen.getByRole("searchbox"), "trade");
-    act(() => jest.advanceTimersByTime(300));
-
+    await typeQuery("trade");
     await waitFor(() => expect(screen.getByText("Trade #001")).toBeInTheDocument());
+
     expect(screen.getByText("Trades")).toBeInTheDocument();
     expect(screen.getByText("Users")).toBeInTheDocument();
     expect(screen.getByText("Contracts")).toBeInTheDocument();
     expect(screen.getByText("Alice Seller")).toBeInTheDocument();
     expect(screen.getByText("Contract AMN-99")).toBeInTheDocument();
-
-    jest.useRealTimers();
   });
 
   it("shows subtitle text when provided", async () => {
-    jest.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-
     render(<GlobalSearch />);
     pressMetaK();
-    await user.type(screen.getByRole("searchbox"), "trade");
-    act(() => jest.advanceTimersByTime(300));
-
+    await typeQuery("trade");
     await waitFor(() => expect(screen.getByText("FUNDED")).toBeInTheDocument());
-
-    jest.useRealTimers();
   });
 });
 
@@ -231,7 +364,7 @@ describe("GlobalSearch — empty results", () => {
 
     render(<GlobalSearch />);
     pressMetaK();
-    await user.type(screen.getByRole("searchbox"), "xyznotfound");
+    await user.type(screen.getByRole("combobox"), "xyznotfound");
     act(() => jest.advanceTimersByTime(300));
 
     await waitFor(() => expect(screen.getByText(/no results for/i)).toBeInTheDocument());
@@ -250,7 +383,7 @@ describe("GlobalSearch — error state", () => {
 
     render(<GlobalSearch />);
     pressMetaK();
-    await user.type(screen.getByRole("searchbox"), "trade");
+    await user.type(screen.getByRole("combobox"), "trade");
     act(() => jest.advanceTimersByTime(300));
 
     await waitFor(() => expect(screen.getByText(/search failed/i)).toBeInTheDocument());
@@ -263,16 +396,11 @@ describe("GlobalSearch — error state", () => {
 
 describe("GlobalSearch — navigation on select", () => {
   it("navigates to the trade detail page when a trade result is clicked", async () => {
-    jest.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-
     render(<GlobalSearch />);
     pressMetaK();
-    await user.type(screen.getByRole("searchbox"), "trade");
-    act(() => jest.advanceTimersByTime(300));
+    await typeQuery("trade");
     await waitFor(() => screen.getByText("Trade #001"));
 
-    jest.useRealTimers();
     await userEvent.click(screen.getByText("Trade #001"));
 
     expect(mockPush).toHaveBeenCalledWith("/trades/t1");
@@ -280,66 +408,33 @@ describe("GlobalSearch — navigation on select", () => {
   });
 
   it("navigates via keyboard ArrowDown + Enter", async () => {
-    jest.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-
     render(<GlobalSearch />);
     pressMetaK();
-    await user.type(screen.getByRole("searchbox"), "trade");
-    act(() => jest.advanceTimersByTime(300));
+    await typeQuery("trade");
     await waitFor(() => screen.getByText("Trade #001"));
 
     // First ArrowDown selects index 0 (Trade #001)
-    fireEvent.keyDown(screen.getByRole("searchbox"), { key: "ArrowDown" });
-    fireEvent.keyDown(screen.getByRole("searchbox"), { key: "Enter" });
-
-    jest.useRealTimers();
+    fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" });
+    fireEvent.keyDown(screen.getByRole("combobox"), { key: "Enter" });
 
     expect(mockPush).toHaveBeenCalledWith("/trades/t1");
   });
 
-  it("links the active option to the searchbox accessibly", async () => {
-    jest.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-
-    render(<GlobalSearch />);
-    pressMetaK();
-    await user.type(screen.getByRole("searchbox"), "trade");
-    act(() => jest.advanceTimersByTime(300));
-    await waitFor(() => expect(screen.getByText("Trade #001")).toBeInTheDocument());
-
-    const searchbox = screen.getByRole("searchbox");
-    expect(searchbox).toHaveAttribute("aria-controls", "global-search-results");
-    expect(screen.getByRole("listbox", { name: /search results/i })).toHaveAttribute("id", "global-search-results");
-    fireEvent.keyDown(searchbox, { key: "ArrowDown" });
-    expect(searchbox).toHaveAttribute("aria-activedescendant", "search-result-0");
-
-    jest.useRealTimers();
-  });
-
   it("navigates user results to their reputation page", async () => {
-    jest.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(<GlobalSearch />);
     pressMetaK();
-    await user.type(screen.getByRole("searchbox"), "alice");
-    act(() => jest.advanceTimersByTime(300));
+    await typeQuery("alice");
     await waitFor(() => expect(screen.getByText("Alice Seller")).toBeInTheDocument());
-    jest.useRealTimers();
 
     await userEvent.click(screen.getByText("Alice Seller"));
     expect(mockPush).toHaveBeenCalledWith("/reputation/u1");
   });
 
   it("navigates contract results to the stream detail route", async () => {
-    jest.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(<GlobalSearch />);
     pressMetaK();
-    await user.type(screen.getByRole("searchbox"), "contract");
-    act(() => jest.advanceTimersByTime(300));
+    await typeQuery("contract");
     await waitFor(() => expect(screen.getByText("Contract AMN-99")).toBeInTheDocument());
-    jest.useRealTimers();
 
     await userEvent.click(screen.getByText("Contract AMN-99"));
     expect(mockPush).toHaveBeenCalledWith("/streams/c1");
