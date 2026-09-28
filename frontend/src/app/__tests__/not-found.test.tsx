@@ -6,6 +6,11 @@
  * jsdom "no history" fallback, an axe pass, and the static facts the issue
  * got wrong (its `/users/*` and `/contracts/*` routes are really
  * `/reputation/*` and `/streams/*`).
+ *
+ * Landmark regression guard: `AppShell` already renders the document's
+ * `<main>` landmark, so the 404 page must expose a labelled `region` (a
+ * `<section aria-labelledby>`) and must never nest a second `<main>` — nested
+ * main landmarks are invalid HTML and an axe landmark violation.
  */
 
 import fs from "node:fs";
@@ -33,6 +38,12 @@ const mockRouter = {
 
 const notFoundPath = path.resolve(__dirname, "../not-found.tsx");
 const globalSearchPath = path.resolve(__dirname, "../../components/GlobalSearch.tsx");
+const appShellPath = path.resolve(__dirname, "../../components/layout/AppShell.tsx");
+
+/** Drop comments so the source-level landmark assertions only see real markup. */
+function stripComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+}
 
 beforeEach(() => {
   mockBack.mockClear();
@@ -50,12 +61,29 @@ describe("NotFound (route-level 404)", () => {
     expect(screen.getByText("404")).toBeInTheDocument();
   });
 
-  it("exposes the fallback as a named main landmark", () => {
+  it("exposes the fallback as a labelled region, not a second main landmark", () => {
     render(<NotFound />);
 
-    const main = screen.getByRole("main");
-    expect(main).toBe(screen.getByTestId("not-found-page"));
-    expect(main).toHaveAttribute("aria-labelledby", "not-found-heading");
+    const region = screen.getByRole("region", { name: "Page not found" });
+    expect(region).toBe(screen.getByTestId("not-found-page"));
+    expect(region.tagName).toBe("SECTION");
+    expect(region).toHaveAttribute("aria-labelledby", "not-found-heading");
+  });
+
+  it("never renders a <main> landmark, because the app shell already provides one", () => {
+    const { container } = render(<NotFound />);
+
+    // Regression guard: `AppShell` wraps every route in `<main>`, so a `<main>`
+    // here would nest one main landmark inside another (invalid HTML, and an
+    // axe landmark violation).
+    expect(container.querySelectorAll("main")).toHaveLength(0);
+    expect(screen.queryByRole("main")).toBeNull();
+
+    const appShellSource = fs.readFileSync(appShellPath, "utf8");
+    const notFoundMarkup = stripComments(fs.readFileSync(notFoundPath, "utf8"));
+
+    expect(appShellSource).toContain("<main");
+    expect(notFoundMarkup).not.toMatch(/<main[\s>]/);
   });
 
   it("links back to the landing page, the dashboard and the trades list", () => {
