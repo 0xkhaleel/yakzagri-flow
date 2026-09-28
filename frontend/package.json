@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:colors": "node scripts/check-tailwind-colors.mjs",
     "test": "jest --config jest.config.ts",
     "test:watch": "jest --config jest.config.ts --watch",
     "test:coverage": "jest --config jest.config.ts --coverage",

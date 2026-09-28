@@ -48,6 +48,23 @@ const config: Config = {
         "status-locked": "var(--status-locked)",
         "status-draft": "var(--status-draft)",
 
+        // Semantic status aliases used by the *State components. These map the
+        // short names (bg-danger, text-warning, ...) onto the same CSS variables
+        // as the status-* scale so one token drives both spellings.
+        danger: "var(--status-danger)",
+        warning: "var(--status-warning)",
+        success: "var(--status-success)",
+        info: "var(--status-info)",
+
+        // Semantic aliases for body copy and the muted surface fill.
+        content: "var(--text-primary)",
+        "surface-variant": "var(--surface-2)",
+
+        // Accent aliases used by the error boundaries and dev fixtures.
+        "accent-gold": "var(--gold)",
+        "accent-gold-hover": "var(--gold-hover)",
+        "accent-teal": "#14B8A6",
+
         // ── Border tokens — elevation-aware ───────────────────────────────
         "border-subtle": "var(--border-subtle)",
         "border-default": "var(--border-default)",
