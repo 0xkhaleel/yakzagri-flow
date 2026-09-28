@@ -12,9 +12,13 @@ import { NotFoundBackButton } from "./NotFoundBackButton";
  * missing record (`/reputation/<id>` for an unknown user and `/streams/<id>`
  * for an unknown contract, see `src/components/GlobalSearch.tsx`).
  *
- * `AppShell` already supplies the application chrome, so this file owns the
- * fallback content only: a single <h1>, the 404 status, and a labelled
- * recovery block that returns the user to a known-good page.
+ * `AppShell` already renders the document's main landmark
+ * (`src/components/layout/AppShell.tsx`) and the root layout wraps every route
+ * in it (`src/app/layout.tsx`), so this page must NOT add a second one: nested
+ * main elements are invalid HTML and an axe landmark violation. The fallback is
+ * therefore a labelled `<section aria-labelledby>` — exposed as a `region`
+ * landmark named by its heading — which owns the 404 status and a labelled
+ * recovery `<nav>` back to a known-good page.
  */
 
 const LINK_BASE =
@@ -24,7 +28,7 @@ const SECONDARY_LINK = `${LINK_BASE} border border-border-default bg-bg-elevated
 
 export default function NotFound() {
   return (
-    <main
+    <section
       data-testid="not-found-page"
       aria-labelledby="not-found-heading"
       className="mx-auto flex min-h-[60vh] w-full max-w-2xl flex-col items-center justify-center px-6 py-16 text-center"
@@ -100,6 +104,6 @@ export default function NotFound() {
           <NotFoundBackButton />
         </div>
       </nav>
-    </main>
+    </section>
   );
 }
