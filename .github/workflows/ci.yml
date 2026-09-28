@@ -157,3 +157,55 @@ jobs:
             frontend/playwright-report/
             frontend/test-results/
           retention-days: 14
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    needs: [changes, frontend]
+    if: needs.changes.outputs.frontend == 'true'
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers (Chromium only)
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Build Next.js app
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:4000
+
+      - name: Run E2E suite (e2e-chromium)
+        run: pnpm exec playwright test --project=e2e-chromium
+        env:
+          CI: true
+          NEXT_PUBLIC_API_URL: http://localhost:4000
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:4000
+
+      - name: Upload E2E report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-report
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          retention-days: 14
