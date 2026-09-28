@@ -1,119 +1,301 @@
 {
+  "$description": "Figma variables export. One mode per theme, mirroring frontend/design-tokens.json and the custom properties in src/app/globals.css. Regenerate with `node scripts/design-tokens.mjs --write`; CI runs `--check` and fails if this file is stale.",
   "amana-colors": {
-    "bg": {
-      "primary": {
-        "$value": "#0B1A14",
-        "$type": "color",
-        "$description": "Dark forest — main app background"
+    "surface-0": {
+      "$type": "color",
+      "$value": {
+        "light": "#F7FAF8",
+        "dark": "#0B1A14"
       },
-      "card": {
-        "$value": "#122A1F",
-        "$type": "color",
-        "$description": "Card / panel surfaces"
-      },
-      "elevated": {
-        "$value": "#1A3D2C",
-        "$type": "color",
-        "$description": "Hover states, elevated panels"
-      },
-      "input": {
-        "$value": "#0F2219",
-        "$type": "color",
-        "$description": "Input field backgrounds"
-      }
+      "$description": "Page canvas — deepest background"
     },
-    "accent": {
-      "gold": {
-        "$value": "#D4A853",
-        "$type": "color",
-        "$description": "Primary CTA, locked funds, highlights"
+    "surface-1": {
+      "$type": "color",
+      "$value": {
+        "light": "#FFFFFF",
+        "dark": "#122A1F"
       },
-      "gold-hover": {
-        "$value": "#E0BA6A",
-        "$type": "color",
-        "$description": "Gold hover state"
-      },
-      "emerald": {
-        "$value": "#34D399",
-        "$type": "color",
-        "$description": "Success, verified, delivered"
-      },
-      "teal": {
-        "$value": "#14B8A6",
-        "$type": "color",
-        "$description": "Secondary accent, links"
-      }
+      "$description": "Card / panel surface"
     },
-    "text": {
-      "primary": {
-        "$value": "#F0F5F1",
-        "$type": "color",
-        "$description": "Headings, prominent text"
+    "surface-2": {
+      "$type": "color",
+      "$value": {
+        "light": "#F0F5F1",
+        "dark": "#1A3D2C"
       },
-      "secondary": {
-        "$value": "#8BA89A",
-        "$type": "color",
-        "$description": "Body text, labels"
-      },
-      "muted": {
-        "$value": "#5A7A6A",
-        "$type": "color",
-        "$description": "Placeholder, disabled"
-      },
-      "inverse": {
-        "$value": "#0B1A14",
-        "$type": "color",
-        "$description": "Text on gold buttons"
-      }
+      "$description": "Elevated surface — active rows, modals, dropdowns"
     },
-    "status": {
-      "success": {
-        "$value": "#34D399",
-        "$type": "color",
-        "$description": "Delivered, completed"
+    "surface-3": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(0, 0, 0, 0.4)",
+        "dark": "rgba(11, 26, 20, 0.85)"
       },
-      "warning": {
-        "$value": "#F59E0B",
-        "$type": "color",
-        "$description": "In transit, pending"
-      },
-      "danger": {
-        "$value": "#EF4444",
-        "$type": "color",
-        "$description": "Disputed, errors"
-      },
-      "info": {
-        "$value": "#3B82F6",
-        "$type": "color",
-        "$description": "Informational"
-      },
-      "locked": {
-        "$value": "#D4A853",
-        "$type": "color",
-        "$description": "Funds locked in escrow"
-      },
-      "draft": {
-        "$value": "#6B7280",
-        "$type": "color",
-        "$description": "Draft, inactive"
-      }
+      "$description": "Overlay / modal scrim"
     },
-    "border": {
-      "default": {
-        "$value": "#2A4A3A",
-        "$type": "color",
-        "$description": "Default borders"
+    "gold": {
+      "$type": "color",
+      "$value": {
+        "light": "#9A7B2F",
+        "dark": "#D4A853"
       },
-      "hover": {
-        "$value": "#3A6A5A",
-        "$type": "color",
-        "$description": "Hover borders"
+      "$description": "Primary CTA, locked funds, highlights"
+    },
+    "gold-hover": {
+      "$type": "color",
+      "$value": {
+        "light": "#8A6B20",
+        "dark": "#E0BA6A"
       },
-      "focus": {
-        "$value": "#D4A853",
-        "$type": "color",
-        "$description": "Focus borders"
-      }
+      "$description": "Gold hover state"
+    },
+    "gold-muted": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(154, 123, 47, 0.1)",
+        "dark": "rgba(212, 168, 83, 0.15)"
+      },
+      "$description": "Gold tinted backgrounds"
+    },
+    "emerald": {
+      "$type": "color",
+      "$value": {
+        "light": "#059669",
+        "dark": "#34D399"
+      },
+      "$description": "Success, verified, delivered"
+    },
+    "emerald-muted": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(5, 150, 105, 0.1)",
+        "dark": "rgba(52, 211, 153, 0.15)"
+      },
+      "$description": "Emerald tinted backgrounds"
+    },
+    "text-primary": {
+      "$type": "color",
+      "$value": {
+        "light": "#1A2E1F",
+        "dark": "#F0F5F1"
+      },
+      "$description": "Headings, strong emphasis"
+    },
+    "text-secondary": {
+      "$type": "color",
+      "$value": {
+        "light": "#4A6B52",
+        "dark": "#8BA89A"
+      },
+      "$description": "Body text, descriptions"
+    },
+    "text-muted": {
+      "$type": "color",
+      "$value": {
+        "light": "#7A9A82",
+        "dark": "#5A7A6A"
+      },
+      "$description": "Metadata, labels, placeholders"
+    },
+    "text-inverse": {
+      "$type": "color",
+      "$value": {
+        "light": "#FFFFFF",
+        "dark": "#0B1A14"
+      },
+      "$description": "Text on primary/CTA backgrounds"
+    },
+    "status-success": {
+      "$type": "color",
+      "$value": {
+        "light": "#059669",
+        "dark": "#34D399"
+      },
+      "$description": "Delivered, released, completed"
+    },
+    "status-warning": {
+      "$type": "color",
+      "$value": {
+        "light": "#D97706",
+        "dark": "#F59E0B"
+      },
+      "$description": "In transit, pending action"
+    },
+    "status-danger": {
+      "$type": "color",
+      "$value": {
+        "light": "#DC2626",
+        "dark": "#EF4444"
+      },
+      "$description": "Disputed, errors, rejected"
+    },
+    "status-info": {
+      "$type": "color",
+      "$value": {
+        "light": "#2563EB",
+        "dark": "#3B82F6"
+      },
+      "$description": "Informational, tips"
+    },
+    "status-locked": {
+      "$type": "color",
+      "$value": {
+        "light": "#9A7B2F",
+        "dark": "#D4A853"
+      },
+      "$description": "Funds locked in escrow"
+    },
+    "status-draft": {
+      "$type": "color",
+      "$value": {
+        "light": "#6B7280",
+        "dark": "#6B7280"
+      },
+      "$description": "Draft, inactive"
+    },
+    "border-subtle": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(26, 46, 31, 0.08)",
+        "dark": "rgba(139, 168, 154, 0.12)"
+      },
+      "$description": "Hairline separators"
+    },
+    "border-default": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(26, 46, 31, 0.15)",
+        "dark": "rgba(139, 168, 154, 0.2)"
+      },
+      "$description": "Default card/input borders"
+    },
+    "border-raised": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(26, 46, 31, 0.22)",
+        "dark": "rgba(139, 168, 154, 0.32)"
+      },
+      "$description": "Raised surfaces and controls"
+    },
+    "border-hover": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(26, 46, 31, 0.3)",
+        "dark": "rgba(139, 168, 154, 0.4)"
+      },
+      "$description": "Hover state borders"
+    },
+    "border-focus": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(154, 123, 47, 0.5)",
+        "dark": "rgba(212, 168, 83, 0.6)"
+      },
+      "$description": "Focused input borders"
+    },
+    "shadow-elev-1": {
+      "$type": "shadow",
+      "$value": {
+        "light": "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)",
+        "dark": "0 1px 4px rgba(0,0,0,0.25), 0 4px 24px rgba(0,0,0,0.3)"
+      },
+      "$description": "Elevation 1 — resting cards"
+    },
+    "shadow-elev-2": {
+      "$type": "shadow",
+      "$value": {
+        "light": "0 4px 12px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)",
+        "dark": "0 4px 12px rgba(0,0,0,0.35), 0 8px 32px rgba(0,0,0,0.4)"
+      },
+      "$description": "Elevation 2 — hovered cards"
+    },
+    "shadow-elev-3": {
+      "$type": "shadow",
+      "$value": {
+        "light": "0 16px 48px rgba(0,0,0,0.1)",
+        "dark": "0 16px 48px rgba(0,0,0,0.5)"
+      },
+      "$description": "Elevation 3 — modals and popovers"
+    },
+    "bg-input": {
+      "$type": "color",
+      "$value": {
+        "light": "#EBF0ED",
+        "dark": "#0F2219"
+      },
+      "$description": "Input field backgrounds"
+    },
+    "skeleton-base": {
+      "$type": "color",
+      "$value": {
+        "light": "#E8EDE9",
+        "dark": "#1A3D2C"
+      },
+      "$description": "Skeleton placeholder fill"
+    },
+    "skeleton-sheen": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(26, 46, 31, 0.06)",
+        "dark": "rgba(240, 245, 241, 0.08)"
+      },
+      "$description": "Skeleton shimmer sheen"
+    },
+    "scrollbar-track": {
+      "$type": "color",
+      "$value": {
+        "light": "#F0F5F1",
+        "dark": "#0B1A14"
+      },
+      "$description": "Scrollbar track"
+    },
+    "scrollbar-thumb": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(26, 46, 31, 0.15)",
+        "dark": "rgba(139, 168, 154, 0.2)"
+      },
+      "$description": "Scrollbar thumb"
+    },
+    "scrollbar-thumb-hover": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(26, 46, 31, 0.25)",
+        "dark": "rgba(139, 168, 154, 0.4)"
+      },
+      "$description": "Scrollbar thumb, hovered"
+    },
+    "bg-primary": {
+      "$type": "color",
+      "$value": {
+        "light": "{surface-0}",
+        "dark": "{surface-0}"
+      },
+      "$description": "Alias of surface-0 (legacy name kept for existing utilities)"
+    },
+    "bg-card": {
+      "$type": "color",
+      "$value": {
+        "light": "{surface-1}",
+        "dark": "{surface-1}"
+      },
+      "$description": "Alias of surface-1 (legacy name kept for existing utilities)"
+    },
+    "bg-elevated": {
+      "$type": "color",
+      "$value": {
+        "light": "{surface-2}",
+        "dark": "{surface-2}"
+      },
+      "$description": "Alias of surface-2 (legacy name kept for existing utilities)"
+    },
+    "bg-overlay": {
+      "$type": "color",
+      "$value": {
+        "light": "{surface-3}",
+        "dark": "{surface-3}"
+      },
+      "$description": "Alias of surface-3 (legacy name kept for existing utilities)"
     }
   },
   "amana-spacing": {
