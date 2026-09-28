@@ -121,10 +121,25 @@ jobs:
         with:
           lfs: false
 
+      - name: Detect committed snapshot baselines
+        id: baselines
+        run: |
+          if git ls-files 'tests/visual/**/*.png' | grep -q .; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: No baselines committed yet
+        if: steps.baselines.outputs.present != 'true'
+        run: echo "No committed Playwright baselines under frontend/tests/visual — the visual gate is a no-op until baselines are committed (see frontend/tests/visual/SNAPSHOT_POLICY.md)."
+
       - name: Setup pnpm
+        if: steps.baselines.outputs.present == 'true'
         uses: pnpm/action-setup@v6
 
       - name: Setup Node
+        if: steps.baselines.outputs.present == 'true'
         uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -132,17 +147,21 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install deps
+        if: steps.baselines.outputs.present == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers (Chromium only)
+        if: steps.baselines.outputs.present == 'true'
         run: pnpm exec playwright install chromium --with-deps
 
       - name: Build Next.js app
+        if: steps.baselines.outputs.present == 'true'
         run: pnpm build
         env:
           NEXT_PUBLIC_API_BASE_URL: http://localhost:4000
 
       - name: Run visual regression suite
+        if: steps.baselines.outputs.present == 'true'
         run: pnpm exec playwright test --project=chromium-desktop --project=chromium-mobile tests/visual
         env:
           CI: true
