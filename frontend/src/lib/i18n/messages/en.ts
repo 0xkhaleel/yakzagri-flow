@@ -56,6 +56,10 @@ const messages = {
     stellarPathPayment: "Stellar path payment",
   },
   ui: {
+    "choose_where_to_go_next_9a7f95b": "Choose where to go next",
+    "page_not_found_bc3023b": "Page not found",
+    "we_couldn_t_find_the_page_you_we_db1a831": "We couldn't find the page you were looking for. It may have been moved, renamed, or the link may be out of date.",
+    "you_can_also_go_back_to_the_page_13f1adb": "You can also go back to the page you came from.",
     "access_denied_1647b9d": "Access Denied",
     "admin_action_history_ca3d545": "Admin Action History",
     "couldn_t_load_admin_action_histo_2023376": "Couldn't load admin action history",
