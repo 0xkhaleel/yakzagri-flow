@@ -5,7 +5,7 @@ import { t as translateCopy } from "@/lib/i18n";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { formatNumber } from "@/lib/i18n/format";
+import { formatDateTime, formatNumber } from "@/lib/i18n/format";
 import {
   api,
   apiConfig,
@@ -22,6 +22,7 @@ import {
   NetworkBackboneCard,
   VaultFooter,
 } from "@/components/vault";
+import { getStatusBadgeClasses, getStatusDotClasses } from "@/components/ui/StatusBadge";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,37 +34,15 @@ type ActionModal =
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const STATUS_STYLES: Record<string, { pill: string; dot: string }> = {
-  active: {
-    pill: "text-status-success bg-emerald-muted",
-    dot: "bg-status-success",
-  },
-  pending: {
-    pill: "text-status-warning bg-status-warning/15",
-    dot: "bg-status-warning",
-  },
-  completed: {
-    pill: "text-text-secondary bg-bg-elevated",
-    dot: "bg-text-muted",
-  },
-  disputed: {
-    pill: "text-status-danger bg-status-danger/15",
-    dot: "bg-status-danger",
-  },
-  locked: { pill: "text-status-locked bg-gold-muted", dot: "bg-gold" },
-};
-
 function statusStyle(status: string) {
-  return (
-    STATUS_STYLES[status.toLowerCase()] ?? {
-      pill: "text-text-muted bg-bg-elevated",
-      dot: "bg-text-muted",
-    }
-  );
+  return {
+    pill: getStatusBadgeClasses(status),
+    dot: getStatusDotClasses(status),
+  };
 }
 
 function fmt(date: string) {
-  return formatLocalizedDate(date);
+  return formatDateTime(date);
 }
 
 function shortAddr(addr: string) {
@@ -134,6 +113,24 @@ function ActionBtn({
 
 // ─── Confirm modal ────────────────────────────────────────────────────────────
 
+const CONFIRM_TITLES: Record<NonNullable<ActionModal>["type"], string> = {
+  deposit: "Confirm Deposit",
+  release: "Release Funds",
+  dispute: "Initiate Dispute",
+};
+
+function confirmDescription(modal: NonNullable<ActionModal>): string {
+  const shortId = modal.trade.tradeId.slice(0, 8);
+  switch (modal.type) {
+    case "deposit":
+      return `Deposit ${modal.trade.amountCngn} cNGN into escrow for trade ${shortId}…`;
+    case "release":
+      return `Release ${modal.trade.amountCngn} cNGN to the seller for trade ${shortId}…`;
+    case "dispute":
+      return `Open a dispute for trade ${shortId}…`;
+  }
+}
+
 function ConfirmModal({
   modal,
   onClose,
@@ -153,104 +150,98 @@ function ConfirmModal({
   disputeCategory: string;
   setDisputeCategory: (v: string) => void;
 }) {
-  if (!modal) return null;
-
-  const titles: Record<NonNullable<ActionModal>["type"], string> = {
-    deposit: "Confirm Deposit",
-    release: "Release Funds",
-    dispute: "Initiate Dispute",
-  };
-
-  const descriptions: Record<NonNullable<ActionModal>["type"], string> = {
-    deposit: `Deposit ${modal.trade.amountCngn} cNGN into escrow for trade ${modal.trade.tradeId.slice(0, 8)}…`,
-    release: `Release ${modal.trade.amountCngn} cNGN to the seller for trade ${modal.trade.tradeId.slice(0, 8)}…`,
-    dispute: `Open a dispute for trade ${modal.trade.tradeId.slice(0, 8)}…`,
-  };
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-bg-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
+    <Modal
+      open={modal !== null}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
     >
-      <div className="w-full max-w-md rounded-2xl border border-border-default bg-card p-6 shadow-card mx-4">
-        <h2
-          id="modal-title"
-          className="text-lg font-semibold text-text-primary mb-2"
-        >
-          {titles[modal.type]}
-        </h2>
-        <p className="text-sm text-text-secondary mb-5">
-          {descriptions[modal.type]}
-        </p>
+      <ModalContent
+        role="alertdialog"
+        aria-live="assertive"
+        mobileFullScreen={false}
+        className="max-w-md"
+        initialFocusRef={cancelRef}
+      >
+        {modal !== null && (
+          <>
+            <ModalHeader>
+              <ModalTitle>{CONFIRM_TITLES[modal.type]}</ModalTitle>
+              <ModalDescription>{confirmDescription(modal)}</ModalDescription>
+            </ModalHeader>
 
-        {modal.type === "dispute" && (
-          <div className="space-y-3 mb-5">
-            <div>
-              <label
-                className="block text-xs text-text-secondary mb-1"
-                htmlFor="dispute-category"
+            {modal.type === "dispute" && (
+              <ModalBody className="space-y-3">
+                <div>
+                  <label
+                    className="block text-xs text-text-secondary mb-1"
+                    htmlFor="dispute-category"
+                  >
+                    {translateCopy("ui.category_a3c686e")}
+                  </label>
+                  <select
+                    id="dispute-category"
+                    value={disputeCategory}
+                    onChange={(e) => setDisputeCategory(e.target.value)}
+                    className="w-full rounded-lg border border-border-default bg-bg-input text-text-primary text-sm px-3 py-2 focus:outline-none focus:border-border-focus"
+                  >
+                    <option value="non_delivery">{translateCopy("ui.non_delivery_907cdab")}</option>
+                    <option value="quality_issue">{translateCopy("ui.quality_issue_fb6b865")}</option>
+                    <option value="payment_dispute">{translateCopy("ui.payment_dispute_e33ec03")}</option>
+                    <option value="other">{translateCopy("ui.other_6e6a6f2")}</option>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    className="block text-xs text-text-secondary mb-1"
+                    htmlFor="dispute-reason"
+                  >
+                    {translateCopy("ui.reason_f219cc0")}
+                  </label>
+                  <textarea
+                    id="dispute-reason"
+                    rows={3}
+                    value={disputeReason}
+                    onChange={(e) => setDisputeReason(e.target.value)}
+                    placeholder={translateCopy("ui.describe_the_issue_35fbb91")}
+                    className="w-full rounded-lg border border-border-default bg-bg-input text-text-primary text-sm px-3 py-2 focus:outline-none focus:border-border-focus resize-none"
+                  />
+                </div>
+              </ModalBody>
+            )}
+
+            <ModalFooter>
+              <button
+                ref={cancelRef}
+                type="button"
+                onClick={onClose}
+                disabled={busy}
+                className="px-4 py-2 rounded-lg border border-border-default text-text-secondary text-sm hover:border-border-hover transition-colors disabled:opacity-40"
               >
-                {translateCopy("ui.category_a3c686e")}
-              </label>
-              <select
-                id="dispute-category"
-                value={disputeCategory}
-                onChange={(e) => setDisputeCategory(e.target.value)}
-                className="w-full rounded-lg border border-border-default bg-bg-input text-text-primary text-sm px-3 py-2 focus:outline-none focus:border-border-focus"
+                {translateCopy("common.cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={onConfirm}
+                disabled={
+                  busy || (modal.type === "dispute" && !disputeReason.trim())
+                }
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  modal.type === "dispute"
+                    ? "bg-status-danger text-white hover:bg-status-danger/80"
+                    : "bg-gold text-text-inverse hover:bg-gold-hover"
+                }`}
               >
-                <option value="non_delivery">{translateCopy("ui.non_delivery_907cdab")}</option>
-                <option value="quality_issue">{translateCopy("ui.quality_issue_fb6b865")}</option>
-                <option value="payment_dispute">{translateCopy("ui.payment_dispute_e33ec03")}</option>
-                <option value="other">{translateCopy("ui.other_6e6a6f2")}</option>
-              </select>
-            </div>
-            <div>
-              <label
-                className="block text-xs text-text-secondary mb-1"
-                htmlFor="dispute-reason"
-              >
-                {translateCopy("ui.reason_f219cc0")}
-              </label>
-              <textarea
-                id="dispute-reason"
-                rows={3}
-                value={disputeReason}
-                onChange={(e) => setDisputeReason(e.target.value)}
-                placeholder={translateCopy("ui.describe_the_issue_35fbb91")}
-                className="w-full rounded-lg border border-border-default bg-bg-input text-text-primary text-sm px-3 py-2 focus:outline-none focus:border-border-focus resize-none"
-              />
-            </div>
-          </div>
+                {busy ? "Processing…" : "Confirm"}
+              </button>
+            </ModalFooter>
+          </>
         )}
-
-        <div className="flex gap-3 justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={busy}
-            className="px-4 py-2 rounded-lg border border-border-default text-text-secondary text-sm hover:border-border-hover transition-colors disabled:opacity-40"
-          >
-            {translateCopy("common.cancel")}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={
-              busy || (modal.type === "dispute" && !disputeReason.trim())
-            }
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-              modal.type === "dispute"
-                ? "bg-status-danger text-white hover:bg-status-danger/80"
-                : "bg-gold text-text-inverse hover:bg-gold-hover"
-            }`}
-          >
-            {busy ? "Processing…" : "Confirm"}
-          </button>
-        </div>
-      </div>
-    </div>
+      </ModalContent>
+    </Modal>
   );
 }
 

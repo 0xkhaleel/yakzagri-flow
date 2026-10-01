@@ -1,6 +1,5 @@
 
 import { t as translateCopy } from "@/lib/i18n";
-import { formatDateTime } from "@/lib/i18n";
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -15,7 +14,7 @@ import {
   type ClawbackPreviewResponse,
   ApiError,
 } from "@/lib/api";
-import { Breadcrumb, LoadingState, ErrorState, CurrencyInput } from "@/components/ui";
+import { Breadcrumbs, LoadingState, ErrorState, CurrencyInput } from "@/components/ui";
 import { formatDateTime } from "@/lib/i18n/format";
 import {
   getAssetInfo,
@@ -218,7 +217,7 @@ export default function AdminStreamManagementPage() {
     <section className="min-h-full bg-bg-primary px-6 py-8 lg:px-10">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} />
+        <Breadcrumbs items={breadcrumbItems} />
 
         {/* Page header */}
         <div className="flex items-center justify-between">

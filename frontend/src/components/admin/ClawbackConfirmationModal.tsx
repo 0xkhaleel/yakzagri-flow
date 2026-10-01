@@ -70,7 +70,7 @@ export function ClawbackConfirmationModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="secondary" onClick={onCancel} disabled={confirming}>
+          <Button variant="secondary" onClick={onCancel} disabled={previewing}>
             {translateCopy("common.cancel")}
           </Button>
           <Button variant="primary" onClick={onPreview} disabled={previewing}>

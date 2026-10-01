@@ -96,7 +96,7 @@ export default function AdminAuditHistoryPage() {
     return (
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="admin-audit-page">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-text-primary">{translateCopy("ui.admin_action_history_ca3d545")}</h1>
+          <h2 className="text-3xl font-bold text-text-primary">{translateCopy("ui.admin_action_history_ca3d545")}</h2>
         </div>
         <SkeletonList rows={PAGE_SIZE} />
       </div>

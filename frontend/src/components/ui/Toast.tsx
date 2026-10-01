@@ -70,6 +70,10 @@ export function Toast({
     info: "text-status-info",
   };
 
+  // Transient toasts are not part of the document outline, so the title is a
+  // plain paragraph that labels the live region instead of a heading element.
+  const titleId = `toast-title-${id}`;
+
   return (
     <div
       className={clsx(
@@ -78,10 +82,15 @@ export function Toast({
         typeClasses[type]
       )}
       role="group"
+      aria-labelledby={title ? titleId : undefined}
     >
       <Icon className={clsx("h-6 w-6 shrink-0", iconColors[type])} />
       <div className="flex-1 pt-0.5">
-        {title && <h3 className="text-sm font-semibold mb-1">{title}</h3>}
+        {title && (
+          <p id={titleId} className="text-sm font-semibold mb-1">
+            {title}
+          </p>
+        )}
         <p className="text-sm text-text-secondary">{message}</p>
       </div>
       <button

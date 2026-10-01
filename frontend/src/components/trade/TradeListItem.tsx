@@ -4,6 +4,7 @@ import { t as translateCopy } from "@/lib/i18n";
 
 import React from "react";
 import { Eye, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { TradeStatus } from "@/types/trade";
 
 export interface TradeListItemProps {
@@ -17,16 +18,6 @@ export interface TradeListItemProps {
   onDeposit?: () => void;
   onWithdraw?: () => void;
 }
-
-const STATUS_STYLES: Record<TradeStatus, string> = {
-  "IN TRANSIT": "bg-emerald-muted text-emerald border border-emerald/30",
-  PENDING:
-    "bg-status-warning/10 text-status-warning border border-status-warning/30",
-  SETTLED: "bg-status-info/10 text-status-info border border-status-info/30",
-  DISPUTED:
-    "bg-status-danger/10 text-status-danger border border-status-danger/30",
-  DRAFT: "bg-status-draft/10 text-status-draft border border-status-draft/30",
-};
 
 function truncateAddress(address: string): string {
   if (address.length <= 12) return address;
@@ -44,27 +35,20 @@ export function TradeListItem({
   onDeposit,
   onWithdraw,
 }: TradeListItemProps) {
-  const statusStyle = STATUS_STYLES[status] ?? STATUS_STYLES["DRAFT"];
-
   return (
     <div
-      onClick={onView}
-      role="button"
-      tabIndex={0}
-      aria-label={`View trade ${tradeId} — ${commodity} ${amountCngn} cNGN, status ${status}`}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onView();
-        }
-      }}
-      className="flex items-center justify-between p-4 bg-card border border-border-default rounded-lg mb-3 hover:border-gold/30 hover:bg-elevated transition-colors cursor-pointer group focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
+      className="flex items-center justify-between p-4 bg-card border border-border-default rounded-lg mb-3 hover:border-gold/30 hover:bg-elevated transition-colors group"
     >
       {/* Left — commodity + meta */}
       <div className="flex flex-col gap-1 min-w-0">
-        <span className="text-lg font-medium text-text-primary truncate">
+        <button
+          type="button"
+          onClick={onView}
+          aria-label={`View trade ${tradeId} — ${commodity} ${amountCngn} cNGN, status ${status}`}
+          className="text-left text-lg font-medium text-text-primary truncate focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
+        >
           {commodity}
-        </span>
+        </button>
 
         <div className="flex items-center gap-2 flex-wrap">
           <span className="bg-white/5 text-teal text-xs px-2 py-1 rounded">
@@ -79,10 +63,7 @@ export function TradeListItem({
       </div>
 
       {/* Right — amount + status + actions */}
-      <div
-        className="flex items-center gap-3"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex items-center gap-3">
         <div className="hidden sm:flex flex-col items-end gap-1">
           <span className="text-text-primary font-semibold text-sm">
             {amountCngn}{" "}
@@ -91,19 +72,13 @@ export function TradeListItem({
           <span className="text-text-muted text-xs">{createdAt}</span>
         </div>
 
-        <span
-          className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide ${statusStyle}`}
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-current" />
-          {status}
+        <span className="hidden sm:inline-flex">
+          <StatusBadge status={status} size="sm" />
         </span>
 
         <div className="flex items-center gap-3">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onView();
-            }}
+            onClick={onView}
             aria-label={`View trade ${tradeId}`}
             title={translateCopy("ui.view_trade_2c6ad20")}
             className="p-2 rounded-lg border border-border-default text-text-muted hover:border-border-hover hover:text-text-primary transition-colors focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
@@ -113,10 +88,7 @@ export function TradeListItem({
 
           {onDeposit && (
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeposit();
-              }}
+              onClick={onDeposit}
               aria-label={`Deposit for trade ${tradeId}`}
               title={translateCopy("ui.deposit_e7b0b31")}
               className="p-2 rounded-lg border border-border-default text-text-muted hover:border-emerald/40 hover:text-emerald transition-colors focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"
@@ -127,10 +99,7 @@ export function TradeListItem({
 
           {onWithdraw && (
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onWithdraw();
-              }}
+              onClick={onWithdraw}
               aria-label={`Withdraw for trade ${tradeId}`}
               title={translateCopy("ui.withdraw_47e5641")}
               className="p-2 rounded-lg border border-border-default text-text-muted hover:border-status-danger/40 hover:text-status-danger transition-colors focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2"

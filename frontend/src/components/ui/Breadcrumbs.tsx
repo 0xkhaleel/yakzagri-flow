@@ -21,18 +21,27 @@ import { t as translateCopy } from "@/lib/i18n";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { clsx } from "clsx";
+import type { ReactNode } from "react";
 import type { BreadcrumbItem } from "@/lib/breadcrumbs";
 
 export interface BreadcrumbsProps {
   items: BreadcrumbItem[];
   className?: string;
+  adminAction?: {
+    label: string;
+    href: string;
+    icon?: ReactNode;
+  };
 }
 
-export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
+export function Breadcrumbs({ items, className, adminAction }: BreadcrumbsProps) {
   if (items.length === 0) return null;
 
   return (
-    <nav aria-label={translateCopy("ui.breadcrumb_c766e66")} className={clsx("flex items-center", className)}>
+    <nav
+      aria-label={translateCopy("ui.breadcrumb_c766e66")}
+      className={clsx("flex items-center", adminAction && "justify-between", className)}
+    >
       <ol className="flex items-center flex-wrap gap-y-1 text-sm">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
@@ -71,6 +80,16 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
           );
         })}
       </ol>
+
+      {adminAction && (
+        <Link
+          href={adminAction.href}
+          className="flex items-center gap-2 rounded-lg border border-border-default bg-bg-elevated px-3 py-1.5 text-sm font-medium text-text-secondary hover:border-border-hover hover:bg-card hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-1"
+        >
+          {adminAction.icon}
+          {adminAction.label}
+        </Link>
+      )}
     </nav>
   );
 }

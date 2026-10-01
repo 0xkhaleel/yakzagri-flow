@@ -1,4 +1,6 @@
 allowBuilds:
-  '@pact-foundation/pact-core': set this to true or false
-  sharp: set this to true or false
-  unrs-resolver: set this to true or false
+  '@pact-foundation/pact-core': true
+  '@parcel/watcher': true
+  '@scarf/scarf': set this to true or false
+  sharp: true
+  unrs-resolver: true

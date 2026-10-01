@@ -5,6 +5,7 @@ import { t as translateCopy } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { formatDate } from "@/lib/i18n";
 import { api, ApiError, TradeResponse, TradeStatsResponse } from "@/lib/api";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { Activity, CreditCard, CheckCircle2, AlertCircle } from "lucide-react";
@@ -79,7 +80,7 @@ export default function DashboardPage() {
         <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-gold" />
         </div>
-        <h1 className="text-2xl font-bold text-text-primary">{translateCopy("ui.connect_wallet_234d7c8")}</h1>
+        <h2 className="text-2xl font-bold text-text-primary">{translateCopy("ui.connect_wallet_234d7c8")}</h2>
         <p className="text-text-secondary max-w-md">
           {translateCopy("ui.please_connect_your_wallet_to_ac_5e32708")}
         </p>
