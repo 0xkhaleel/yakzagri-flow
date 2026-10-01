@@ -14,6 +14,7 @@ import {
 import { api, ApiError } from "@/lib/api";
 import { trackAuthEvent } from "@/lib/analytics";
 import { useFreighterIdentity } from "@/hooks/useFreighterIdentity";
+import { decodeTokenPayload, getTokenExpiryMs, isTokenExpired, isTokenValid } from "@/lib/tokenValidity";
 
 const TOKEN_STORAGE_KEY = "amana_jwt";
 const TOKEN_ADDRESS_STORAGE_KEY = "amana_jwt_address";
@@ -62,60 +63,9 @@ function clearStoredToken(): void {
 }
 
 function getTokenAddress(token: string): string | null {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.walletAddress ?? payload.sub ?? null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Decode a JWT payload without ever throwing. Returns null for malformed
- * tokens (bad structure, invalid base64, non-JSON payload) so callers can
- * treat them as unauthenticated instead of crashing.
- */
-function decodeTokenPayload(token: string): Record<string, unknown> | null {
-  if (typeof token !== "string") return null;
-  const parts = token.split(".");
-  if (parts.length !== 3 || !parts[1]) return null;
-  try {
-    const normalized = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const padded = normalized.padEnd(
-      normalized.length + ((4 - (normalized.length % 4)) % 4),
-      "="
-    );
-    const decoded = atob(padded);
-    const payload = JSON.parse(decoded);
-    if (!payload || typeof payload !== "object") return null;
-    return payload as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Returns the token's expiry in epoch milliseconds, or null when the token is
- * malformed or carries no numeric `exp` claim. Aligns with the backend's
- * standard JWT `exp` (seconds since epoch).
- */
-function getTokenExpiryMs(token: string): number | null {
   const payload = decodeTokenPayload(token);
-  if (!payload) return null;
-  const exp = payload.exp;
-  if (typeof exp !== "number" || !Number.isFinite(exp)) return null;
-  return exp * 1000;
-}
-
-/**
- * A token is only usable when it is well-formed and not past its expiry.
- * Malformed or expired tokens are treated as unauthenticated (no bypass).
- */
-function isTokenValid(token: string | null): token is string {
-  if (!token) return false;
-  const expiryMs = getTokenExpiryMs(token);
-  if (expiryMs === null) return false;
-  return Date.now() < expiryMs;
+  const address = payload?.walletAddress ?? payload?.sub;
+  return typeof address === "string" ? address : null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

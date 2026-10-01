@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { t as translateCopy } from "@/lib/i18n";
 
 export interface RepScoreRingProps {
   score: number;
@@ -35,7 +36,11 @@ export function RepScoreRing({
     : clampedScore.toFixed(1);
 
   return (
-    <div className="inline-flex flex-col items-center gap-1" role="img" aria-label={`Trust score: ${scoreDisplay} out of ${maxScore}`}>
+    <div
+      className="inline-flex flex-col items-center gap-1"
+      role="img"
+      aria-label={translateCopy("ui.trustScoreOutOfMax", { score: scoreDisplay, maxScore })}
+    >
       <svg
         width={svgSize}
         height={svgSize}
@@ -44,8 +49,8 @@ export function RepScoreRing({
       >
         <defs>
           <linearGradient id="gold-emerald-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#D4A853" />
-            <stop offset="100%" stopColor="#34D399" />
+            <stop offset="0%" stopColor="var(--gold)" />
+            <stop offset="100%" stopColor="var(--emerald)" />
           </linearGradient>
         </defs>
 
@@ -55,7 +60,7 @@ export function RepScoreRing({
           cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(139,168,154,0.2)"
+          stroke="var(--border-default)"
           strokeWidth={strokeWidth}
         />
 
@@ -81,16 +86,19 @@ export function RepScoreRing({
           y={center}
           textAnchor="middle"
           dominantBaseline="central"
-          fill="#F0F5F1"
-          fontSize={SIZE_CONFIG[size].svgSize * 0.18}
-          fontWeight="600"
+          fill="var(--text-primary)"
+          fontSize={SIZE_CONFIG[size].svgSize * 0.24}
+          fontWeight="700"
           fontFamily="var(--font-geist-sans), Geist, ui-sans-serif, system-ui, sans-serif"
         >
           {scoreDisplay}
         </text>
       </svg>
 
-      <span className={`${labelSize} text-text-muted font-medium`}>
+      <span className={`${labelSize} text-text-secondary font-medium`}>
+        {translateCopy("ui.trust_score_2c7902e")}
+      </span>
+      <span className={`${labelSize} text-text-secondary`}>
         / {maxScore}
       </span>
     </div>

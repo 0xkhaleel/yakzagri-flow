@@ -202,7 +202,7 @@ export function TradeTimeline({ events }: TradeTimelineProps) {
         <div className="absolute left-5 top-5 bottom-5 w-px bg-border-default" />
 
         <div className="flex flex-col gap-0">
-          {events.map((event, index) => (
+          {mergedEvents.map((event, index) => (
             <div key={event.id} className="relative flex gap-4">
               {/* Icon node */}
               <div
@@ -275,44 +275,10 @@ export function TradeTimeline({ events }: TradeTimelineProps) {
                       </p>
                     </div>
                   </div>
-
-                  {meta.description && (
-                    <p className="text-xs text-text-secondary leading-relaxed">
-                      {meta.description}
-                    </p>
-                  )}
-
-                  {/* Live tracking card */}
-                  {event.tracking && (
-                    <div className="mt-3 flex items-center gap-3 bg-elevated rounded-lg p-3 border border-border-default">
-                      <div className="w-12 h-12 rounded-md bg-teal/10 border border-teal/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {event.tracking.imageUrl ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
-                            src={event.tracking.imageUrl}
-                            alt="vessel"
-                            className="w-full h-full object-cover rounded-md"
-                          />
-                        ) : (
-                          <svg className="w-6 h-6 text-teal" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                            <path d="M2 20h20M4 20V10l8-7 8 7v10" />
-                          </svg>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-text-muted mb-0.5">
-                          LIVE TRACKING
-                        </p>
-                        <p className="text-sm font-semibold text-text-primary">
-                          Tracking #: {event.tracking.trackingNumber}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-            );
-          })}
+              </div>
+            ))}
         </div>
       </div>
     </div>
