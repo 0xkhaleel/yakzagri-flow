@@ -3,16 +3,19 @@
 /**
  * ConfirmActionModal — accessible destructive-action confirmation dialog.
  *
- * Keyboard flow (#61):
+ * Keyboard flow (#54, #61):
  *  - Focus is auto-moved to the Cancel button when the dialog opens so the
  *    safe default is reachable without any keyboard input.
  *  - Tab cycles only within the modal (Radix Dialog provides the focus trap).
  *  - Shift+Tab traverses in reverse order.
  *  - Escape dismisses without confirming (Radix Dialog default).
+ *  - Clicking the backdrop dismisses without confirming (Radix Dialog default).
+ *  - Focus returns to the element that opened the dialog (Radix Dialog default).
  *
  * ARIA:
  *  - role="alertdialog" signals that the dialog contains a warning.
- *  - aria-labelledby and aria-describedby wire the title and message.
+ *  - aria-labelledby and aria-describedby are wired by Radix Dialog to the
+ *    ModalTitle and ModalDescription below.
  *  - The action button carries an aria-label describing the consequence.
  */
 
@@ -69,24 +72,12 @@ export function ConfirmActionModal({
 }: ConfirmActionModalProps) {
   const cancelRef = React.useRef<HTMLButtonElement>(null);
 
-  // Move focus to Cancel (safe default) as soon as the dialog opens.
-  // Radix Dialog owns the focus trap; we only direct initial focus.
-  React.useEffect(() => {
-    if (open) {
-      // Defer one tick so Radix has time to mount the content.
-      const raf = requestAnimationFrame(() => {
-        cancelRef.current?.focus();
-      });
-      return () => cancelAnimationFrame(raf);
-    }
-  }, [open]);
-
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
       <ModalContent
-        // Prevent Radix from auto-focusing the first element; we handle it
-        // ourselves so Cancel (the safe action) gets focus first.
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        // Radix owns focus trapping and focus return; we only direct the
+        // initial focus at Cancel (the safe default) so it is deterministic.
+        initialFocusRef={cancelRef}
         role="alertdialog"
         aria-live="assertive"
       >
@@ -96,7 +87,7 @@ export function ConfirmActionModal({
         </ModalHeader>
 
         <ModalFooter>
-          {/* Cancel — rendered first in DOM; cancelRef ensures it gets focus. */}
+          {/* Cancel — rendered first in DOM; initialFocusRef focuses it. */}
           <Button
             ref={cancelRef}
             variant="secondary"

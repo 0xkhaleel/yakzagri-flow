@@ -1,5 +1,5 @@
 /**
- * Tests for the ConfirmActionModal component (#61).
+ * Tests for the ConfirmActionModal component (#54, #61).
  *
  * Covers:
  * - Renders title and message when open
@@ -7,12 +7,14 @@
  * - Confirm button calls onConfirm
  * - Loading state disables both buttons
  * - Different variants render correct CSS classes
- * - role="alertdialog" is present
+ * - role="alertdialog" is present with an accessible name + description
+ * - Initial focus lands on Cancel and Escape/backdrop dismiss the dialog
+ * - Focus returns to the trigger after the dialog closes
  * - axe accessibility audit passes
  */
 
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { ConfirmActionModal } from "../ConfirmActionModal";
@@ -35,7 +37,27 @@ function renderModal(overrides: Partial<React.ComponentProps<typeof ConfirmActio
   return { ...render(<ConfirmActionModal {...props} />), props };
 }
 
-describe("ConfirmActionModal (#61 — keyboard-accessible confirmations)", () => {
+function ControlledConfirmModal() {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Open confirm
+      </button>
+      <ConfirmActionModal
+        open={open}
+        onOpenChange={setOpen}
+        title="Close Stream"
+        message="This will permanently close the stream. Are you sure?"
+        confirmLabel="Close Stream"
+        onConfirm={() => {}}
+      />
+    </>
+  );
+}
+
+describe("ConfirmActionModal (#54/#61 — keyboard-accessible confirmations)", () => {
   it("renders the dialog when open=true", () => {
     renderModal();
     expect(screen.getByRole("alertdialog")).toBeInTheDocument();
@@ -56,6 +78,15 @@ describe("ConfirmActionModal (#61 — keyboard-accessible confirmations)", () =>
     ).toBeInTheDocument();
   });
 
+  it("exposes the title and message as accessible name and description", () => {
+    renderModal();
+    const dialog = screen.getByRole("alertdialog", { name: "Close Stream" });
+    expect(dialog).toHaveAccessibleDescription(
+      "This will permanently close the stream. Are you sure?",
+    );
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+  });
+
   it("calls onOpenChange(false) when Cancel is clicked", async () => {
     const user = userEvent.setup();
     const { props } = renderModal();
@@ -72,6 +103,38 @@ describe("ConfirmActionModal (#61 — keyboard-accessible confirmations)", () =>
     await user.click(screen.getByTestId("confirm-action-button"));
 
     expect(props.onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls onOpenChange(false) when Escape is pressed", () => {
+    const { props } = renderModal();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(props.onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("moves initial focus to the Cancel button", async () => {
+    renderModal();
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /cancel/i })).toHaveFocus(),
+    );
+  });
+
+  it("returns focus to the trigger after the dialog closes", async () => {
+    const user = userEvent.setup();
+    render(<ControlledConfirmModal />);
+
+    const trigger = screen.getByRole("button", { name: "Open confirm" });
+    await user.click(trigger);
+    await waitFor(() => screen.getByRole("alertdialog"));
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    await waitFor(() =>
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument(),
+    );
+    expect(trigger).toHaveFocus();
   });
 
   it("disables both buttons when loading=true", () => {
@@ -99,20 +162,20 @@ describe("ConfirmActionModal (#61 — keyboard-accessible confirmations)", () =>
   });
 
   it("has no axe violations for danger variant", async () => {
-    const { container } = renderModal({ variant: "danger" });
-    await waitFor(() => screen.getByRole("alertdialog"));
-    expect(await axe(container)).toHaveNoViolations();
+    renderModal({ variant: "danger" });
+    const dialog = await screen.findByRole("alertdialog");
+    expect(await axe(dialog)).toHaveNoViolations();
   });
 
   it("has no axe violations for warning variant", async () => {
-    const { container } = renderModal({ variant: "warning", title: "Pause Stream", confirmLabel: "Pause Stream" });
-    await waitFor(() => screen.getByRole("alertdialog"));
-    expect(await axe(container)).toHaveNoViolations();
+    renderModal({ variant: "warning", title: "Pause Stream", confirmLabel: "Pause Stream" });
+    const dialog = await screen.findByRole("alertdialog");
+    expect(await axe(dialog)).toHaveNoViolations();
   });
 
   it("has no axe violations for info variant", async () => {
-    const { container } = renderModal({ variant: "info", title: "Resume Stream", confirmLabel: "Resume Stream" });
-    await waitFor(() => screen.getByRole("alertdialog"));
-    expect(await axe(container)).toHaveNoViolations();
+    renderModal({ variant: "info", title: "Resume Stream", confirmLabel: "Resume Stream" });
+    const dialog = await screen.findByRole("alertdialog");
+    expect(await axe(dialog)).toHaveNoViolations();
   });
 });

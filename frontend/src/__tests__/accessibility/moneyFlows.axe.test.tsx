@@ -1,5 +1,5 @@
 import React from "react";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { VideoUploadCard } from "@/components/ui/VideoUploadCard";
@@ -56,21 +56,20 @@ describe("Money-action flows — axe WCAG 2.1 AA", () => {
 
   describe("ConfirmActionModal — money-action confirmation (alertdialog)", () => {
     it("has no axe violations — danger variant", async () => {
-      const { container } = render(
+      render(
         <ConfirmActionModal
-          isOpen={true}
-          onClose={() => {}}
+          open
+          onOpenChange={() => {}}
           onConfirm={() => {}}
           title="Confirm clawback"
-          description="This will claw back 100 cNGN irreversibly."
+          message="This will claw back 100 cNGN irreversibly."
           variant="danger"
           confirmLabel="Confirm Clawback"
         />
       );
-      // Modal uses Radix; in jsdom axe may warn about missing focus but we assert no critical/serious
-      const results = await axe(container);
-      const critical = results.violations.filter((v) => ["critical", "serious"].includes(v.impact!));
-      expect(critical).toEqual([]);
+      // The dialog is portalled to document.body, so audit the dialog itself.
+      const dialog = await screen.findByRole("alertdialog");
+      expect(await axe(dialog)).toHaveNoViolations();
     });
   });
 

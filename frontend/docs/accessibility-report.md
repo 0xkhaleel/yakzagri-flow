@@ -1,6 +1,6 @@
 # Accessibility Audit Report — WCAG 2.1 AA
 
-**Date:** 2026-08-31 (updated)  
+**Date:** 2026-08-31 (updated 2026-09-28 — modal consolidation, issue #54)  
 **Auditor:** Mikey-222 (with axe-core 4.10 + manual)  
 **Scope:** `frontend/src/components/`, `frontend/src/app/**/page.tsx` (all routes)  
 **Standard:** WCAG 2.1 AA  
@@ -81,6 +81,39 @@ Run: `pnpm test -- src/__tests__/accessibility --verbose` (blocking in CI)
 <div role="tablist" className={`flex gap-2 ...`}>
 ```
 
+### Tier 1 — Modal focus management (issue #54)
+
+`frontend/src/components/ui/Modal.tsx` wrapped Radix Dialog *and* ran its own focus
+effect: it captured `document.activeElement`, focused the first focusable element,
+and restored focus on unmount. Radix Dialog already traps focus and returns it to
+the trigger, so the custom effect stacked a second restore on top of Radix's (the
+documented "double focus restore" bug). Four dialogs had diverged:
+
+| Implementation | Focus trap | ESC | Backdrop click | Focus return | ARIA |
+|---|---|---|---|---|---|
+| `components/ui/Modal.tsx` | Radix + custom effect (double restore) | ✅ | ✅ | ⚠️ duplicated | ✅ |
+| `app/vault/manage/page.tsx` inline `ConfirmModal` | ❌ | ❌ | ❌ | ❌ | `role="dialog"` only |
+| `components/ui/ConfirmActionModal.tsx` | Radix + rAF focus | ✅ | ✅ | ✅ | `role="alertdialog"` |
+| `app/mediator/disputes/[id]/MediatorPanelClient.tsx` | document-wide `useFocusTrap` | ⚠️ prevented but never closed | ⚠️ manual | ❌ | `role="dialog"` only |
+
+**Fix.** All four now render through the single `Modal` / `ModalContent` primitive:
+
+- Removed the custom capture/restore effect from `ModalContent`; Radix owns the focus
+  trap and the focus return. Added an `initialFocusRef` prop so callers can still steer
+  the initial target through Radix's `onOpenAutoFocus`.
+- `ConfirmActionModal` now focuses Cancel deterministically with `initialFocusRef`
+  instead of a `requestAnimationFrame`.
+- The vault manage inline `ConfirmModal` was deleted and rebuilt on
+  `Modal` + `ModalHeader`/`ModalTitle`/`ModalDescription`/`ModalBody`/`ModalFooter`
+  (`role="alertdialog"`), preserving its props, dispute category/reason fields and
+  confirm/cancel disabled logic.
+- The mediator panel's document-wide `useFocusTrap` was deleted and the panel now uses
+  the shared primitive.
+
+All four dialogs expose a focus trap, Escape and backdrop dismissal, focus return to
+the trigger, `aria-modal`, and an accessible name + description wired by Radix to
+`ModalTitle` / `ModalDescription`.
+
 ## Components with No Violations
 
 - **Button** — All variants (primary, secondary, disabled) pass. Focus indicators present via `focus-visible:outline`.
@@ -113,7 +146,7 @@ Tested via `jest + @testing-library/user-event` tab simulation and manual Chromi
 | Trade list + deposit | VoiceOver | Card aria-label "View trade t-1 — Maize 10,000 cNGN, status PENDING" announced; buttons announced as "Deposit for trade t-1, button" |
 | Video upload | NVDA | Drop zone "Upload delivery proof video — drag and drop or press Enter to browse, button" announced; progress not interruptive |
 | Admin clawback | NVDA | CurrencyInput label "Clawback amount" + helper "Remaining vested: 1000" announced via describedby; error polite |
-| Vault manage | VoiceOver | Custom dialog `role="dialog" aria-modal="true"` trapped focus correctly (fixed from document-wide query) |
+| Vault manage | VoiceOver | Confirm dialog is `role="alertdialog"` with an accessible name/description, focus trapped by Radix and returned to the trigger (#54) |
 
 No critical/serious axe violations remain; minor contrast warnings require manual verification (gold-on-dark passes AA for large text, fails for small — design token `text-gold` now only for large/bold).
 
@@ -132,7 +165,7 @@ No critical/serious axe violations remain; minor contrast warnings require manua
 - `frontend/src/__tests__/accessibility/components.axe.test.tsx` (original 14)
 - `frontend/src/__tests__/accessibility/moneyFlows.axe.test.tsx` (CurrencyInput, VideoUploadCard, ConfirmActionModal, TradeListItem keyboard)
 - `frontend/src/__tests__/accessibility/routes.axe.test.tsx` (all routes baseline)
-- `frontend/src/components/ui/__tests__/Breadcrumbs.test.tsx`, `ConfirmActionModal.test.tsx` (existing)
+- `frontend/src/components/ui/__tests__/Breadcrumbs.test.tsx`, `ConfirmActionModal.test.tsx`, `Modal.test.tsx` (focus trap, Escape, backdrop click, focus return, accessible name/description, axe)
 
 Run with:
 ```bash
