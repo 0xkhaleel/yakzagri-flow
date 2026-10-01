@@ -1,4 +1,5 @@
 {
+  "$description": "Figma variables export. One mode per theme, mirroring frontend/design-tokens.json and the custom properties in src/app/globals.css. Regenerate with `node scripts/design-tokens.mjs --write`; CI runs `--check` and fails if this file is stale.",
   "amana-colors": {
     "bg": {
       "primary": {
@@ -59,59 +60,21 @@
         "$description": "Secondary accent, links"
       }
     },
-    "text": {
-      "primary": {
-        "$value": "#F0F5F1",
-        "$type": "color",
-        "$description": "Headings, prominent text"
+    "surface-2": {
+      "$type": "color",
+      "$value": {
+        "light": "#F0F5F1",
+        "dark": "#1A3D2C"
       },
-      "secondary": {
-        "$value": "#8BA89A",
-        "$type": "color",
-        "$description": "Body text, labels"
-      },
-      "muted": {
-        "$value": "#5A7A6A",
-        "$type": "color",
-        "$description": "Placeholder, disabled"
-      },
-      "inverse": {
-        "$value": "#0B1A14",
-        "$type": "color",
-        "$description": "Text on gold buttons"
-      }
+      "$description": "Elevated surface — active rows, modals, dropdowns"
     },
-    "status": {
-      "success": {
-        "$value": "#34D399",
-        "$type": "color",
-        "$description": "Delivered, completed"
+    "surface-3": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(0, 0, 0, 0.4)",
+        "dark": "rgba(11, 26, 20, 0.85)"
       },
-      "warning": {
-        "$value": "#F59E0B",
-        "$type": "color",
-        "$description": "In transit, pending"
-      },
-      "danger": {
-        "$value": "#EF4444",
-        "$type": "color",
-        "$description": "Disputed, errors"
-      },
-      "info": {
-        "$value": "#3B82F6",
-        "$type": "color",
-        "$description": "Informational"
-      },
-      "locked": {
-        "$value": "#D4A853",
-        "$type": "color",
-        "$description": "Funds locked in escrow"
-      },
-      "draft": {
-        "$value": "#6B7280",
-        "$type": "color",
-        "$description": "Draft, inactive"
-      }
+      "$description": "Overlay / modal scrim"
     },
     "border": {
       "default": {

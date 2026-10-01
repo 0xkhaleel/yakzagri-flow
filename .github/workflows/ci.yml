@@ -61,6 +61,10 @@ jobs:
             exit 1
           fi
 
+      - name: Design tokens in sync
+        working-directory: frontend
+        run: node scripts/design-tokens.mjs --check
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
