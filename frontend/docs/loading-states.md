@@ -60,17 +60,11 @@ for content areas, no unstyled gaps, no layout shift when real data arrives.
 - **Component-level** (`<Suspense>` / `isLoading` branch): secondary data that
   streams in after the shell — use the matching primitive from the inventory.
 
-## CLS budget / Lighthouse CI
+## CLS budget
 
-`frontend/lighthouserc.json` asserts `cumulative-layout-shift ≤ 0.02` (Web Vitals
-"good" is ≤ 0.1; we hold a tighter internal budget) on the key routes. Wire into
-CI:
-
-```yaml
-- run: pnpm build && npx --yes @lhci/cli@0.13.x autorun
-```
-
-A regression above budget fails the job.
+The internal cumulative-layout-shift budget is 0.02 (Web Vitals "good" is
+≤ 0.1). This budget is not currently enforced in CI because Lighthouse CI is
+not configured for this repository.
 
 ## Slow-network manual pass
 

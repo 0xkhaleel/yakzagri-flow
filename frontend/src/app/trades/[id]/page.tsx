@@ -99,7 +99,7 @@ export default function TradeDetailPage() {
   async function runAction(
     label: string,
     action: string,
-    apiCall: (opts?: { idempotencyKey?: string }) => Promise<{ unsignedXdr: string }>,
+    apiCall: (options: { idempotencyKey: string }) => Promise<{ unsignedXdr: string }>,
   ) {
     if (!token || actionLoading) return;
 
@@ -108,7 +108,7 @@ export default function TradeDetailPage() {
     setActionSuccess(null);
     setActionTxHash(null);
 
-    const scopeKey = `trade:${tradeId}:${action}`;
+    const scopeKey = `${action}:${tradeId}`;
     const idempotencyKey = getOrCreateIdempotencyKey(address, scopeKey);
 
     try {
@@ -171,17 +171,21 @@ export default function TradeDetailPage() {
   }
 
   function handleDeposit() {
-    void runAction("Deposit", "deposit", (opts) => api.trades.deposit(token!, tradeId, opts));
+    void runAction("Deposit", "deposit", (options) =>
+      api.trades.deposit(token!, tradeId, options),
+    );
   }
 
   function handleConfirmDelivery() {
-    void runAction("Confirm Delivery", "confirm-delivery", (opts) =>
-      api.trades.confirmDelivery(token!, tradeId, opts),
+    void runAction("Confirm Delivery", "confirm-delivery", (options) =>
+      api.trades.confirmDelivery(token!, tradeId, options),
     );
   }
 
   function handleReleaseFunds() {
-    void runAction("Release Funds", "release-funds", (opts) => api.trades.releaseFunds(token!, tradeId, opts));
+    void runAction("Release Funds", "release-funds", (options) =>
+      api.trades.releaseFunds(token!, tradeId, options),
+    );
   }
 
   function handleInitiateDispute() {
@@ -191,10 +195,8 @@ export default function TradeDetailPage() {
       return;
     }
     setDisputeError(null);
-    void runAction(
-      "Initiate Dispute",
-      "dispute",
-      (opts) => api.trades.initiateDispute(token!, tradeId, reason, disputeCategory, opts),
+    void runAction("Initiate Dispute", "initiate-dispute", (options) =>
+      api.trades.initiateDispute(token!, tradeId, reason, disputeCategory, options),
     );
   }
 

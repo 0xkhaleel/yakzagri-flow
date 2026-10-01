@@ -46,17 +46,23 @@ function buildCsp(nonce: string): string {
     "default-src": ["'self'"],
     "script-src": ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'", "https:"],
     "style-src": ["'self'", "'unsafe-inline'"],
-    "img-src": ["'self'", "data:", "blob:", "https:"],
-    "media-src": ["'self'", "blob:", ...IPFS_MEDIA_ORIGINS],
-    "font-src": ["'self'", "data:"],
-    "connect-src": ["'self'", ...WALLET_FRAME_ALLOWLIST, "https://api.pinata.cloud"],
-    "frame-src": ["'self'", ...WALLET_FRAME_ALLOWLIST],
-    "object-src": ["'none'"],
-    "base-uri": ["'self'"],
-    "form-action": ["'self'"],
-    "frame-ancestors": ["'none'"],
-    "upgrade-insecure-requests": [],
-    "report-uri": ["/api/csp-report"],
+
+export function buildCsp(nonce: string): string {
+  const directives: Record<string, string> = {
+    "default-src": "'self'",
+    "script-src": `'self' 'nonce-${nonce}' 'strict-dynamic' https:`,
+    "style-src": "'self' 'unsafe-inline'",
+    "img-src": "'self' data: blob: https:",
+    "media-src": "'self' blob:",
+    "font-src": "'self' data:",
+    "connect-src": buildConnectSrc(),
+    "frame-src": buildFrameSrc(),
+    "object-src": "'none'",
+    "base-uri": "'self'",
+    "form-action": "'self'",
+    "frame-ancestors": "'none'",
+    "upgrade-insecure-requests": "",
+    "report-uri": "/api/csp-report",
   };
 
   return Object.entries(directives)
