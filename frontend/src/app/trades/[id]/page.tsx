@@ -108,7 +108,7 @@ export default function TradeDetailPage() {
   async function runAction(
     label: string,
     action: string,
-    apiCall: () => Promise<{ unsignedXdr: string }>,
+    apiCall: (options: { idempotencyKey: string }) => Promise<{ unsignedXdr: string }>,
   ) {
     if (!token || actionLoading) return;
 
@@ -117,15 +117,11 @@ export default function TradeDetailPage() {
     setActionSuccess(null);
     setActionTxHash(null);
 
-    const idempotencyKey = scopeKey
-      ? getOrCreateIdempotencyKey(address, scopeKey)
-      : undefined;
+    const scopeKey = `${action}:${tradeId}`;
+    const idempotencyKey = getOrCreateIdempotencyKey(address, scopeKey);
 
     try {
-      const { unsignedXdr } = await withIdempotency(
-        () => apiCall(),
-        { key: `${action}:${tradeId}` },
-      );
+      const { unsignedXdr } = await apiCall({ idempotencyKey });
       const networkPassphrase = apiConfig.getStellarNetworkPassphrase();
 
       const result = await signTransaction(unsignedXdr, {
@@ -184,17 +180,21 @@ export default function TradeDetailPage() {
   }
 
   function handleDeposit() {
-    void runAction("Deposit", "deposit", () => api.trades.deposit(token!, tradeId));
+    void runAction("Deposit", "deposit", (options) =>
+      api.trades.deposit(token!, tradeId, options),
+    );
   }
 
   function handleConfirmDelivery() {
-    void runAction("Confirm Delivery", "confirm-delivery", () =>
-      api.trades.confirmDelivery(token!, tradeId),
+    void runAction("Confirm Delivery", "confirm-delivery", (options) =>
+      api.trades.confirmDelivery(token!, tradeId, options),
     );
   }
 
   function handleReleaseFunds() {
-    void runAction("Release Funds", "release-funds", () => api.trades.releaseFunds(token!, tradeId));
+    void runAction("Release Funds", "release-funds", (options) =>
+      api.trades.releaseFunds(token!, tradeId, options),
+    );
   }
 
   function handleInitiateDispute() {
@@ -204,10 +204,8 @@ export default function TradeDetailPage() {
       return;
     }
     setDisputeError(null);
-    void runAction(
-      "Initiate Dispute",
-      (opts) => api.trades.initiateDispute(token!, tradeId, reason, disputeCategory, opts),
-      `trade:${tradeId}:dispute`,
+    void runAction("Initiate Dispute", "initiate-dispute", (options) =>
+      api.trades.initiateDispute(token!, tradeId, reason, disputeCategory, options),
     );
   }
 
