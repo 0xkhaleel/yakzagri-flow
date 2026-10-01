@@ -56,6 +56,10 @@ const messages = {
     stellarPathPayment: "Stellar path payment",
   },
   ui: {
+    "choose_where_to_go_next_9a7f95b": "Choose where to go next",
+    "page_not_found_bc3023b": "Page not found",
+    "we_couldn_t_find_the_page_you_we_db1a831": "We couldn't find the page you were looking for. It may have been moved, renamed, or the link may be out of date.",
+    "you_can_also_go_back_to_the_page_13f1adb": "You can also go back to the page you came from.",
     "access_denied_1647b9d": "Access Denied",
     not_found_title: "Page not found",
     not_found_description: "This page may have moved, or the link may be incorrect.",
