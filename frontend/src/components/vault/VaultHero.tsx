@@ -23,9 +23,9 @@ export function VaultHero({
         <p className="text-xs font-semibold tracking-widest text-gold uppercase mb-2">
           {translateCopy("ui.vault_system_active_de26716")}
         </p>
-        <h1 className="text-4xl md:text-5xl font-bold text-text-primary">
+        <h2 className="text-4xl md:text-5xl font-bold text-text-primary">
           {translateCopy("ui.escrow_44ce837")}{escrowId}
-        </h1>
+        </h2>
         <p className="text-3xl md:text-4xl font-light text-text-muted">
           {custodyType}
         </p>

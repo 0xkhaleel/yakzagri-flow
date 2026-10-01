@@ -227,7 +227,7 @@ function AllocationBar({ trades, loading }: AllocationBarProps) {
 
   return (
     <div className="rounded-2xl border border-border-default bg-surface-1 p-5">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">{translateCopy("ui.asset_allocation_9cd81b5")}</h3>
+      <h2 className="text-sm font-semibold text-text-primary mb-4">{translateCopy("ui.asset_allocation_9cd81b5")}</h2>
       {loading ? (
         <Skeleton className="h-3 w-full rounded-full" />
       ) : trades.length === 0 ? (
