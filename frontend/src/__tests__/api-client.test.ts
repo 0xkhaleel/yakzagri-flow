@@ -1,6 +1,10 @@
-import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { request, requestWithResult, ApiError, navigationHelpers, resolveApiUrl } from "@/lib/api/client";
 import { z } from "zod";
+
+function validJwt() {
+  const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url");
+  return `${encode({ alg: "none", typ: "JWT" })}.${encode({ exp: Math.floor(Date.now() / 1000) + 60 })}.test`;
+}
 
 describe("resolveApiUrl (versioning contract)", () => {
   // These tests rely on the real env defaults: base http://localhost:4000 and
@@ -91,7 +95,7 @@ describe("API Client", () => {
         } as Response),
       );
 
-      const result = await request<{ data: string }>("/test", undefined, schema);
+      const result = await request<{ data: string }>("/test", { schema });
       expect(result).toEqual({ data: "test" });
     });
 
@@ -106,7 +110,7 @@ describe("API Client", () => {
       );
 
       await expect(
-        request<{ data: string }>("/test", undefined, schema),
+        request<{ data: string }>("/test", { schema }),
       ).rejects.toBeInstanceOf(ApiError);
     });
   });
@@ -161,7 +165,7 @@ describe("API Client", () => {
     });
 
     it("should handle 401 refresh flow", async () => {
-      sessionStorage.setItem("amana_jwt", "test-token");
+      sessionStorage.setItem("amana_jwt", validJwt());
       global.fetch = jest.fn(() =>
         Promise.resolve({
           ok: false,

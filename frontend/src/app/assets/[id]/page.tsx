@@ -261,7 +261,11 @@ export default function TradeDetailPage() {
     }
   }, [token, tradeId]);
 
-  async function runSignedAction(label: string, action: () => Promise<{ unsignedXdr: string }>) {
+  async function runSignedAction(
+    label: string,
+    scopeKey: string,
+    action: (options: { idempotencyKey?: string }) => Promise<{ unsignedXdr: string }>,
+  ) {
     if (!token) {
       setActionError("Sign in with your wallet to perform this action.");
       return;
@@ -338,8 +342,8 @@ export default function TradeDetailPage() {
     }
     void runSignedAction(
       "Dispute",
-      (opts) => api.trades.initiateDispute(token!, tradeId, reason.trim(), "other", opts),
       `trade:${tradeId}:dispute`,
+      (opts) => api.trades.initiateDispute(token!, tradeId, reason.trim(), "other", opts),
     );
   }
 

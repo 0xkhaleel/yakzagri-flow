@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { StrKey } from "@stellar/stellar-sdk";
 import { useTrade } from "../TradeContext";
 import { useAuth } from "@/hooks/useAuth";
-import { ApiError } from "@/lib/api";
 import { submitTradeCreation } from "@/lib/trades/submitTradeCreation";
 import { createTradeInputSchema, fieldErrors } from "@/lib/domain-schemas/trade";
 import Link from "next/link";
@@ -30,9 +29,11 @@ function ReviewRow({ label, value }: Row) {
   );
 }
 
-export function Step3Review({ draft, onBack }: Step3ReviewProps) {
-  const navigate = useNavigate();
-  const submitTrade = useTradeStore((s) => s.submitTrade);
+export function Step3Review() {
+  const router = useRouter();
+  const { data, setStep } = useTrade();
+  const { token, address, isAuthenticated, isWalletConnected, connectWallet, authenticate } = useAuth();
+  const { isOffline } = useOffline();
   const enqueue = useOfflineQueueStore((s) => s.enqueue);
   const pendingCount = useOfflineQueueStore((s) => s.queue.length);
   const { addToastWithCorrelation, updateToast } = useToast();
@@ -100,6 +101,13 @@ export function Step3Review({ draft, onBack }: Step3ReviewProps) {
       return;
     }
 
+    const requestPayload = {
+      sellerAddress: parsed.data.sellerAddress,
+      amountUsdc: parsed.data.amountUsdc,
+      buyerLossBps,
+      sellerLossBps,
+    };
+
     const correlationId = generateCorrelationId();
     const idempotencyKey = getOrCreateIdempotencyKey(address, dedupKey);
     registerAction(dedupKey, correlationId, idempotencyKey);
@@ -110,7 +118,7 @@ export function Step3Review({ draft, onBack }: Step3ReviewProps) {
         type: "create-trade",
         endpoint: "/trades",
         method: "POST",
-        body: payload,
+        body: requestPayload,
         idempotencyKey,
         correlationId,
       });
@@ -134,7 +142,7 @@ export function Step3Review({ draft, onBack }: Step3ReviewProps) {
     addToastWithCorrelation({ type: "info", title: "In progress", message: "Locking funds…", correlationId, duration: 0 });
 
     try {
-      const submission = await submitTradeCreation(token, payload, {
+      const submission = await submitTradeCreation(token, requestPayload, {
         idempotencyKey,
         correlationId,
       });
@@ -147,20 +155,28 @@ export function Step3Review({ draft, onBack }: Step3ReviewProps) {
       try { localStorage.removeItem("amana:draft-trade"); } catch {}
     } catch (err) {
       if (!navigator.onLine) {
-        enqueue({ draft, correlationId });
-        navigate('/trades/queue');
+        enqueue({
+          type: "create-trade",
+          endpoint: "/trades",
+          method: "POST",
+          body: requestPayload,
+          idempotencyKey,
+          correlationId,
+        });
+        router.push('/trades/queue');
         return;
       }
       setError(err instanceof Error ? err.message : 'Failed to submit trade');
     } finally {
-      setSubmitting(false);
+      submittingRef.current = false;
+      setLoading(false);
     }
   };
 
   if (tradeId && txHash) {
     return (
     <div className="step-review">
-      <h2>Review Trade</h2>
+      <h2>{translateCopy("ui.review_trade_56119c6")}</h2>
 
       <div className="review-summary">
         <div>
@@ -275,10 +291,19 @@ export function Step3Review({ draft, onBack }: Step3ReviewProps) {
               {translateCopy("ui.creating_trade_776cf21")}
             </>
           ) : (
-            "Lock Funds & Create Trade"
+            translateCopy("ui.lock_funds_create_trade")
           )}
         </button>
       </div>
+      <LegalDisclaimerModal
+        isOpen={showDisclaimer}
+        onAccept={handleDisclaimerAccept}
+        onDecline={() => setShowDisclaimer(false)}
+        lossRatio={{ buyer: data.buyerRatio, seller: data.sellerRatio }}
+        tradeValueCngn={Number.isFinite(rawAmount) && rawAmount > 0 ? rawAmount.toFixed(2) : "0"}
+      />
     </div>
   );
 }
+
+export default Step3Review;

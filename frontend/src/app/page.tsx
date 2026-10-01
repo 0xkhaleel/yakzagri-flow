@@ -13,13 +13,58 @@ import {
 import Link from "next/link";
 import { LandingCtaButtons } from "@/components/landing/LandingCtaButtons";
 
-import Link from 'next/link';
-import { useWalletStore } from '@/store/wallet';
-import { WalletConnectButton } from '@/components/wallet/WalletConnectButton';
+const stats = [
+  { label: "Settlement", value: "On-chain" },
+  { label: "Platform fee", value: "1%" },
+  { label: "Supported assets", value: "cNGN · USDC" },
+  { label: "Wallet custody", value: "Non-custodial" },
+];
+
+const steps = [
+  {
+    step: "01",
+    title: "Agree on the trade",
+    description: "Set the commodity, price, delivery window, and loss-sharing terms.",
+    icon: Scale,
+  },
+  {
+    step: "02",
+    title: "Lock funds in escrow",
+    description: "The buyer funds the Stellar escrow after both parties approve the terms.",
+    icon: Lock,
+  },
+  {
+    step: "03",
+    title: "Confirm delivery",
+    description: "Share delivery evidence, then release funds when the trade is complete.",
+    icon: CheckCircle2,
+  },
+];
+
+const features = [
+  {
+    title: "Protected settlement",
+    description: "Funds remain in smart-contract escrow until delivery is confirmed.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Clear loss sharing",
+    description: "Buyers and sellers agree how transit losses are handled before funding.",
+    icon: Scale,
+  },
+  {
+    title: "Delivery evidence",
+    description: "Attach proof of delivery to the trade for an auditable record.",
+    icon: Truck,
+  },
+  {
+    title: "Reputation history",
+    description: "Completed trades build a visible record of reliable participation.",
+    icon: Star,
+  },
+];
 
 export default function LandingPage() {
-  const { isConnected } = useWalletStore();
-
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}

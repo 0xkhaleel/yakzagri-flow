@@ -11,6 +11,7 @@ import { useTradeDetail } from "@/hooks/useTradeDetail";
 import { useWallet } from "@/hooks/useWallet";
 import { api, ApiError } from "@/lib/api";
 import { apiConfig } from "@/lib/api";
+import { getMediatorAddresses, isMediatorAddress } from "@/app/mediator/disputes/helpers";
 import { formatDateTime } from "@/lib/i18n/format";
 import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/idempotency";
 import { broadcastTransaction } from "@/lib/stellar/broadcast";
@@ -61,6 +62,7 @@ function deriveRole(
   sellerAddress: string,
 ): UserRole {
   if (!walletAddress) return "observer";
+  if (isMediatorAddress(walletAddress, getMediatorAddresses())) return "mediator";
   const addr = walletAddress.toLowerCase();
   const mediatorAllowlist = (process.env.NEXT_PUBLIC_MEDIATOR_WALLETS ?? "")
     .split(",")
@@ -84,7 +86,6 @@ export default function TradeDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-  const [actionTxHash, setActionTxHash] = useState<string | null>(null);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
   const [disputeCategory, setDisputeCategory] = useState<DisputeCategory>("delivery");
@@ -106,7 +107,6 @@ export default function TradeDetailPage() {
     setActionLoading(true);
     setActionError(null);
     setActionSuccess(null);
-    setActionTxHash(null);
 
     const scopeKey = `${action}:${tradeId}`;
     const idempotencyKey = getOrCreateIdempotencyKey(address, scopeKey);
@@ -136,7 +136,6 @@ export default function TradeDetailPage() {
       const { hash: txHash } = await broadcastTransaction(signedTxXdr);
 
       if (scopeKey) clearIdempotencyKey(address, scopeKey);
-      if (txHash) setActionTxHash(txHash);
       setActionSuccess(
         txHash
           ? `${label} completed successfully. Transaction: ${txHash}`
@@ -399,9 +398,9 @@ export default function TradeDetailPage() {
       <Modal open={disputeOpen} onOpenChange={setDisputeOpen}>
         <ModalContent mobileFullScreen={false}>
           <ModalHeader>
-            <ModalTitle>Initiate dispute</ModalTitle>
+            <ModalTitle>{translateCopy("ui.initiate_dispute_title")}</ModalTitle>
             <ModalDescription>
-              Choose a category and explain the issue. The reason must be 10 to 500 characters.
+              {translateCopy("ui.initiate_dispute_description")}
             </ModalDescription>
           </ModalHeader>
           <form
@@ -413,7 +412,7 @@ export default function TradeDetailPage() {
             <ModalBody className="space-y-4">
               <div>
                 <label htmlFor="dispute-category" className="mb-1 block text-sm font-medium text-text-primary">
-                  Category
+                  {translateCopy("ui.category_a3c686e")}
                 </label>
                 <select
                   id="dispute-category"
@@ -421,16 +420,16 @@ export default function TradeDetailPage() {
                   onChange={(event) => setDisputeCategory(event.target.value as DisputeCategory)}
                   className="w-full rounded-lg border border-border-default bg-bg-input px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-border-focus"
                 >
-                  <option value="quality">Quality</option>
-                  <option value="delivery">Delivery</option>
-                  <option value="payment">Payment</option>
-                  <option value="fraud">Fraud</option>
-                  <option value="other">Other</option>
+                  <option value="quality">{translateCopy("ui.dispute_quality")}</option>
+                  <option value="delivery">{translateCopy("ui.dispute_delivery")}</option>
+                  <option value="payment">{translateCopy("ui.dispute_payment")}</option>
+                  <option value="fraud">{translateCopy("ui.dispute_fraud")}</option>
+                  <option value="other">{translateCopy("ui.other_6e6a6f2")}</option>
                 </select>
               </div>
               <div>
                 <label htmlFor="dispute-reason" className="mb-1 block text-sm font-medium text-text-primary">
-                  Reason
+                  {translateCopy("ui.reason_f219cc0")}
                 </label>
                 <textarea
                   id="dispute-reason"
@@ -460,14 +459,14 @@ export default function TradeDetailPage() {
                 onClick={() => setDisputeOpen(false)}
                 className="rounded-lg border border-border-default px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
               >
-                Cancel
+                {translateCopy("common.cancel")}
               </button>
               <button
                 type="submit"
                 disabled={actionLoading}
                 className="rounded-lg bg-status-danger px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
-                {actionLoading ? "Processing..." : "Submit dispute"}
+                {actionLoading ? translateCopy("ui.processing") : translateCopy("ui.dispute_submit")}
               </button>
             </ModalFooter>
           </form>

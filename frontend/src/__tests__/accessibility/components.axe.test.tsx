@@ -1,16 +1,28 @@
 import React from "react";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { Tabs } from "@/components/ui/Tabs";
 import { Badge } from "@/components/ui/Badge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { RepScoreRing } from "@/components/ui/RepScoreRing";
 import { TradeListItem } from "@/components/trade/TradeListItem";
 
 expect.extend(toHaveNoViolations);
 
 describe("Accessibility audit — WCAG 2.1 AA", () => {
+  describe("RepScoreRing", () => {
+    it("shows a text label and announces the score with sufficient contrast tokens", async () => {
+      const { container } = render(<RepScoreRing score={4.5} />);
+
+      expect(screen.getByRole("img", { name: "Trust score: 4.5 out of 5" })).toBeInTheDocument();
+      expect(screen.getByText("Trust Score")).toBeInTheDocument();
+      expect(container.querySelector("text")).toHaveAttribute("fill", "var(--text-primary)");
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   describe("Button", () => {
     it("primary variant has no axe violations", async () => {
       const { container } = render(<Button variant="primary">Submit</Button>);

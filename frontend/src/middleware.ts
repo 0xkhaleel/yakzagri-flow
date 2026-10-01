@@ -57,12 +57,12 @@ export function buildCsp(nonce: string): string {
     "font-src": "'self' data:",
     "connect-src": buildConnectSrc(),
     "frame-src": buildFrameSrc(),
-    "object-src": "'none'",
-    "base-uri": "'self'",
-    "form-action": "'self'",
-    "frame-ancestors": "'none'",
-    "upgrade-insecure-requests": "",
-    "report-uri": "/api/csp-report",
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "form-action": ["'self'"],
+    "frame-ancestors": ["'none'"],
+    "upgrade-insecure-requests": [],
+    "report-uri": ["/api/csp-report"],
   };
 
   return Object.entries(directives)

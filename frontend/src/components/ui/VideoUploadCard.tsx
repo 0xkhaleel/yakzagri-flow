@@ -108,8 +108,17 @@ async function uploadToIpfs(
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
-          const res = JSON.parse(xhr.responseText);
-          resolve(res.IpfsHash ?? res.cid ?? res.hash);
+          const res = JSON.parse(xhr.responseText) as {
+            IpfsHash?: string;
+            cid?: string;
+            hash?: string;
+          };
+          const hash = res.IpfsHash ?? res.cid ?? res.hash;
+          if (!hash) {
+            reject(new Error("Upload response did not include an IPFS hash"));
+            return;
+          }
+          resolve(hash);
         } catch {
           reject(new Error("Malformed upload response"));
         }
@@ -230,6 +239,7 @@ export function VideoUploadCard({
       recorder.onstop = async () => {
         stream.getTracks().forEach((track) => track.stop());
         if (videoRef.current) videoRef.current.srcObject = null;
+        setRecording(false);
         const blob = new Blob(chunksRef.current, { type: mimeType });
         if (!blob.size) return;
         setPreview(URL.createObjectURL(blob));
@@ -239,8 +249,9 @@ export function VideoUploadCard({
       };
       recorderRef.current = recorder;
       recorder.start();
-      setRecording(true);
+      elapsedRef.current = 0;
       setElapsed(0);
+      setRecording(true);
       timerRef.current = setInterval(() => {
         setElapsed((current) => {
           const next = current + 1;
@@ -260,6 +271,13 @@ export function VideoUploadCard({
     if (preview) URL.revokeObjectURL(preview);
   }, [preview, stopTimer]);
 
+  useEffect(() => () => {
+    stopTimer();
+    if (typeof uploadRequestRef.current?.abort === "function") {
+      uploadRequestRef.current.abort();
+    }
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+  }, [stopTimer]);
   const flushQueue = useCallback(async () => {
     const queue = readQueue();
     if (queue.length === 0) return;
@@ -383,7 +401,7 @@ export function VideoUploadCard({
               transition-colors duration-200
             "
           >
-            <Circle className="w-4 h-4" /> Record ({maxDurationSeconds}s max)
+            <Circle className="w-4 h-4" /> {translateCopy("ui.record_video_max_duration", { seconds: maxDurationSeconds })}
           </button>
         ) : (
           <button
@@ -396,7 +414,7 @@ export function VideoUploadCard({
               transition-colors duration-200
             "
           >
-            <Square className="w-4 h-4" /> Stop ({remaining}s left)
+            <Square className="w-4 h-4" /> {translateCopy("ui.stop_recording_remaining", { seconds: remaining })}
           </button>
         )}
       </div>
@@ -404,7 +422,7 @@ export function VideoUploadCard({
       {/* Local hash + dedupe indicator */}
       {localHash && (
         <p className="mt-2 text-[11px] text-text-muted truncate" title={localHash}>
-          Local hash: {localHash.slice(0, 16)}…
+          {translateCopy("ui.local_hash_prefix")} {localHash.slice(0, 16)}…
         </p>
       )}
 
@@ -422,7 +440,7 @@ export function VideoUploadCard({
             transition-colors duration-200
           "
         >
-          <RotateCcw className="w-3.5 h-3.5" /> Retry {queued} queued upload{queued > 1 ? "s" : ""}
+          <RotateCcw className="w-3.5 h-3.5" /> {translateCopy(queued === 1 ? "ui.retry_one_queued_upload" : "ui.retry_queued_uploads", { count: queued })}
         </button>
       )}
 
@@ -486,14 +504,14 @@ export function VideoUploadCard({
       >
         {translateCopy("ui.submit_proof_7a3580b")}
       </button>
-      {!ipfsHash && <p id="video-upload-hint" className="sr-only">Upload video evidence before submitting proof</p>}
+      {!ipfsHash && <p id="video-upload-hint" className="sr-only">{translateCopy("ui.upload_video_before_submit_proof")}</p>}
       {uploading && (
         <button
           type="button"
           onClick={cancelUpload}
           className="mt-3 w-full rounded-lg border border-border-default bg-bg-elevated px-3 py-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
         >
-          Cancel upload
+          {translateCopy("ui.cancel_upload")}
         </button>
       )}
     </BentoCard>

@@ -16,7 +16,7 @@ import {
 } from "@/components/vault";
 import { DriverManifestForm, LoadingState, type DriverManifestData } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
-import { formatDate, formatDateTime } from "@/lib/i18n";
+import { formatDate } from "@/lib/i18n";
 import { useWallet } from "@/hooks/useWallet";
 import { formatDateTime, formatNumber } from "@/lib/i18n/format";
 import {

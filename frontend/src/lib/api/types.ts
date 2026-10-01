@@ -10,12 +10,14 @@ export interface VerifyResponse {
 // shapes cannot drift. See docs/shared-schemas.md.
 export type {
   Trade,
-  TradeStatus,
-  TradeMoneyAmount,
+  TradeAmount,
   CreateTradeInput,
 } from "@/lib/domain-schemas/trade";
 
-import type { Trade, TradeStatus, TradeMoneyAmount } from "@/lib/domain-schemas/trade";
+import type { Trade, TradeAmount } from "@/lib/domain-schemas/trade";
+
+export type TradeStatus = Trade["status"];
+export type TradeMoneyAmount = TradeAmount;
 
 /**
  * API response shape for a trade. Money is expressed as `amountCngn` on the
@@ -75,10 +77,6 @@ export interface EvidenceResponse {
   evidence: EvidenceRecord[];
 }
 
-// Request shape is derived from the shared domain schema so it cannot drift
-// from what the backend accepts. See docs/shared-schemas.md.
-export type { CreateTradeInput } from "@/lib/domain-schemas/trade";
-
 export interface CreateTradeRequest {
   sellerAddress: string;
   amountUsdc: TradeMoneyAmount;
@@ -99,7 +97,7 @@ export interface CreateTradeResponse {
  */
 export function mapTradeResponseToTrade(response: TradeResponse): Trade {
   return {
-    tradeId: response.tradeId,
+    id: response.tradeId,
     buyerAddress: response.buyerAddress,
     sellerAddress: response.sellerAddress,
     amount: response.amountCngn,
@@ -107,9 +105,6 @@ export function mapTradeResponseToTrade(response: TradeResponse): Trade {
     sellerLossBps: response.sellerLossBps,
     status: response.status,
     createdAt: response.createdAt,
-    updatedAt: response.updatedAt,
-    eta: response.eta,
-    carrier: response.carrier,
   };
 }
 
