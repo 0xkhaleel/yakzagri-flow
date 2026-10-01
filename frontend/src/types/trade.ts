@@ -59,6 +59,7 @@ export type TransactionEventActor = "system" | "buyer" | "seller" | "driver";
 
 export interface TransactionEvent {
   id: string;
+  type?: string;
   title: string;
   actor: TransactionEventActor;
   status?: TransactionEventStatus;

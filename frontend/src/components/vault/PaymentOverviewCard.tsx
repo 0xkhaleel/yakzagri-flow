@@ -6,6 +6,7 @@ import { useState } from "react";
 import { CreditCard } from "lucide-react";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { formatNumber } from "@/lib/i18n/format";
+import { getNgnExchangeRate } from "@/lib/exchangeRate";
 
 interface PaymentOverviewCardProps {
   totalCngn: number;
@@ -57,7 +58,7 @@ export function PaymentOverviewCard({
 
   const lockedDisplay =
     currency === "NGN"
-      ? `₦${formatNumber(totalCngn * ngnRate, { maximumFractionDigits: 2 })}`
+      ? `₦${formatNumber(totalCngn * rate, { maximumFractionDigits: 2 })}`
       : `${formatNumber(totalCngn)} cNGN`;
 
   return (

@@ -25,7 +25,7 @@ export function getMediatorAddresses(
   if (fromEnv.length > 0) return fromEnv;
 
   // Fail closed in production: no placeholder mediator addresses.
-  return isNonProductionEnv(appEnv) ? DEV_MEDIATOR_ADDRESSES : [];
+  return isNonProductionEnv(appEnv) ? DEFAULT_MEDIATOR_ADDRESSES : [];
 }
 
 export function isMediatorAddress(

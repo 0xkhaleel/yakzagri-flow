@@ -60,7 +60,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
               </div>
               
               {/* Label below the circle */}
-              <div className="absolute top-12 flex flex-col items-center w-max min-w-[60px] max-w-[120px]">
+              <div className="absolute top-12 flex flex-col items-center w-max min-w-15 max-w-30">
                 <span className={`text-sm font-medium transition-colors text-center w-full truncate ${isCurrent ? "text-gold" : isCompleted ? "text-primary" : "text-text-muted"}`}>
                   {step.label}
                 </span>

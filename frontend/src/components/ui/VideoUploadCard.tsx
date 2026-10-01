@@ -15,6 +15,7 @@ export interface VideoUploadCardProps {
 
 const DEFAULT_MAX_DURATION = 60;
 const UPLOAD_ENDPOINT = "https://api.pinata.cloud/pinning/pinFileToIPFS";
+const IPFS_GATEWAY = "https://gateway.pinata.cloud";
 const QUEUE_STORAGE_KEY = "pod-video-upload-queue";
 
 interface QueuedUpload {
@@ -26,11 +27,25 @@ interface QueuedUpload {
 
 /** Compute a SHA-256 hex digest of a blob for local dedupe. */
 async function computeHash(blob: Blob): Promise<string> {
-  const buffer = await blob.arrayBuffer();
-  const digest = await crypto.subtle.digest("SHA-256", buffer);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const buffer = typeof blob.arrayBuffer === "function"
+    ? await blob.arrayBuffer()
+    : await new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as ArrayBuffer);
+        reader.onerror = () => reject(new Error("Failed to read video data"));
+        reader.readAsArrayBuffer(blob);
+      });
+  try {
+    if (!globalThis.crypto?.subtle) throw new Error("Web Crypto unavailable");
+    const digest = await globalThis.crypto.subtle.digest("SHA-256", buffer);
+    return Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  } catch {
+    return Array.from(new Uint8Array(buffer))
+      .reduce((hash, byte) => Math.imul(hash ^ byte, 0x01000193) >>> 0, 0x811c9dc5)
+      .toString(16);
+  }
 }
 
 function readQueue(): QueuedUpload[] {
@@ -78,21 +93,32 @@ function dataUrlToBlob(dataUrl: string): Blob {
 async function uploadToIpfs(
   blob: Blob,
   name: string,
-  onProgress: (pct: number) => void
+  onProgress: (pct: number) => void,
+  onRequest?: (request: XMLHttpRequest) => void,
 ): Promise<string> {
   const data = new FormData();
   data.append("file", blob, name);
 
   return new Promise<string>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
+    onRequest?.(xhr);
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
     };
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
-          const res = JSON.parse(xhr.responseText);
-          resolve(res.IpfsHash ?? res.cid ?? res.hash);
+          const res = JSON.parse(xhr.responseText) as {
+            IpfsHash?: string;
+            cid?: string;
+            hash?: string;
+          };
+          const hash = res.IpfsHash ?? res.cid ?? res.hash;
+          if (!hash) {
+            reject(new Error("Upload response did not include an IPFS hash"));
+            return;
+          }
+          resolve(hash);
         } catch {
           reject(new Error("Malformed upload response"));
         }
@@ -101,6 +127,7 @@ async function uploadToIpfs(
       }
     };
     xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.onabort = () => reject(new DOMException("Upload cancelled", "AbortError"));
     xhr.open("POST", UPLOAD_ENDPOINT);
     const jwt = process.env.NEXT_PUBLIC_PINATA_JWT;
     if (jwt) xhr.setRequestHeader("Authorization", `Bearer ${jwt}`);
@@ -113,7 +140,11 @@ export function VideoUploadCard({
   maxDurationSeconds = DEFAULT_MAX_DURATION,
 }: VideoUploadCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const uploadRequestRef = useRef<XMLHttpRequest | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const [preview, setPreview] = useState<string | null>(null);
   const [ipfsHash, setIpfsHash] = useState<string | null>(null);
   const [localHash, setLocalHash] = useState<string | null>(null);
@@ -122,24 +153,20 @@ export function VideoUploadCard({
   const [error, setError] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [queued, setQueued] = useState(0);
+  const [queued, setQueued] = useState(() => readQueue().length);
+
+  const abortUpload = () => {
+    const request = uploadRequestRef.current;
+    if (request && typeof request.abort === "function") request.abort();
+    uploadRequestRef.current = null;
+  };
 
   const cancelUpload = () => {
-    uploadRequestRef.current?.abort();
-    uploadRequestRef.current = null;
+    abortUpload();
     setUploading(false);
     setProgress(0);
     setError(null);
   };
-
-  const handleFile = async (file: File) => {
-    if (!file) return;
-
-    uploadRequestRef.current?.abort();
-    setPreview(URL.createObjectURL(file));
-    setError(null);
-    setUploading(true);
-    setProgress(0);
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -148,119 +175,109 @@ export function VideoUploadCard({
     }
   }, []);
 
-      const xhr = new XMLHttpRequest();
-      uploadRequestRef.current = xhr;
-      xhr.timeout = 30000;
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          setProgress(Math.round((e.loaded / e.total) * 100));
-        }
-      };
-
-      const hash = await new Promise<string>((resolve, reject) => {
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const res = JSON.parse(xhr.responseText);
-              const result = res.IpfsHash ?? res.cid ?? res.hash;
-              if (!result) {
-                reject(new Error("Upload response did not include an IPFS hash"));
-                return;
-              }
-              resolve(result);
-            } catch {
-              reject(new Error("Upload response was not valid JSON"));
-            }
-          } else {
-            reject(new Error(`Upload failed: ${xhr.statusText || "Request failed"}`));
-          }
-        };
-        xhr.onerror = () => reject(new Error("Network error during upload"));
-        xhr.ontimeout = () => reject(new Error("Upload timed out after 30 seconds"));
-        xhr.onabort = () => reject(new DOMException("Upload cancelled", "AbortError"));
-
-        const uploadUrl =
-          process.env.NEXT_PUBLIC_PINATA_API_URL?.trim() ||
-          "https://api.pinata.cloud/pinning/pinFileToIPFS";
-
-        xhr.open("POST", uploadUrl);
-        const jwt = process.env.NEXT_PUBLIC_PINATA_JWT;
-        if (jwt) xhr.setRequestHeader("Authorization", `Bearer ${jwt}`);
-        xhr.send(data);
+  const handleBlob = useCallback(async (blob: Blob, name: string) => {
+    setUploading(true);
+    setProgress(0);
+    setError(null);
+    const hashPromise = computeHash(blob).then((hash) => {
+      setLocalHash(hash);
+      return hash;
+    });
+    try {
+      const cid = await uploadToIpfs(blob, name, setProgress, (request) => {
+        uploadRequestRef.current = request;
       });
+      setIpfsHash(cid);
+      onUpload?.(cid);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      const hash = await hashPromise;
+      const queue = readQueue();
+      if (!queue.some((item) => item.hash === hash)) {
+        queue.push({ hash, name, type: blob.type, dataUrl: await blobToDataUrl(blob) });
+        writeQueue(queue);
+        setQueued(queue.length);
+      }
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      uploadRequestRef.current = null;
+      setUploading(false);
+      setProgress(0);
+    }
+  }, [onUpload]);
+
+  const handleFile = useCallback(async (file: File) => {
+    if (!file) return;
+    abortUpload();
+    setIpfsHash(null);
+    setPreview(URL.createObjectURL(file));
+    void handleBlob(file, file.name);
+  }, [handleBlob]);
+
+  const stopRecording = useCallback(() => {
+    stopTimer();
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+    setRecording(false);
+  }, [stopTimer]);
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
         await videoRef.current.play().catch(() => undefined);
       }
-
       const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
         ? "video/webm;codecs=vp9"
         : "video/webm";
       const recorder = new MediaRecorder(stream, { mimeType });
       chunksRef.current = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunksRef.current.push(event.data);
       };
       recorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
+        stream.getTracks().forEach((track) => track.stop());
         if (videoRef.current) videoRef.current.srcObject = null;
+        setRecording(false);
         const blob = new Blob(chunksRef.current, { type: mimeType });
-        if (blob.size === 0) return;
-        const url = URL.createObjectURL(blob);
-        setPreview(url);
+        if (!blob.size) return;
+        setPreview(URL.createObjectURL(blob));
         const hash = await computeHash(blob);
         setLocalHash(hash);
-        await handleBlob(blob, hash, `pod-${hash.slice(0, 12)}.webm`);
+        void handleBlob(blob, `pod-${hash.slice(0, 12)}.webm`);
       };
       recorderRef.current = recorder;
       recorder.start();
-      setRecording(true);
+      elapsedRef.current = 0;
       setElapsed(0);
+      setRecording(true);
       timerRef.current = setInterval(() => {
-        setElapsed((prev) => {
-          const next = prev + 1;
+        setElapsed((current) => {
+          const next = current + 1;
           if (next >= maxDurationSeconds) stopRecording();
           return next;
         });
       }, 1000);
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") {
-        return;
-      }
-      setError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      if (uploadRequestRef.current === null || uploadRequestRef.current.readyState === XMLHttpRequest.DONE) {
-        uploadRequestRef.current = null;
-      }
-      setUploading(false);
-      setProgress(0);
-      try {
-        const cid = await uploadToIpfs(blob, name, setProgress);
-        setIpfsHash(cid);
-        onUpload?.(cid);
-      } catch (err) {
-        // Offline / failed: queue for later retry, deduped by local hash.
-        const queue = readQueue();
-        if (!queue.some((q) => q.hash === hash)) {
-          const dataUrl = await blobToDataUrl(blob);
-          queue.push({ hash, name, type: blob.type, dataUrl });
-          writeQueue(queue);
-          setQueued(queue.length);
-        }
-        setError(
-          err instanceof Error
-            ? `${err.message} — saved locally for retry`
-            : "Upload failed — saved locally for retry"
-        );
-      } finally {
-        setUploading(false);
-        setProgress(0);
-      }
-    },
-    [onUpload]
-  );
+      setError(err instanceof Error ? err.message : "Unable to start recording");
+    }
+  }, [handleBlob, maxDurationSeconds, stopRecording]);
 
+  useEffect(() => () => {
+    stopTimer();
+    abortUpload();
+    recorderRef.current?.stream.getTracks().forEach((track) => track.stop());
+    if (preview) URL.revokeObjectURL(preview);
+  }, [preview, stopTimer]);
+
+  useEffect(() => () => {
+    stopTimer();
+    if (typeof uploadRequestRef.current?.abort === "function") {
+      uploadRequestRef.current.abort();
+    }
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+  }, [stopTimer]);
   const flushQueue = useCallback(async () => {
     const queue = readQueue();
     if (queue.length === 0) return;
@@ -269,7 +286,9 @@ export function VideoUploadCard({
     for (const item of queue) {
       try {
         const blob = dataUrlToBlob(item.dataUrl);
-        const cid = await uploadToIpfs(blob, item.name, setProgress);
+        const cid = await uploadToIpfs(blob, item.name, setProgress, (request) => {
+          uploadRequestRef.current = request;
+        });
         setIpfsHash(cid);
         onUpload?.(cid);
       } catch {
@@ -281,19 +300,6 @@ export function VideoUploadCard({
     setUploading(false);
     setProgress(0);
   }, [onUpload]);
-
-  const handleFile = useCallback(
-    async (file: File) => {
-      if (!file) return;
-      setError(null);
-      setIpfsHash(null);
-      setPreview(URL.createObjectURL(file));
-      const hash = await computeHash(file);
-      setLocalHash(hash);
-      await handleBlob(file, hash, file.name);
-    },
-    [handleBlob]
-  );
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -347,7 +353,7 @@ export function VideoUploadCard({
           hover:border-border-hover hover:bg-bg-elevated
           focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2
           transition-colors duration-200
-          min-h-[140px]
+          min-h-36
         "
       >
         {preview && !recording ? (
@@ -395,7 +401,7 @@ export function VideoUploadCard({
               transition-colors duration-200
             "
           >
-            <Circle className="w-4 h-4" /> Record ({maxDurationSeconds}s max)
+            <Circle className="w-4 h-4" /> {translateCopy("ui.record_video_max_duration", { seconds: maxDurationSeconds })}
           </button>
         ) : (
           <button
@@ -408,7 +414,7 @@ export function VideoUploadCard({
               transition-colors duration-200
             "
           >
-            <Square className="w-4 h-4" /> Stop ({remaining}s left)
+            <Square className="w-4 h-4" /> {translateCopy("ui.stop_recording_remaining", { seconds: remaining })}
           </button>
         )}
       </div>
@@ -416,7 +422,7 @@ export function VideoUploadCard({
       {/* Local hash + dedupe indicator */}
       {localHash && (
         <p className="mt-2 text-[11px] text-text-muted truncate" title={localHash}>
-          Local hash: {localHash.slice(0, 16)}…
+          {translateCopy("ui.local_hash_prefix")} {localHash.slice(0, 16)}…
         </p>
       )}
 
@@ -434,7 +440,7 @@ export function VideoUploadCard({
             transition-colors duration-200
           "
         >
-          <RotateCcw className="w-3.5 h-3.5" /> Retry {queued} queued upload{queued > 1 ? "s" : ""}
+          <RotateCcw className="w-3.5 h-3.5" /> {translateCopy(queued === 1 ? "ui.retry_one_queued_upload" : "ui.retry_queued_uploads", { count: queued })}
         </button>
       )}
 
@@ -498,14 +504,14 @@ export function VideoUploadCard({
       >
         {translateCopy("ui.submit_proof_7a3580b")}
       </button>
-      {!ipfsHash && <p id="video-upload-hint" className="sr-only">Upload video evidence before submitting proof</p>}
+      {!ipfsHash && <p id="video-upload-hint" className="sr-only">{translateCopy("ui.upload_video_before_submit_proof")}</p>}
       {uploading && (
         <button
           type="button"
           onClick={cancelUpload}
           className="mt-3 w-full rounded-lg border border-border-default bg-bg-elevated px-3 py-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
         >
-          Cancel upload
+          {translateCopy("ui.cancel_upload")}
         </button>
       )}
     </BentoCard>

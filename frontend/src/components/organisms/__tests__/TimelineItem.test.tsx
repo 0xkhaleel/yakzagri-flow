@@ -39,7 +39,7 @@ describe("TimelineItem", () => {
   it("renders connector when not last", () => {
     const { container } = render(<TimelineItem {...base} isLast={false} />);
     const line = container.querySelector(
-      ".absolute.top-3.left-1\\.5.w-0\\.5.min-h-\\[40px\\].bg-border-default",
+      ".absolute.top-3.left-1\\.5.w-0\\.5.min-h-10.bg-border-default",
     );
     expect(line).toBeInTheDocument();
   });
@@ -47,7 +47,7 @@ describe("TimelineItem", () => {
   it("omits connector when last", () => {
     const { container } = render(<TimelineItem {...base} isLast />);
     expect(
-      container.querySelector(".min-h-\\[40px\\].bg-border-default"),
+      container.querySelector(".min-h-10.bg-border-default"),
     ).not.toBeInTheDocument();
   });
 

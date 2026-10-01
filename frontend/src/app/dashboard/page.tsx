@@ -5,6 +5,7 @@ import { t as translateCopy } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { formatDate } from "@/lib/i18n";
 import { api, ApiError, TradeResponse, TradeStatsResponse } from "@/lib/api";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { Activity, CreditCard, CheckCircle2, AlertCircle } from "lucide-react";

@@ -1,6 +1,7 @@
 "use client";
 
 import { formatNumber } from "@/lib/i18n/format";
+import { t as translateCopy } from "@/lib/i18n";
 
 interface TradeAmountRowProps {
   amountCngn: string | number;
@@ -41,7 +42,7 @@ export function TradeAmountRow({
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border border-border-default bg-elevated p-4">
       <div className="min-w-0">
-        <p className="text-xs text-text-muted mb-1">{label ?? t("trade.totalTradeValue")}</p>
+        <p className="text-xs text-text-muted mb-1">{label ?? translateCopy("trade.totalTradeValue")}</p>
         <div className="flex items-end gap-2 flex-wrap">
           <p
             className={`font-mono text-3xl font-bold ${
@@ -69,7 +70,7 @@ export function TradeAmountRow({
         >
           <path d="M2 5h9M11 3l2 2-2 2M14 11H5M5 9l-2 2 2 2" />
         </svg>
-        <span className="whitespace-nowrap">{t("trade.stellarPathPayment")}</span>
+        <span className="whitespace-nowrap">{translateCopy("trade.stellarPathPayment")}</span>
       </div>
     </div>
   );

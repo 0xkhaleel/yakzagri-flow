@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonList } from "@/components/ui/SkeletonList";
 import { Tabs } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
+import { getStatusBadgeClasses } from "@/components/ui/StatusBadge";
 import { getMediatorAddresses, isMediatorAddress, formatDate, formatAddress } from "./helpers";
 
 type DisputeStatus = "OPEN" | "UNDER_REVIEW" | "RESOLVED" | "CLOSED";
@@ -22,13 +23,6 @@ const FILTERS: { label: string; value: DisputeStatus | "all" }[] = [
   { label: "Resolved", value: "RESOLVED" },
   { label: "Closed", value: "CLOSED" },
 ];
-
-const STATUS_STYLES: Record<string, string> = {
-  OPEN: "text-status-warning bg-status-warning/15",
-  UNDER_REVIEW: "text-status-info bg-status-info/15",
-  RESOLVED: "text-status-success bg-status-success/15",
-  CLOSED: "text-text-secondary bg-bg-elevated",
-};
 
 const PAGE_SIZE = 10;
 
@@ -159,7 +153,7 @@ export default function MediatorDisputesPage() {
                       {translateCopy("ui.trade_b0811e4")}{" "}{dispute.tradeId}
                     </span>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[dispute.status]}`}
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClasses(dispute.status)}`}
                     >
                       {dispute.status.replace("_", " ")}
                     </span>

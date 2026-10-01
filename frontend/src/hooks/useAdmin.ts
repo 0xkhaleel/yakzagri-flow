@@ -11,6 +11,7 @@ interface UseAdminResult {
   isAdminUIEnabled: boolean;
   canAccessAdmin: boolean;
   adminAddresses: string[];
+  isLoading: boolean;
 }
 
 /**
@@ -28,7 +29,7 @@ interface UseAdminResult {
  * requires the feature flag, preserving the `useAdmin` gating behavior.
  */
 export function useAdmin(): UseAdminResult {
-  const { address } = useAuth();
+  const { address, isLoading } = useAuth();
   const { address: freighterAddress } = useFreighterIdentity();
 
   const adminAddresses = useMemo(() => {
@@ -55,5 +56,6 @@ export function useAdmin(): UseAdminResult {
     isAdminUIEnabled: adminUIEnabled,
     canAccessAdmin,
     adminAddresses,
+    isLoading,
   };
 }
