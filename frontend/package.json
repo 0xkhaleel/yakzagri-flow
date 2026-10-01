@@ -11,6 +11,7 @@
     "test": "jest --config jest.config.ts",
     "test:watch": "jest --config jest.config.ts --watch",
     "test:coverage": "jest --config jest.config.ts --coverage",
+    "test:pact": "jest --config jest.config.ts --runTestsByPath tests/pact/trades.pact.spec.ts --runInBand",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
     "analyze": "ANALYZE=true next build"
@@ -49,6 +50,7 @@
     "jest-environment-jsdom": "30.5.2",
     "tailwindcss": "4.3.3",
     "ts-node": "10.9.2",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "undici": "^8.11.2"
   }
 }

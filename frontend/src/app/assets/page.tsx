@@ -33,17 +33,7 @@ const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
   { label: "Disputed", value: "disputed" },
 ];
 
-const STATUS_STYLES: Record<string, string> = {
-  active:    "text-status-success bg-status-success/10 border border-status-success/20",
-  funded:    "text-status-success bg-status-success/10 border border-status-success/20",
-  pending:   "text-status-warning bg-status-warning/10 border border-status-warning/20",
-  created:   "text-status-warning bg-status-warning/10 border border-status-warning/20",
-  completed: "text-text-secondary bg-surface-2 border border-border-default",
-  settled:   "text-text-secondary bg-surface-2 border border-border-default",
-  disputed:  "text-status-danger bg-status-danger/10 border border-status-danger/20",
-  cancelled: "text-text-muted bg-surface-1 border border-border-default",
-  delivered: "text-status-info bg-status-info/10 border border-status-info/20",
-};
+import { getStatusBadgeClasses } from "@/components/ui/StatusBadge";
 
 const ASSET_NAV = [
   {
@@ -406,7 +396,7 @@ function AssetTable({
             <tbody className="divide-y divide-border-default">
               {trades.map((trade) => {
                 const statusKey = trade.status.toLowerCase().replace(/_/g, "");
-                const pill = STATUS_STYLES[statusKey] ?? "text-text-muted bg-surface-2 border border-border-default";
+                const pill = getStatusBadgeClasses(statusKey);
                 const displayStatus = trade.status.toLowerCase().replace(/_/g, " ");
 
                 return (

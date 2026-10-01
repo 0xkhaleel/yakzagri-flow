@@ -39,7 +39,7 @@ export function ContractManifestCard({
       title={translateCopy("ui.contract_manifest_1052b0a")}
       icon={<FileText className="w-5 h-5" />}
       glowVariant="gold"
-      className="h-106.5"
+      className="h-104"
     >
       <div className="flex items-center justify-end -mt-8 mb-6">
         <span className="text-xs font-mono text-gold bg-gold-muted px-3 py-1 rounded-full">

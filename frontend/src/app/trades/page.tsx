@@ -306,7 +306,7 @@ export default function TradesPage() {
             </div>
           ) : (
             <div className="rounded-lg border border-border-default overflow-x-auto shadow-elev-1">
-              <table className="w-full min-w-[700px] text-sm">
+              <table className="w-full min-w-176 text-sm">
                 <caption className="sr-only">Trades matching the selected filters</caption>
                 <thead>
                   <tr className="border-b border-border-default bg-surface-1">

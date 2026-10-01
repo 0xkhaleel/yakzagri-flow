@@ -50,7 +50,7 @@ export function AuditLogCard({ entries, isLiveSync = true }: AuditLogCardProps) 
 
       <div className="space-y-4">
         {entries.map((entry, index) => (
-          <div key={index} className="flex items-start gap-3 bg-[#03110B4D] p-4 rounded-lg h-18">
+          <div key={index} className="flex items-start gap-3 bg-[#03110B4D] p-4 rounded-lg h-20">
             <div
               className={`w-10 h-10 rounded-full ${logBgColors[entry.type]} flex items-center justify-center shrink-0 mb-12`}
             >

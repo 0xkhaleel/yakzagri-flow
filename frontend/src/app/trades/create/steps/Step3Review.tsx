@@ -157,11 +157,12 @@ export function Step3Review({ draft, onBack }: Step3ReviewProps) {
     }
   };
 
-  return (
+  if (tradeId && txHash) {
+    return (
     <div className="step-review">
       <h2>Review Trade</h2>
 
-      <dl className="review-summary">
+      <div className="review-summary">
         <div>
           <p className="text-text-primary font-semibold text-lg">{translateCopy("ui.trade_created_c6d612a")}</p>
           <p className="text-text-secondary text-sm mt-1">{translateCopy("ui.funds_locked_in_escrow_vault_b134ccb")}</p>
@@ -186,6 +187,7 @@ export function Step3Review({ draft, onBack }: Step3ReviewProps) {
         >
           {translateCopy("ui.view_all_trades_20304ec")}
         </Link>
+      </div>
       </div>
     );
   }
@@ -249,9 +251,7 @@ export function Step3Review({ draft, onBack }: Step3ReviewProps) {
           <span className="text-sm text-status-warning">{pendingCount} {translateCopy("ui.queued_action_s_will_send_when_o_186a14f")}</span>
           <span className="text-xs text-text-muted">{translateCopy("ui.idempotency_keys_preserved_no_du_0f369d4")}</span>
         </div>
-      </dl>
-
-      {error && <p className="error">{error}</p>}
+      )}
 
       <div className="flex gap-3">
         <button

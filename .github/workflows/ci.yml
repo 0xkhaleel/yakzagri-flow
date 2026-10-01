@@ -142,13 +142,17 @@ jobs:
       - name: Build Next.js app
         run: pnpm build
         env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000
           NEXT_PUBLIC_API_BASE_URL: http://localhost:4000
+          NEXT_PUBLIC_API_VERSION_PREFIX: /api/v1
 
       - name: Run visual regression suite
         run: pnpm exec playwright test --project=chromium-desktop --project=chromium-mobile tests/visual
         env:
           CI: true
+          NEXT_PUBLIC_API_URL: http://localhost:4000
           NEXT_PUBLIC_API_BASE_URL: http://localhost:4000
+          NEXT_PUBLIC_API_VERSION_PREFIX: /api/v1
 
       - name: Upload visual regression report on failure
         if: failure()

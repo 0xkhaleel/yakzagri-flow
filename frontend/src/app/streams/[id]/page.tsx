@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { api, type StreamRemainingResponse, ApiError } from "@/lib/api";
-import { Breadcrumb, LoadingState, ErrorState } from "@/components/ui";
+import { Breadcrumbs, LoadingState, ErrorState } from "@/components/ui";
 import {
   getAssetInfo,
   stroopsToAmount,
@@ -96,7 +96,7 @@ export default function StreamDetailPage() {
     <section className="min-h-full bg-bg-primary px-6 py-8 lg:px-10">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Breadcrumb with admin action */}
-        <Breadcrumb
+        <Breadcrumbs
           items={breadcrumbItems}
           adminAction={
             canAccessAdmin
