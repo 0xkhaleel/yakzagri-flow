@@ -202,7 +202,7 @@ export function TradeTimeline({ events }: TradeTimelineProps) {
         <div className="absolute left-5 top-5 bottom-5 w-px bg-border-default" />
 
         <div className="flex flex-col gap-0">
-          {events.map((event, index) => (
+          {mergedEvents.map((event, index) => (
             <div key={event.id} className="relative flex gap-4">
               {/* Icon node */}
               <div
@@ -276,7 +276,6 @@ export function TradeTimeline({ events }: TradeTimelineProps) {
                     </div>
                   </div>
                 )}
-
               </div>
               </div>
             ))}

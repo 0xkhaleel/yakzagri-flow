@@ -24,6 +24,7 @@ import {
   ModalBody,
   ModalFooter,
 } from "@/components/ui/Modal";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 function formatDate(dateString: string) {
   return formatDateTime(dateString);
@@ -52,23 +53,7 @@ function InfoCard({
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    FUNDED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    PENDING: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    SETTLED: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    DISPUTED: "bg-red-500/15 text-red-400 border-red-500/30",
-    CANCELLED: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
-  };
-  const cls = colors[status.toUpperCase()] ?? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30";
-  return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${cls}`}>
-      {status}
-    </span>
-  );
-}
-
-type UserRole = "buyer" | "seller" | "observer" | "mediator";
+type UserRole = "buyer" | "seller" | "mediator" | "observer";
 type DisputeCategory = "quality" | "delivery" | "payment" | "fraud" | "other";
 
 function deriveRole(
@@ -79,8 +64,14 @@ function deriveRole(
   if (!walletAddress) return "observer";
   if (isMediatorAddress(walletAddress, getMediatorAddresses())) return "mediator";
   const addr = walletAddress.toLowerCase();
+  const mediatorAllowlist = (process.env.NEXT_PUBLIC_MEDIATOR_WALLETS ?? "")
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean);
+
   if (addr === buyerAddress.toLowerCase()) return "buyer";
   if (addr === sellerAddress.toLowerCase()) return "seller";
+  if (mediatorAllowlist.includes(addr)) return "mediator";
   return "observer";
 }
 
@@ -109,7 +100,7 @@ export default function TradeDetailPage() {
   async function runAction(
     label: string,
     action: string,
-    apiCall: (options: { idempotencyKey?: string }) => Promise<{ unsignedXdr: string }>,
+    apiCall: (options: { idempotencyKey: string }) => Promise<{ unsignedXdr: string }>,
   ) {
     if (!token || actionLoading) return;
 
@@ -117,7 +108,7 @@ export default function TradeDetailPage() {
     setActionError(null);
     setActionSuccess(null);
 
-    const scopeKey = `trade:${tradeId}:${action}`;
+    const scopeKey = `${action}:${tradeId}`;
     const idempotencyKey = getOrCreateIdempotencyKey(address, scopeKey);
 
     try {
@@ -179,7 +170,9 @@ export default function TradeDetailPage() {
   }
 
   function handleDeposit() {
-    void runAction("Deposit", "deposit", (options) => api.trades.deposit(token!, tradeId, options));
+    void runAction("Deposit", "deposit", (options) =>
+      api.trades.deposit(token!, tradeId, options),
+    );
   }
 
   function handleConfirmDelivery() {
@@ -189,7 +182,9 @@ export default function TradeDetailPage() {
   }
 
   function handleReleaseFunds() {
-    void runAction("Release Funds", "release-funds", (options) => api.trades.releaseFunds(token!, tradeId, options));
+    void runAction("Release Funds", "release-funds", (options) =>
+      api.trades.releaseFunds(token!, tradeId, options),
+    );
   }
 
   function handleInitiateDispute() {
@@ -199,10 +194,8 @@ export default function TradeDetailPage() {
       return;
     }
     setDisputeError(null);
-    void runAction(
-      "Initiate Dispute",
-      "dispute",
-      (options) => api.trades.initiateDispute(token!, tradeId, reason, disputeCategory, options),
+    void runAction("Initiate Dispute", "initiate-dispute", (options) =>
+      api.trades.initiateDispute(token!, tradeId, reason, disputeCategory, options),
     );
   }
 
@@ -253,7 +246,7 @@ export default function TradeDetailPage() {
                 <p className="mt-1 text-xs text-text-muted">{translateCopy("ui.updated_702cad2")}{" "}{formatDate(trade.updatedAt)}</p>
               </div>
               <div className="flex flex-col items-start sm:items-end gap-2">
-                <StatusBadge status={trade.status} />
+                <StatusBadge status={trade.status} size="sm" showIcon={false} />
                 {role !== "observer" && (
                   <span className="text-xs text-text-muted capitalize">{translateCopy("ui.your_role_83a4169")}{" "}{role}</span>
                 )}

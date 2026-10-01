@@ -26,19 +26,6 @@ const IPFS_MEDIA_ORIGINS = [
 
 const CSP_HEADER = "Content-Security-Policy";
 
-function buildConnectSrc(): string[] {
-  return [
-    "'self'",
-    ...WALLET_FRAME_ALLOWLIST,
-    ...IPFS_MEDIA_ORIGINS,
-    "https://api.pinata.cloud",
-  ];
-}
-
-function buildFrameSrc(): string[] {
-  return ["'self'", ...WALLET_FRAME_ALLOWLIST];
-}
-
 /**
  * Build the Content-Security-Policy for a given request.
  *
@@ -56,19 +43,18 @@ function buildFrameSrc(): string[] {
  */
 function buildCsp(nonce: string): string {
   const directives: Record<string, string[]> = {
-    // Fallback for directives that are not declared explicitly.
     "default-src": ["'self'"],
-
-    // Scripts: Next.js requires a per-request nonce; 'strict-dynamic' lets
-    // nonce-trusted scripts load their own dependencies.
-    "script-src": ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"],
-
-    // Styles: 'unsafe-inline' is required by the toast library, which injects
-    // inline <style> tags at runtime.
+    "script-src": ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'", "https:"],
     "style-src": ["'self'", "'unsafe-inline'"],
-    "img-src": ["'self'", "data:", "blob:", "https:"],
-    "media-src": ["'self'", "blob:"],
-    "font-src": ["'self'", "data:"],
+
+export function buildCsp(nonce: string): string {
+  const directives: Record<string, string> = {
+    "default-src": "'self'",
+    "script-src": `'self' 'nonce-${nonce}' 'strict-dynamic' https:`,
+    "style-src": "'self' 'unsafe-inline'",
+    "img-src": "'self' data: blob: https:",
+    "media-src": "'self' blob:",
+    "font-src": "'self' data:",
     "connect-src": buildConnectSrc(),
     "frame-src": buildFrameSrc(),
     "object-src": ["'none'"],
@@ -80,7 +66,7 @@ function buildCsp(nonce: string): string {
   };
 
   return Object.entries(directives)
-    .map(([key, values]) => values.length ? `${key} ${values.join(" ")}` : key)
+    .map(([name, values]) => (values.length ? `${name} ${values.join(" ")}` : name))
     .join("; ");
 }
 

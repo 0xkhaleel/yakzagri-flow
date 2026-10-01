@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { api, ApiError, type AdminStreamSummary } from "@/lib/api";
-import { Breadcrumb } from "@/components/ui";
+import { Breadcrumbs } from "@/components/ui";
 
 export default function StreamsPage() {
   const { token, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -54,7 +54,8 @@ export default function StreamsPage() {
   return (
     <section className="min-h-full bg-bg-primary px-6 py-8 lg:px-10">
       <div className="mx-auto max-w-7xl space-y-6">
-        <Breadcrumb items={breadcrumbItems} />
+        {/* Breadcrumb */}
+        <Breadcrumbs items={breadcrumbItems} />
 
         <div className="flex items-center justify-between">
           <div>
@@ -65,37 +66,54 @@ export default function StreamsPage() {
           </div>
         </div>
 
-        {loading ? (
-          <p role="status">{translateCopy("ui.loading_8f26c65")}</p>
-        ) : error ? (
-          <p role="alert">{error}</p>
-        ) : streams.length === 0 ? (
+        {/* Coming soon placeholder */}
+        {!canAccessAdmin ? (
           <>
-            <div className="rounded-2xl border border-border-default bg-card p-8 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-text-muted"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <h2 className="mt-4 text-lg font-medium text-text-primary">{translateCopy("ui.stream_list_coming_soon_b52faaf")}</h2>
-              <p className="text-sm text-text-muted mb-4">
-                {translateCopy("ui.stream_help_text")}
-              </p>
-              <Link
-                href="/admin/streams"
-                className="rounded-lg border border-border-default bg-bg-elevated px-4 py-2 text-sm font-medium text-text-secondary hover:border-border-hover hover:bg-card hover:text-text-primary transition-colors"
-              >
-                {translateCopy("ui.view_stream_ledger")}
-              </Link>
-            </div>
+        <div className="rounded-2xl border border-border-default bg-card p-8 text-center">
+          <svg
+            className="mx-auto h-12 w-12 text-text-muted"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <h2 className="mt-4 text-lg font-medium text-text-primary">{translateCopy("ui.stream_list_coming_soon_b52faaf")}</h2>
+          <p className="mt-2 text-sm text-text-secondary">
+            {translateCopy("ui.stream_listing_and_filtering_fea_e64ecf9")}
+          </p>
+          <div className="mt-6">
+            <Link
+              href="/"
+              className="inline-flex rounded-lg border border-border-default bg-bg-elevated px-4 py-2 text-sm font-medium text-text-secondary hover:border-border-hover hover:bg-card hover:text-text-primary transition-colors"
+            >
+              {translateCopy("ui.back_to_home_ce7472d")}
+            </Link>
+          </div>
+        </div>
+
+        {/* Example stream navigation */}
+        <div className="rounded-2xl border border-border-default bg-card p-5">
+          <p className="text-xs uppercase tracking-[0.22em] text-text-secondary mb-3">
+            {translateCopy("ui.quick_access_85257a4")}
+          </p>
+          <p className="text-sm text-text-muted mb-4">
+            Use a real stream ID from your connected wallet or the stream overview to open a detail page.
+          </p>
+          <div className="flex gap-3">
+            <Link
+              href="/admin/streams"
+              className="rounded-lg border border-border-default bg-bg-elevated px-4 py-2 text-sm font-medium text-text-secondary hover:border-border-hover hover:bg-card hover:text-text-primary transition-colors"
+            >
+              View Stream Ledger
+            </Link>
+          </div>
+        </div>
           </>
         ) : (
           <>

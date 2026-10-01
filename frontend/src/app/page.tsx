@@ -74,7 +74,7 @@ export default function LandingPage() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
         >
-          <div className="h-[480px] w-[480px] rounded-full bg-gold opacity-[0.04] blur-3xl" />
+          <div className="h-120 w-120 rounded-full bg-gold opacity-[0.04] blur-3xl" />
         </div>
 
         <div className="relative mx-auto max-w-4xl text-center">

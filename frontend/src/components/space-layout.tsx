@@ -95,7 +95,7 @@ export function VideoUploadCard({ onUpload }: VideoUploadCardProps) {
           cursor-pointer
           hover:border-border-hover hover:bg-bg-elevated
           transition-colors duration-200
-          min-h-[140px]
+          min-h-36
         "
       >
         {preview ? (

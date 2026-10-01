@@ -12,22 +12,9 @@ interface TradeHeaderProps {
   confirmingDelivery?: boolean;
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  "IN TRANSIT":
-    "bg-emerald-muted text-emerald border border-emerald/30",
-  "PENDING":
-    "bg-status-warning/10 text-status-warning border border-status-warning/30",
-  "SETTLED":
-    "bg-status-info/10 text-status-info border border-status-info/30",
-  "DISPUTED":
-    "bg-status-danger/10 text-status-danger border border-status-danger/30",
-  "DRAFT":
-    "bg-status-draft/10 text-status-draft border border-status-draft/30",
-};
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 export function TradeHeader({ trade, onConfirmDelivery, confirmingDelivery = false }: TradeHeaderProps) {
-  const statusStyle =
-    STATUS_STYLES[trade.status] ?? STATUS_STYLES["DRAFT"];
 
   return (
     <div className="bg-card rounded-xl border border-border-default p-6 shadow-card">
@@ -48,12 +35,7 @@ export function TradeHeader({ trade, onConfirmDelivery, confirmingDelivery = fal
           </h1>
           <div className="flex flex-wrap items-center gap-3 mt-3">
             {/* Status badge */}
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${statusStyle}`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-              {trade.status}
-            </span>
+            <StatusBadge status={trade.status} size="sm" showIcon />
 
             {/* Initiated date */}
             <span className="flex items-center gap-1.5 text-xs text-text-muted">

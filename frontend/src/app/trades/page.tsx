@@ -306,8 +306,8 @@ export default function TradesPage() {
             </div>
           ) : (
             <div className="rounded-lg border border-border-default overflow-x-auto shadow-elev-1">
-              <table className="w-full min-w-[700px] text-sm">
-                <caption className="sr-only">{translateCopy("ui.trades_matching_selected_filters")}</caption>
+              <table className="w-full min-w-176 text-sm">
+                <caption className="sr-only">Trades matching the selected filters</caption>
                 <thead>
                   <tr className="border-b border-border-default bg-surface-1">
                     <th scope="col" className="text-left px-4 py-3 text-text-muted font-medium">

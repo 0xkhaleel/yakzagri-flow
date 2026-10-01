@@ -174,7 +174,7 @@ export function Step3Review() {
   };
 
   if (tradeId && txHash) {
-  return (
+    return (
     <div className="step-review">
       <h2>{translateCopy("ui.review_trade_56119c6")}</h2>
 
@@ -267,7 +267,7 @@ export function Step3Review() {
           <span className="text-sm text-status-warning">{pendingCount} {translateCopy("ui.queued_action_s_will_send_when_o_186a14f")}</span>
           <span className="text-xs text-text-muted">{translateCopy("ui.idempotency_keys_preserved_no_du_0f369d4")}</span>
         </div>
-        )}
+      )}
 
       <div className="flex gap-3">
         <button

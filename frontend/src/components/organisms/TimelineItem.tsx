@@ -70,7 +70,7 @@ export function TimelineItem({
       <div className="relative w-3 shrink-0">
         {!isLast ? (
           <div
-            className="absolute top-3 left-1.5 w-0.5 min-h-[40px] bg-border-default"
+            className="absolute top-3 left-1.5 w-0.5 min-h-10 bg-border-default"
             aria-hidden
           />
         ) : null}

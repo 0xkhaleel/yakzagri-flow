@@ -271,6 +271,8 @@ export default function TradeDetailPage() {
       return;
     }
 
+    const scopeKey = `trade:${tradeId}:asset-action`;
+
     setActionLoading(true);
     setActionError(null);
     setActionSuccess(null);
@@ -321,16 +323,14 @@ export default function TradeDetailPage() {
   function handleConfirmDelivery() {
     void runSignedAction(
       "Delivery confirmation",
-      `trade:${tradeId}:confirmDelivery`,
-      (opts) => api.trades.confirmDelivery(token!, tradeId, opts),
+      () => api.trades.confirmDelivery(token!, tradeId),
     );
   }
 
   function handleReleaseFunds() {
     void runSignedAction(
       "Funds release",
-      `trade:${tradeId}:releaseFunds`,
-      (opts) => api.trades.releaseFunds(token!, tradeId, opts),
+      () => api.trades.releaseFunds(token!, tradeId),
     );
   }
 

@@ -94,10 +94,6 @@ jobs:
         if: needs.changes.outputs.frontend == 'true'
         run: pnpm test --ci --json
 
-      - name: A11y axe audit (blocking)
-        if: needs.changes.outputs.frontend == 'true'
-        run: pnpm test -- src/__tests__/accessibility --verbose
-
       - name: Upload coverage report
         if: needs.changes.outputs.frontend == 'true'
         uses: actions/upload-artifact@v7
@@ -115,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [changes, frontend]
     if: needs.changes.outputs.frontend == 'true'
-    timeout-minutes: 8
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -141,16 +137,26 @@ jobs:
       - name: Install Playwright browsers (Chromium only)
         run: pnpm exec playwright install chromium --with-deps
 
+      - name: Route smoke and accessibility audit
+        run: pnpm exec playwright test --project=e2e-chromium tests/e2e/routes-accessibility.spec.ts
+        env:
+          CI: true
+          NEXT_PUBLIC_API_URL: http://localhost:4000
+
       - name: Build Next.js app
         run: pnpm build
         env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000
           NEXT_PUBLIC_API_BASE_URL: http://localhost:4000
+          NEXT_PUBLIC_API_VERSION_PREFIX: /api/v1
 
       - name: Run visual regression suite
         run: pnpm exec playwright test --project=chromium-desktop --project=chromium-mobile tests/visual
         env:
           CI: true
+          NEXT_PUBLIC_API_URL: http://localhost:4000
           NEXT_PUBLIC_API_BASE_URL: http://localhost:4000
+          NEXT_PUBLIC_API_VERSION_PREFIX: /api/v1
 
       - name: Upload visual regression report on failure
         if: failure()

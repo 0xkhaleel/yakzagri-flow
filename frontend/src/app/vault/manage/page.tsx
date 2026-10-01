@@ -5,8 +5,7 @@ import { t as translateCopy } from "@/lib/i18n";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { formatDate as formatLocalizedDate } from "@/lib/i18n";
-import { formatNumber } from "@/lib/i18n/format";
+import { formatDateTime, formatNumber } from "@/lib/i18n/format";
 import {
   api,
   apiConfig,
@@ -23,6 +22,7 @@ import {
   NetworkBackboneCard,
   VaultFooter,
 } from "@/components/vault";
+import { getStatusBadgeClasses, getStatusDotClasses } from "@/components/ui/StatusBadge";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,37 +34,15 @@ type ActionModal =
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const STATUS_STYLES: Record<string, { pill: string; dot: string }> = {
-  active: {
-    pill: "text-status-success bg-emerald-muted",
-    dot: "bg-status-success",
-  },
-  pending: {
-    pill: "text-status-warning bg-status-warning/15",
-    dot: "bg-status-warning",
-  },
-  completed: {
-    pill: "text-text-secondary bg-bg-elevated",
-    dot: "bg-text-muted",
-  },
-  disputed: {
-    pill: "text-status-danger bg-status-danger/15",
-    dot: "bg-status-danger",
-  },
-  locked: { pill: "text-status-locked bg-gold-muted", dot: "bg-gold" },
-};
-
 function statusStyle(status: string) {
-  return (
-    STATUS_STYLES[status.toLowerCase()] ?? {
-      pill: "text-text-muted bg-bg-elevated",
-      dot: "bg-text-muted",
-    }
-  );
+  return {
+    pill: getStatusBadgeClasses(status),
+    dot: getStatusDotClasses(status),
+  };
 }
 
 function fmt(date: string) {
-  return formatLocalizedDate(date);
+  return formatDateTime(date);
 }
 
 function shortAddr(addr: string) {
