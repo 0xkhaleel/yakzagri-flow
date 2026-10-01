@@ -15,8 +15,9 @@ import { useOffline } from "@/hooks/useOffline";
 import { useOfflineQueueStore } from "@/stores/offlineQueueStore";
 import { useToast } from "@/hooks/useToast";
 import { shouldDedup, registerAction } from "@/lib/actionDedup";
-import { generateIdempotencyKey } from "@/lib/idempotency";
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from "@/lib/idempotency";
 import { generateCorrelationId } from "@/lib/correlationId";
+import { formatNumber } from "@/lib/i18n/format";
 
 type Row = { label: string; value: string };
 
@@ -29,11 +30,9 @@ function ReviewRow({ label, value }: Row) {
   );
 }
 
-export default function Step3Review() {
-  const router = useRouter();
-  const { data, setStep } = useTrade();
-  const { token, isAuthenticated, connectWallet, authenticate, isWalletConnected } = useAuth();
-  const { isOffline } = useOffline();
+export function Step3Review({ draft, onBack }: Step3ReviewProps) {
+  const navigate = useNavigate();
+  const submitTrade = useTradeStore((s) => s.submitTrade);
   const enqueue = useOfflineQueueStore((s) => s.enqueue);
   const pendingCount = useOfflineQueueStore((s) => s.queue.length);
   const { addToastWithCorrelation, updateToast } = useToast();
@@ -102,7 +101,7 @@ export default function Step3Review() {
     }
 
     const correlationId = generateCorrelationId();
-    const idempotencyKey = generateIdempotencyKey();
+    const idempotencyKey = getOrCreateIdempotencyKey(address, dedupKey);
     registerAction(dedupKey, correlationId, idempotencyKey);
 
     // Offline queue: queue idempotent action locally while offline (draft trades survive refresh)
@@ -140,35 +139,29 @@ export default function Step3Review() {
         correlationId,
       });
 
+      clearIdempotencyKey(address, dedupKey);
       setTradeId(submission.tradeId);
       setTxHash(submission.transactionHash);
       updateToast(correlationId, { type: "success", title: "Success", message: "Trade created — funds locked.", duration: 5000 });
       // Clear draft on success
       try { localStorage.removeItem("amana:draft-trade"); } catch {}
     } catch (err) {
-      let errorMessage = "Transaction failed. Please try again.";
-      if (err instanceof ApiError) {
-        errorMessage = err.message;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
+      if (!navigator.onLine) {
+        enqueue({ draft, correlationId });
+        navigate('/trades/queue');
+        return;
       }
-      setError(errorMessage);
-      // Snapshot-based rollback for store/state is not needed here (no optimistic patch yet), but ensure toast reflects error with correlation
-      updateToast(correlationId, { type: "error", title: "Error", message: errorMessage, duration: 6000 });
+      setError(err instanceof Error ? err.message : 'Failed to submit trade');
     } finally {
-      submittingRef.current = false;
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  if (txHash) {
-    return (
-      <div className="flex flex-col items-center gap-6 py-6 text-center">
-        <div className="w-16 h-16 rounded-full bg-emerald-muted flex items-center justify-center">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
+  return (
+    <div className="step-review">
+      <h2>Review Trade</h2>
+
+      <dl className="review-summary">
         <div>
           <p className="text-text-primary font-semibold text-lg">{translateCopy("ui.trade_created_c6d612a")}</p>
           <p className="text-text-secondary text-sm mt-1">{translateCopy("ui.funds_locked_in_escrow_vault_b134ccb")}</p>
@@ -256,15 +249,9 @@ export default function Step3Review() {
           <span className="text-sm text-status-warning">{pendingCount} {translateCopy("ui.queued_action_s_will_send_when_o_186a14f")}</span>
           <span className="text-xs text-text-muted">{translateCopy("ui.idempotency_keys_preserved_no_du_0f369d4")}</span>
         </div>
-      )}
+      </dl>
 
-      <LegalDisclaimerModal
-        isOpen={showDisclaimer}
-        onAccept={handleDisclaimerAccept}
-        onDecline={() => setShowDisclaimer(false)}
-        lossRatio={{ buyer: data.buyerRatio * 100, seller: data.sellerRatio * 100 }}
-        tradeValueCngn={amountUsdc}
-      />
+      {error && <p className="error">{error}</p>}
 
       <div className="flex gap-3">
         <button

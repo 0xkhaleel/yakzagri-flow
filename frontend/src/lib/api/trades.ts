@@ -32,10 +32,16 @@ export const tradesApi = {
   getEvidence: (token: string, id: string) =>
     request<EvidenceResponse>(`/trades/${id}/evidence`, { token }),
 
-  submitManifest: (token: string, tradeId: string, data: SubmitManifestRequest) =>
+  submitManifest: (
+    token: string,
+    tradeId: string,
+    data: SubmitManifestRequest,
+    opts?: { idempotencyKey?: string; correlationId?: string },
+  ) =>
     request<SubmitManifestResponse>(`/trades/${tradeId}/manifest`, {
       method: "POST",
       token,
+      headers: withIdempotency(undefined, opts),
       body: JSON.stringify(data),
     }),
 

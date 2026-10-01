@@ -45,6 +45,7 @@ jest.mock("@/lib/api", () => ({
   },
   apiConfig: {
     getStellarNetworkPassphrase: () => "Test SDF Network ; September 2015",
+    getStellarRpcUrl: () => "https://soroban-testnet.stellar.org",
   },
 }));
 
@@ -110,6 +111,10 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockWallet();
   mockSignTransaction.mockResolvedValue({ signedTxXdr: "signed-xdr", signerAddress: "GABC" } as unknown as Awaited<ReturnType<typeof signTransaction>>);
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ result: { hash: "tx-mock-hash-456" } }),
+  });
 });
 
 // ── Loading state ──────────────────────────────────────────────────────────────
@@ -307,6 +312,28 @@ describe("Trade Detail — Freighter signing flow", () => {
         "trade-123",
         "The payment receipt is fraudulent.",
         "fraud",
+        expect.objectContaining({ idempotencyKey: expect.any(String) }),
+      ),
+    );
+    await waitFor(() =>
+      expect(mockSignTransaction).toHaveBeenCalledWith(
+        "dispute-xdr",
+        expect.objectContaining({ networkPassphrase: "Test SDF Network ; September 2015" }),
+      ),
+    );
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith(
+        "https://soroban-testnet.stellar.org",
+        expect.objectContaining({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "sendTransaction",
+            params: { transaction: "signed-xdr" },
+          }),
+        }),
       ),
     );
   });
@@ -329,7 +356,7 @@ describe("Trade Detail — Freighter signing flow", () => {
     expect(mockInitiateDispute).not.toHaveBeenCalled();
   });
 
-  it("calls deposit API and signTransaction when Deposit is clicked", async () => {
+  it("calls deposit API, signs with Freighter, and broadcasts to Stellar when Deposit is clicked", async () => {
     mockAuth(BUYER_ADDRESS);
     mockUseTradeDetail.mockReturnValue({
       trade: makeTrade("PENDING"),
@@ -342,14 +369,31 @@ describe("Trade Detail — Freighter signing flow", () => {
     render(<TradeDetailPage />);
     await userEvent.click(screen.getByTestId("action-deposit"));
 
-    await waitFor(() => expect(mockDeposit).toHaveBeenCalledWith("jwt-token", "trade-123"));
+    await waitFor(() => expect(mockDeposit).toHaveBeenCalledWith(
+      "jwt-token",
+      "trade-123",
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
+    ));
     await waitFor(() => expect(mockSignTransaction).toHaveBeenCalledWith(
       "unsigned-xdr-payload",
       expect.objectContaining({ networkPassphrase: "Test SDF Network ; September 2015" })
     ));
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+      "https://soroban-testnet.stellar.org",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "sendTransaction",
+          params: { transaction: "signed-xdr" },
+        }),
+      })
+    ));
   });
 
-  it("shows success message after successful signing", async () => {
+  it("shows success message and transaction hash after successful signing and broadcast", async () => {
     mockAuth(BUYER_ADDRESS);
     mockUseTradeDetail.mockReturnValue({
       trade: makeTrade("PENDING"),
@@ -363,8 +407,9 @@ describe("Trade Detail — Freighter signing flow", () => {
     await userEvent.click(screen.getByTestId("action-deposit"));
 
     await waitFor(() =>
-      expect(screen.getByText(/signed successfully/i)).toBeInTheDocument()
+      expect(screen.getByText(/completed successfully/i)).toBeInTheDocument()
     );
+    expect(screen.getByText(/tx-mock-hash-456/i)).toBeInTheDocument();
   });
 
   it("shows error message when signTransaction fails", async () => {
@@ -388,7 +433,30 @@ describe("Trade Detail — Freighter signing flow", () => {
     );
   });
 
-  it("calls confirmDelivery API when Confirm Delivery is clicked", async () => {
+  it("shows error message when Stellar broadcast fails", async () => {
+    mockAuth(BUYER_ADDRESS);
+    mockUseTradeDetail.mockReturnValue({
+      trade: makeTrade("PENDING"),
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    mockDeposit.mockResolvedValue({ unsignedXdr: "xdr-payload" });
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: { message: "RPC node broadcast error" } }),
+    });
+
+    render(<TradeDetailPage />);
+    await userEvent.click(screen.getByTestId("action-deposit"));
+
+    await waitFor(() =>
+      expect(screen.getByText(/RPC node broadcast error/i)).toBeInTheDocument()
+    );
+  });
+
+  it("calls confirmDelivery API, signs, and broadcasts when Confirm Delivery is clicked", async () => {
     mockAuth(BUYER_ADDRESS);
     mockUseTradeDetail.mockReturnValue({
       trade: makeTrade("FUNDED"),
@@ -401,10 +469,31 @@ describe("Trade Detail — Freighter signing flow", () => {
     render(<TradeDetailPage />);
     await userEvent.click(screen.getByTestId("action-confirm-delivery"));
 
-    await waitFor(() => expect(mockConfirmDelivery).toHaveBeenCalledWith("jwt-token", "trade-123"));
+    await waitFor(() => expect(mockConfirmDelivery).toHaveBeenCalledWith(
+      "jwt-token",
+      "trade-123",
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
+    ));
+    await waitFor(() => expect(mockSignTransaction).toHaveBeenCalledWith(
+      "confirm-xdr",
+      expect.objectContaining({ networkPassphrase: "Test SDF Network ; September 2015" })
+    ));
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+      "https://soroban-testnet.stellar.org",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "sendTransaction",
+          params: { transaction: "signed-xdr" },
+        }),
+      })
+    ));
   });
 
-  it("calls releaseFunds API when Release Funds is clicked", async () => {
+  it("calls releaseFunds API, signs, and broadcasts when Release Funds is clicked", async () => {
     mockAuth(SELLER_ADDRESS);
     mockUseTradeDetail.mockReturnValue({
       trade: makeTrade("FUNDED"),
@@ -417,6 +506,63 @@ describe("Trade Detail — Freighter signing flow", () => {
     render(<TradeDetailPage />);
     await userEvent.click(screen.getByTestId("action-release-funds"));
 
-    await waitFor(() => expect(mockReleaseFunds).toHaveBeenCalledWith("jwt-token", "trade-123"));
+    await waitFor(() => expect(mockReleaseFunds).toHaveBeenCalledWith(
+      "jwt-token",
+      "trade-123",
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
+    ));
+    await waitFor(() => expect(mockSignTransaction).toHaveBeenCalledWith(
+      "release-xdr",
+      expect.objectContaining({ networkPassphrase: "Test SDF Network ; September 2015" })
+    ));
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+      "https://soroban-testnet.stellar.org",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "sendTransaction",
+          params: { transaction: "signed-xdr" },
+        }),
+      })
+    ));
+  });
+
+  it("reuses stable Idempotency-Key on retry after failed attempt (#9)", async () => {
+    mockAuth(BUYER_ADDRESS);
+    mockUseTradeDetail.mockReturnValue({
+      trade: makeTrade("PENDING"),
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    mockDeposit.mockResolvedValue({ unsignedXdr: "xdr-retry" });
+    // First attempt fails during signing
+    mockSignTransaction.mockResolvedValueOnce({
+      error: { message: "Network timeout" },
+    } as any);
+    // Second attempt succeeds
+    mockSignTransaction.mockResolvedValueOnce({
+      signedTxXdr: "signed-xdr",
+    } as any);
+
+    render(<TradeDetailPage />);
+
+    // Click Deposit (1st attempt)
+    await userEvent.click(screen.getByTestId("action-deposit"));
+    await waitFor(() => expect(screen.getByText(/network timeout/i)).toBeInTheDocument());
+
+    const firstKey = (mockDeposit.mock.calls[0][2] as any)?.idempotencyKey;
+    expect(firstKey).toBeDefined();
+
+    // Click Deposit again (retry attempt)
+    await userEvent.click(screen.getByTestId("action-deposit"));
+    await waitFor(() => expect(screen.getByText(/completed successfully/i)).toBeInTheDocument());
+
+    const secondKey = (mockDeposit.mock.calls[1][2] as any)?.idempotencyKey;
+    // Retried submit reuses the exact same Idempotency-Key to prevent duplicate on-chain operation
+    expect(secondKey).toBe(firstKey);
   });
 });
