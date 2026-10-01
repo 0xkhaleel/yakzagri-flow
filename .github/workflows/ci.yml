@@ -82,6 +82,10 @@ jobs:
         if: needs.changes.outputs.frontend == 'true'
         run: pnpm lint
 
+      - name: Undefined Tailwind colour guard
+        if: needs.changes.outputs.frontend == 'true'
+        run: node scripts/check-tailwind-colors.mjs
+
       - name: Type check
         if: needs.changes.outputs.frontend == 'true'
         run: npx tsc --noEmit
