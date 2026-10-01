@@ -52,7 +52,7 @@ function buildCsp(nonce: string): string {
     // inline <style> tags at runtime.
     "style-src": ["'self'", "'unsafe-inline'"],
 
-function buildCsp(nonce: string): string {
+export function buildCsp(nonce: string): string {
   const directives: Record<string, string> = {
     "default-src": "'self'",
     "script-src": `'self' 'nonce-${nonce}' 'strict-dynamic' https:`,
