@@ -51,7 +51,7 @@ export function ActionBar({
       {showPoDVerification && (
         <button
           disabled
-          title="Proof-of-delivery verification is not available yet."
+          title={translateCopy("ui.proof_of_delivery_unavailable")}
           className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-semibold opacity-50 cursor-not-allowed"
         >
           <svg

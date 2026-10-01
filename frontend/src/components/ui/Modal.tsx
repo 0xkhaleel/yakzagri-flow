@@ -22,6 +22,16 @@ export interface ModalContentProps extends React.ComponentPropsWithoutRef<
   overlayOpacity?: OverlayOpacity;
   mobileFullScreen?: boolean;
   showCloseButton?: boolean;
+  /**
+   * Element that should receive focus when the dialog opens.
+   *
+   * Radix Dialog owns the focus trap and restores focus to the trigger on
+   * close, so callers must not run their own focus effects. Use this prop only
+   * to steer the *initial* target (for example a "Cancel" button in a
+   * destructive confirmation). When omitted, Radix focuses the first focusable
+   * element inside the dialog.
+   */
+  initialFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
 const overlayByOpacity: Record<OverlayOpacity, string> = {
@@ -60,29 +70,10 @@ export function ModalContent({
   overlayOpacity = "medium",
   mobileFullScreen = true,
   showCloseButton = true,
+  initialFocusRef,
+  onOpenAutoFocus,
   ...props
 }: ModalContentProps) {
-  const contentRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const content = contentRef.current;
-    if (!content) return;
-
-    const previouslyFocused = document.activeElement as HTMLElement;
-
-    const focusableElements = content.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-    );
-
-    if (focusableElements.length > 0) {
-      focusableElements[0]?.focus();
-    }
-
-    return () => {
-      previouslyFocused?.focus();
-    };
-  }, []);
-
   return (
     <ModalPortal>
       <Dialog.Overlay
@@ -93,7 +84,6 @@ export function ModalContent({
         )}
       />
       <Dialog.Content
-        ref={contentRef}
         className={clsx(
           "fixed z-50 bg-card dark:bg-surface-1 border border-border-default dark:border-border-default shadow-modal",
           "transition-all duration-200 ease-out",
@@ -104,6 +94,16 @@ export function ModalContent({
             : "left-1/2 top-1/2 w-[min(92vw,640px)] -translate-x-1/2 -translate-y-1/2 rounded-2xl",
           className,
         )}
+        onOpenAutoFocus={(event) => {
+          onOpenAutoFocus?.(event);
+          if (event.defaultPrevented) return;
+
+          const target = initialFocusRef?.current;
+          if (target) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
         {...props}
       >
         {showCloseButton ? (

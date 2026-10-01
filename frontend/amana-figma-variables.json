@@ -1,4 +1,5 @@
 {
+  "$description": "Figma variables export. One mode per theme, mirroring frontend/design-tokens.json and the custom properties in src/app/globals.css. Regenerate with `node scripts/design-tokens.mjs --write`; CI runs `--check` and fails if this file is stale.",
   "amana-colors": {
     "bg": {
       "primary": {
@@ -20,6 +21,11 @@
         "$value": "#0F2219",
         "$type": "color",
         "$description": "Input field backgrounds"
+      },
+      "overlay": {
+        "$value": "rgba(11, 26, 20, 0.85)",
+        "$type": "color",
+        "$description": "Modal and dialog backdrop"
       }
     },
     "accent": {
@@ -33,10 +39,20 @@
         "$type": "color",
         "$description": "Gold hover state"
       },
+      "gold-muted": {
+        "$value": "rgba(212, 168, 83, 0.15)",
+        "$type": "color",
+        "$description": "Gold tinted backgrounds"
+      },
       "emerald": {
         "$value": "#34D399",
         "$type": "color",
         "$description": "Success, verified, delivered"
+      },
+      "emerald-muted": {
+        "$value": "rgba(52, 211, 153, 0.15)",
+        "$type": "color",
+        "$description": "Emerald tinted backgrounds"
       },
       "teal": {
         "$value": "#14B8A6",
@@ -44,75 +60,54 @@
         "$description": "Secondary accent, links"
       }
     },
-    "text": {
-      "primary": {
-        "$value": "#F0F5F1",
-        "$type": "color",
-        "$description": "Headings, prominent text"
+    "surface-2": {
+      "$type": "color",
+      "$value": {
+        "light": "#F0F5F1",
+        "dark": "#1A3D2C"
       },
-      "secondary": {
-        "$value": "#8BA89A",
-        "$type": "color",
-        "$description": "Body text, labels"
-      },
-      "muted": {
-        "$value": "#5A7A6A",
-        "$type": "color",
-        "$description": "Placeholder, disabled"
-      },
-      "inverse": {
-        "$value": "#0B1A14",
-        "$type": "color",
-        "$description": "Text on gold buttons"
-      }
+      "$description": "Elevated surface — active rows, modals, dropdowns"
     },
-    "status": {
-      "success": {
-        "$value": "#34D399",
-        "$type": "color",
-        "$description": "Delivered, completed"
+    "surface-3": {
+      "$type": "color",
+      "$value": {
+        "light": "rgba(0, 0, 0, 0.4)",
+        "dark": "rgba(11, 26, 20, 0.85)"
       },
-      "warning": {
-        "$value": "#F59E0B",
-        "$type": "color",
-        "$description": "In transit, pending"
-      },
-      "danger": {
-        "$value": "#EF4444",
-        "$type": "color",
-        "$description": "Disputed, errors"
-      },
-      "info": {
-        "$value": "#3B82F6",
-        "$type": "color",
-        "$description": "Informational"
-      },
-      "locked": {
-        "$value": "#D4A853",
-        "$type": "color",
-        "$description": "Funds locked in escrow"
-      },
-      "draft": {
-        "$value": "#6B7280",
-        "$type": "color",
-        "$description": "Draft, inactive"
-      }
+      "$description": "Overlay / modal scrim"
     },
     "border": {
       "default": {
-        "$value": "#2A4A3A",
+        "$value": "rgba(139, 168, 154, 0.2)",
         "$type": "color",
         "$description": "Default borders"
       },
       "hover": {
-        "$value": "#3A6A5A",
+        "$value": "rgba(139, 168, 154, 0.4)",
         "$type": "color",
         "$description": "Hover borders"
       },
       "focus": {
-        "$value": "#D4A853",
+        "$value": "rgba(212, 168, 83, 0.6)",
         "$type": "color",
         "$description": "Focus borders"
+      }
+    },
+    "gradient": {
+      "hero": {
+        "$value": "linear-gradient(135deg, #0B1A14 0%, #122A1F 50%, #1A3D2C 100%)",
+        "$type": "color",
+        "$description": "Hero section background gradient"
+      },
+      "gold-cta": {
+        "$value": "linear-gradient(135deg, #D4A853 0%, #E0BA6A 100%)",
+        "$type": "color",
+        "$description": "Primary CTA button gradient"
+      },
+      "card-glow": {
+        "$value": "linear-gradient(135deg, rgba(52,211,153,0.05) 0%, rgba(212,168,83,0.05) 100%)",
+        "$type": "color",
+        "$description": "Subtle card glow effect"
       }
     }
   },
@@ -273,6 +268,47 @@
       "relaxed": {
         "$value": 1.75,
         "$type": "number"
+      },
+      "display": {
+        "$value": 1.1,
+        "$type": "number"
+      },
+      "hero": {
+        "$value": 1.15,
+        "$type": "number"
+      },
+      "heading": {
+        "$value": 1.25,
+        "$type": "number"
+      },
+      "subheading": {
+        "$value": 1.3,
+        "$type": "number"
+      },
+      "compact": {
+        "$value": 1.4,
+        "$type": "number"
+      },
+      "large": {
+        "$value": 1.6,
+        "$type": "number"
+      }
+    },
+    "letterSpacing": {
+      "tight": {
+        "$value": "-0.02em",
+        "$type": "dimension",
+        "$description": "Headlines"
+      },
+      "normal": {
+        "$value": "0",
+        "$type": "dimension",
+        "$description": "Body text"
+      },
+      "wide": {
+        "$value": "0.05em",
+        "$type": "dimension",
+        "$description": "Labels and badges"
       }
     }
   },
@@ -326,6 +362,120 @@
         "spread": "0px"
       },
       "$type": "shadow"
+    }
+  },
+  "amana-font-families": {
+    "sans": {
+      "$value": "Geist, Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+      "$type": "fontFamily",
+      "$description": "Primary font for headings and body"
+    },
+    "mono": {
+      "$value": "Geist Mono, JetBrains Mono, monospace",
+      "$type": "fontFamily",
+      "$description": "Wallet addresses, code, and IDs"
+    },
+    "manrope": {
+      "$value": "Manrope, sans-serif",
+      "$type": "fontFamily",
+      "$description": "Alternative display font"
+    }
+  },
+  "amana-effects": {
+    "borderWidth": {
+      "default": { "$value": "1px", "$type": "dimension" },
+      "thick": { "$value": "2px", "$type": "dimension" }
+    },
+    "opacity": {
+      "glass": { "$value": "0.05", "$type": "number", "$description": "Glass card fill" },
+      "glass-border": { "$value": "0.1", "$type": "number", "$description": "Glass card border" },
+      "disabled": { "$value": "0.5", "$type": "number", "$description": "Disabled elements" },
+      "hover-overlay": { "$value": "0.08", "$type": "number", "$description": "Hover fill overlay" }
+    },
+    "backdropBlur": {
+      "sm": { "$value": "4px", "$type": "dimension", "$description": "Subtle blur" },
+      "md": { "$value": "12px", "$type": "dimension", "$description": "Standard glassmorphism" },
+      "lg": { "$value": "24px", "$type": "dimension", "$description": "Modal blur" }
+    }
+  },
+  "amana-themes": {
+    "light": {
+      "surface-0": { "$value": "#F7FAF8", "$type": "color" },
+      "surface-1": { "$value": "#FFFFFF", "$type": "color" },
+      "surface-2": { "$value": "#F0F5F1", "$type": "color" },
+      "surface-3": { "$value": "rgba(0, 0, 0, 0.4)", "$type": "color" },
+      "gold": { "$value": "#9A7B2F", "$type": "color" },
+      "gold-hover": { "$value": "#8A6B20", "$type": "color" },
+      "gold-muted": { "$value": "rgba(154, 123, 47, 0.1)", "$type": "color" },
+      "emerald": { "$value": "#059669", "$type": "color" },
+      "emerald-muted": { "$value": "rgba(5, 150, 105, 0.1)", "$type": "color" },
+      "teal": { "$value": "{amana-colors.accent.teal}", "$type": "color" },
+      "text-primary": { "$value": "#1A2E1F", "$type": "color" },
+      "text-secondary": { "$value": "#4A6B52", "$type": "color" },
+      "text-muted": { "$value": "#7A9A82", "$type": "color" },
+      "text-inverse": { "$value": "#FFFFFF", "$type": "color" },
+      "status-success": { "$value": "#059669", "$type": "color" },
+      "status-warning": { "$value": "#D97706", "$type": "color" },
+      "status-danger": { "$value": "#DC2626", "$type": "color" },
+      "status-info": { "$value": "#2563EB", "$type": "color" },
+      "status-locked": { "$value": "#9A7B2F", "$type": "color" },
+      "status-draft": { "$value": "#6B7280", "$type": "color" },
+      "border-subtle": { "$value": "rgba(26, 46, 31, 0.08)", "$type": "color" },
+      "border-default": { "$value": "rgba(26, 46, 31, 0.15)", "$type": "color" },
+      "border-raised": { "$value": "rgba(26, 46, 31, 0.22)", "$type": "color" },
+      "border-hover": { "$value": "rgba(26, 46, 31, 0.3)", "$type": "color" },
+      "border-focus": { "$value": "rgba(154, 123, 47, 0.5)", "$type": "color" },
+      "shadow-elev-1": { "$value": "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)", "$type": "shadow" },
+      "shadow-elev-2": { "$value": "0 4px 12px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)", "$type": "shadow" },
+      "shadow-elev-3": { "$value": "0 16px 48px rgba(0,0,0,0.1)", "$type": "shadow" },
+      "bg-input": { "$value": "#EBF0ED", "$type": "color" },
+      "skeleton-base": { "$value": "#E8EDE9", "$type": "color" },
+      "skeleton-sheen": { "$value": "rgba(26, 46, 31, 0.06)", "$type": "color" },
+      "scrollbar-track": { "$value": "#F0F5F1", "$type": "color" },
+      "scrollbar-thumb": { "$value": "rgba(26, 46, 31, 0.15)", "$type": "color" },
+      "scrollbar-thumb-hover": { "$value": "rgba(26, 46, 31, 0.25)", "$type": "color" },
+      "amana-gradient-hero": { "$value": "linear-gradient(135deg, #F7FAF8 0%, #FFFFFF 50%, #F0F5F1 100%)", "$type": "color" },
+      "amana-gradient-gold-cta": { "$value": "linear-gradient(135deg, #9A7B2F 0%, #8A6B20 100%)", "$type": "color" },
+      "amana-gradient-card-glow": { "$value": "{amana-colors.gradient.card-glow}", "$type": "color" }
+    },
+    "dark": {
+      "surface-0": { "$value": "{amana-colors.bg.primary}", "$type": "color" },
+      "surface-1": { "$value": "{amana-colors.bg.card}", "$type": "color" },
+      "surface-2": { "$value": "{amana-colors.bg.elevated}", "$type": "color" },
+      "surface-3": { "$value": "{amana-colors.bg.overlay}", "$type": "color" },
+      "gold": { "$value": "{amana-colors.accent.gold}", "$type": "color" },
+      "gold-hover": { "$value": "{amana-colors.accent.gold-hover}", "$type": "color" },
+      "gold-muted": { "$value": "{amana-colors.accent.gold-muted}", "$type": "color" },
+      "emerald": { "$value": "{amana-colors.accent.emerald}", "$type": "color" },
+      "emerald-muted": { "$value": "{amana-colors.accent.emerald-muted}", "$type": "color" },
+      "teal": { "$value": "{amana-colors.accent.teal}", "$type": "color" },
+      "text-primary": { "$value": "{amana-colors.text.primary}", "$type": "color" },
+      "text-secondary": { "$value": "{amana-colors.text.secondary}", "$type": "color" },
+      "text-muted": { "$value": "{amana-colors.text.muted}", "$type": "color" },
+      "text-inverse": { "$value": "{amana-colors.text.inverse}", "$type": "color" },
+      "status-success": { "$value": "{amana-colors.status.success}", "$type": "color" },
+      "status-warning": { "$value": "{amana-colors.status.warning}", "$type": "color" },
+      "status-danger": { "$value": "{amana-colors.status.danger}", "$type": "color" },
+      "status-info": { "$value": "{amana-colors.status.info}", "$type": "color" },
+      "status-locked": { "$value": "{amana-colors.status.locked}", "$type": "color" },
+      "status-draft": { "$value": "{amana-colors.status.draft}", "$type": "color" },
+      "border-subtle": { "$value": "rgba(139, 168, 154, 0.12)", "$type": "color" },
+      "border-default": { "$value": "{amana-colors.border.default}", "$type": "color" },
+      "border-raised": { "$value": "rgba(139, 168, 154, 0.32)", "$type": "color" },
+      "border-hover": { "$value": "{amana-colors.border.hover}", "$type": "color" },
+      "border-focus": { "$value": "{amana-colors.border.focus}", "$type": "color" },
+      "shadow-elev-1": { "$value": "0 1px 4px rgba(0,0,0,0.25), 0 4px 24px rgba(0,0,0,0.3)", "$type": "shadow" },
+      "shadow-elev-2": { "$value": "0 4px 12px rgba(0,0,0,0.35), 0 8px 32px rgba(0,0,0,0.4)", "$type": "shadow" },
+      "shadow-elev-3": { "$value": "0 16px 48px rgba(0,0,0,0.5)", "$type": "shadow" },
+      "bg-input": { "$value": "{amana-colors.bg.input}", "$type": "color" },
+      "skeleton-base": { "$value": "{amana-colors.bg.elevated}", "$type": "color" },
+      "skeleton-sheen": { "$value": "rgba(240, 245, 241, 0.08)", "$type": "color" },
+      "scrollbar-track": { "$value": "{amana-colors.bg.primary}", "$type": "color" },
+      "scrollbar-thumb": { "$value": "rgba(139, 168, 154, 0.2)", "$type": "color" },
+      "scrollbar-thumb-hover": { "$value": "{amana-colors.border.hover}", "$type": "color" },
+      "amana-gradient-hero": { "$value": "{amana-colors.gradient.hero}", "$type": "color" },
+      "amana-gradient-gold-cta": { "$value": "{amana-colors.gradient.gold-cta}", "$type": "color" },
+      "amana-gradient-card-glow": { "$value": "{amana-colors.gradient.card-glow}", "$type": "color" }
     }
   }
 }

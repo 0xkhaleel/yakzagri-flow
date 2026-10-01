@@ -138,7 +138,7 @@ export default function ReputationPage() {
         <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center">
           <AlertCircle className="w-8 h-8 text-gold" />
         </div>
-        <h1 className="text-2xl font-bold text-text-primary">{translateCopy("ui.connect_wallet_234d7c8")}</h1>
+        <h2 className="text-2xl font-bold text-text-primary">{translateCopy("ui.connect_wallet_234d7c8")}</h2>
         <p className="text-text-secondary max-w-md">
           {translateCopy("ui.please_connect_your_wallet_to_vi_a4f8c6d")}
         </p>
@@ -163,7 +163,7 @@ export default function ReputationPage() {
         <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center">
           <AlertCircle className="w-8 h-8 text-status-danger" />
         </div>
-        <h1 className="text-xl font-semibold text-text-primary">{translateCopy("ui.failed_to_load_reputation_940a7ad")}</h1>
+        <h2 className="text-xl font-semibold text-text-primary">{translateCopy("ui.failed_to_load_reputation_940a7ad")}</h2>
         <p className="text-text-secondary max-w-md">{error}</p>
         <Button variant="primary" onClick={fetchReputation}>
           <RefreshCw className="w-4 h-4 mr-2" />
@@ -179,7 +179,7 @@ export default function ReputationPage() {
         <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center">
           <TrendingUp className="w-8 h-8 text-text-secondary" />
         </div>
-        <h1 className="text-2xl font-bold text-text-primary">{translateCopy("ui.no_reputation_data_8b0fe48")}</h1>
+        <h2 className="text-2xl font-bold text-text-primary">{translateCopy("ui.no_reputation_data_8b0fe48")}</h2>
         <p className="text-text-secondary max-w-md">
           {translateCopy("ui.your_reputation_will_be_calculat_af47dce")}
         </p>
@@ -237,7 +237,7 @@ export default function ReputationPage() {
             >
               <div className="flex items-center gap-2 mb-3">
                 {metric.icon}
-                <h3 className="text-sm font-medium text-text-secondary">{metric.title}</h3>
+                <h2 className="text-sm font-medium text-text-secondary">{metric.title}</h2>
               </div>
               <p className="text-2xl font-bold text-text-primary">{metric.value}</p>
             </div>

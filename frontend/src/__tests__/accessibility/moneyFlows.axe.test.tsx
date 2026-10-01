@@ -1,5 +1,5 @@
 import React from "react";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { VideoUploadCard } from "@/components/ui/VideoUploadCard";
@@ -56,26 +56,25 @@ describe("Money-action flows — axe WCAG 2.1 AA", () => {
 
   describe("ConfirmActionModal — money-action confirmation (alertdialog)", () => {
     it("has no axe violations — danger variant", async () => {
-      const { container } = render(
+      render(
         <ConfirmActionModal
-          isOpen={true}
-          onClose={() => {}}
+          open
+          onOpenChange={() => {}}
           onConfirm={() => {}}
           title="Confirm clawback"
-          description="This will claw back 100 cNGN irreversibly."
+          message="This will claw back 100 cNGN irreversibly."
           variant="danger"
           confirmLabel="Confirm Clawback"
         />
       );
-      // Modal uses Radix; in jsdom axe may warn about missing focus but we assert no critical/serious
-      const results = await axe(container);
-      const critical = results.violations.filter((v) => ["critical", "serious"].includes(v.impact!));
-      expect(critical).toEqual([]);
+      // The dialog is portalled to document.body, so audit the dialog itself.
+      const dialog = await screen.findByRole("alertdialog");
+      expect(await axe(dialog)).toHaveNoViolations();
     });
   });
 
   describe("TradeListItem — keyboard accessible", () => {
-    it("outer div has role=button, tabIndex=0, and aria-label", async () => {
+    it("trade title is keyboard accessible without nesting row actions", async () => {
       const { TradeListItem } = await import("@/components/trade/TradeListItem");
       const { container } = render(
         <TradeListItem
@@ -89,10 +88,9 @@ describe("Money-action flows — axe WCAG 2.1 AA", () => {
           onDeposit={() => {}}
         />
       );
-      const card = container.querySelector('[role="button"]') as HTMLElement;
-      expect(card).toBeTruthy();
-      expect(card.getAttribute("tabIndex")).toBe("0");
-      expect(card.getAttribute("aria-label")).toMatch(/View trade t-1/);
+      const viewButton = container.querySelector('button[aria-label*="View trade t-1"]') as HTMLElement;
+      expect(viewButton).toBeTruthy();
+      expect(viewButton.getAttribute("tabIndex")).not.toBe("-1");
       const depositBtn = container.querySelector('button[aria-label*="Deposit"]');
       expect(depositBtn).toBeTruthy();
       expect(await axe(container)).toHaveNoViolations();

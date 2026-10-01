@@ -223,14 +223,14 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
       <button
         ref={triggerRef}
         onClick={open}
-        aria-label="Open global search"
+        aria-label={translateCopy("ui.open_global_search_489a247")}
         className="flex items-center gap-2 rounded-lg border border-border-default bg-bg-elevated px-2 py-1.5 text-sm text-text-muted hover:border-border-hover hover:text-text-secondary transition-colors sm:px-3"
       >
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
           <circle cx="6.5" cy="6.5" r="4.5" />
           <path d="M10 10l3 3" strokeLinecap="round" />
         </svg>
-        <span className="hidden sm:inline">Search</span>
+        <span className="hidden sm:inline">{translateCopy("ui.search_bce0641")}</span>
         <kbd className="ml-1 hidden sm:inline-flex items-center gap-0.5 rounded border border-border-default px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
           <span>⌘</span>{translateCopy("ui.k_a7ee38b")}
         </kbd>
@@ -258,17 +258,11 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
           <input
             ref={inputRef}
             type="text"
-            role="combobox"
-            aria-label="Search trades, users, and contracts"
-            aria-autocomplete="list"
-            aria-haspopup="listbox"
-            aria-expanded={hasResults}
-            aria-controls={hasResults ? RESULTS_LISTBOX_ID : undefined}
-            aria-activedescendant={
-              activeIndex >= 0 ? `search-result-${activeIndex}` : undefined
-            }
-            aria-describedby={!query ? SEARCH_HINT_ID : undefined}
-            placeholder="Search trades, users, contracts…"
+            role="searchbox"
+            aria-label={translateCopy("ui.search_trades_users_and_contract_3948f3a")}
+            aria-controls="global-search-results"
+            aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
+            placeholder={translateCopy("ui.search_trades_users_contracts_204acaf")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyNavigation}
@@ -289,34 +283,22 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
           </button>
         </div>
 
-        {/* Status messages stay outside the listbox so the popup only ever
-            contains options (and their labelled groups). */}
-        {error && (
-          <p role="alert" className="px-3 py-4 text-center text-sm text-status-danger">
-            {error}
-          </p>
-        )}
+        {/* Results */}
+        <div id="global-search-results" className="max-h-[60vh] overflow-y-auto p-2" role="listbox" aria-label={translateCopy("ui.search_results_0144dae")}>
+          {error && (
+            <p className="px-3 py-4 text-center text-sm text-status-danger">{error}</p>
+          )}
 
-        {!error && query && !loading && !hasResults && (
-          <p role="status" className="px-3 py-4 text-center text-sm text-text-muted">
-            {translateCopy("ui.no_results_for_2a5f91d")}{query}&rdquo;
-          </p>
-        )}
+          {!error && query && !loading && !hasResults && (
+            <p className="px-3 py-4 text-center text-sm text-text-muted">{translateCopy("ui.no_results_for_2a5f91d")}{query}&rdquo;</p>
+          )}
 
-        {!error && !query && (
-          <p id={SEARCH_HINT_ID} className="px-3 py-4 text-center text-sm text-text-muted">
-            {translateCopy("ui.type_to_search_trades_users_and__6fdf7a0")}
-          </p>
-        )}
+          {!error && !query && (
+            <p className="px-3 py-4 text-center text-sm text-text-muted">{translateCopy("ui.type_to_search_trades_users_and__6fdf7a0")}</p>
+          )}
 
-        {hasResults && (
-          <div
-            id={RESULTS_LISTBOX_ID}
-            className="max-h-[60vh] overflow-y-auto p-2"
-            role="listbox"
-            aria-label="Search results"
-          >
-            {(Object.keys(CATEGORY_LABELS) as Array<keyof GroupedResults>).map((category) => {
+          {hasResults &&
+            (Object.keys(CATEGORY_LABELS) as Array<keyof GroupedResults>).map((category) => {
               const items = results[category];
               if (items.length === 0) return null;
 

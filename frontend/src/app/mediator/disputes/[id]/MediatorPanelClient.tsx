@@ -17,6 +17,14 @@ import { signTransaction } from "@stellar/freighter-api";
 import { useFreighterIdentity } from "@/hooks/useFreighterIdentity";
 import { Badge } from "@/components/ui/Badge";
 import { WalletAddressBadge } from "@/components/ui/WalletAddressBadge";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalDescription,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/Modal";
 import { api, ApiError, type EvidenceRecord } from "@/lib/api";
 
 type Props = { disputeId: string };
@@ -82,37 +90,6 @@ function pickBestEvidenceCid(records: EvidenceRecord[]): string | null {
   return candidateCid && isProbablyIpfsCid(candidateCid) ? candidateCid : null;
 }
 
-function useFocusTrap(isActive: boolean) {
-  useEffect(() => {
-    if (!isActive) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-      }
-
-      if (e.key === "Tab") {
-        const focusableElements = document.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        );
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement?.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement?.focus();
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isActive]);
-}
-
 export default function MediatorPanelClient({ disputeId }: Props) {
   const { address, isAuthorized, isLoading, connectWallet } =
     useFreighterIdentity();
@@ -152,8 +129,6 @@ export default function MediatorPanelClient({ disputeId }: Props) {
   const pinataUrl = resolvedCid
     ? `${PINATA_GATEWAYS[activeGatewayIndex]}/${resolvedCid}`
     : null;
-
-  useFocusTrap(modal.isOpen);
 
   useEffect(() => {
     let cancelled = false;
@@ -639,92 +614,92 @@ export default function MediatorPanelClient({ disputeId }: Props) {
       </div>
 
       {/* Confirmation Modal */}
-      {modal.isOpen && modal.sellerGetsBps !== null && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeModal();
-          }}
-        >
-          <div className="bg-bg-card rounded-t-2xl sm:rounded-2xl shadow-lg w-full max-w-md p-4 sm:p-6 space-y-4 animate-slide-up sm:animate-none">
-            <h2
-              id="modal-title"
-              className="text-lg sm:text-xl font-bold text-text-primary"
-            >
-              {translateCopy("ui.confirm_resolution_1c8af18")}
-            </h2>
+      <Modal
+        open={modal.isOpen && modal.sellerGetsBps !== null}
+        onOpenChange={(open) => {
+          if (!open) closeModal();
+        }}
+      >
+        <ModalContent role="alertdialog" mobileFullScreen={false} className="max-w-md">
+          {modal.sellerGetsBps !== null && (
+            <>
+              <ModalHeader>
+                <ModalTitle>{translateCopy("ui.confirm_resolution_1c8af18")}</ModalTitle>
+              </ModalHeader>
 
-            <div className="border border-border-default rounded-lg bg-bg-elevated p-4 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-text-secondary">
-                  {translateCopy("ui.trade_id_b32a8bb")}
-                </span>
-                <span className="text-sm font-mono text-text-primary">
-                  {disputeId}
-                </span>
-              </div>
-              <div className="border-t border-border-default" />
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-text-secondary">
-                  {translateCopy("ui.split_208adf5")}
-                </span>
-                <span className="text-sm font-semibold text-text-primary">
-                  {modal.splitLabel}
-                </span>
-              </div>
-              <div className="border-t border-border-default" />
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-text-secondary">
-                  {translateCopy("ui.seller_receives_f80dbbe")}
-                </span>
-                <span className="text-sm font-semibold text-status-success">
-                  {(modal.sellerGetsBps / 100).toFixed(2)}%
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-text-secondary">
-                  {translateCopy("ui.buyer_receives_6af6881")}
-                </span>
-                <span className="text-sm font-semibold text-gold">
-                  {(getBuyerSplit(modal.sellerGetsBps) / 100).toFixed(2)}%
-                </span>
-              </div>
-            </div>
+              <ModalBody className="space-y-4">
+                <div className="border border-border-default rounded-lg bg-bg-elevated p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-text-secondary">
+                      {translateCopy("ui.trade_id_b32a8bb")}
+                    </span>
+                    <span className="text-sm font-mono text-text-primary">
+                      {disputeId}
+                    </span>
+                  </div>
+                  <div className="border-t border-border-default" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-text-secondary">
+                      {translateCopy("ui.split_208adf5")}
+                    </span>
+                    <span className="text-sm font-semibold text-text-primary">
+                      {modal.splitLabel}
+                    </span>
+                  </div>
+                  <div className="border-t border-border-default" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-text-secondary">
+                      {translateCopy("ui.seller_receives_f80dbbe")}
+                    </span>
+                    <span className="text-sm font-semibold text-status-success">
+                      {(modal.sellerGetsBps / 100).toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-text-secondary">
+                      {translateCopy("ui.buyer_receives_6af6881")}
+                    </span>
+                    <span className="text-sm font-semibold text-gold">
+                      {(getBuyerSplit(modal.sellerGetsBps) / 100).toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
 
-            <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3">
-              <p className="text-xs text-yellow-800">
-                <span className="font-semibold">{translateCopy("ui.warning_3217f29")}</span> {translateCopy("ui.this_action_is_irreversible_and__629365e")}
-              </p>
-            </div>
+                <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3">
+                  <ModalDescription className="text-xs text-yellow-800">
+                    <span className="font-semibold">{translateCopy("ui.warning_3217f29")}</span>{" "}
+                    {translateCopy("ui.this_action_is_irreversible_and__629365e")}
+                  </ModalDescription>
+                </div>
+              </ModalBody>
 
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              <button
-                onClick={closeModal}
-                disabled={isSubmittingTx}
-                className="px-3 sm:px-4 py-2.5 border border-border-default text-text-primary text-sm font-medium rounded-md hover:bg-bg-elevated disabled:opacity-50 transition"
-                aria-label={translateCopy("ui.cancel_resolution_4acad72")}
-              >
-                {translateCopy("common.cancel")}
-              </button>
-              <button
-                onClick={() => {
-                  const bps = modal.sellerGetsBps!;
-                  closeModal();
-                  void executeResolution(bps);
-                }}
-                disabled={isSubmittingTx}
-                className="px-3 sm:px-4 py-2.5 bg-emerald-700 text-white text-sm font-medium rounded-md hover:bg-emerald-800 disabled:opacity-50 transition"
-                aria-label={translateCopy("ui.confirm_and_sign_resolution_2d0dc86")}
-              >
-                {isSubmittingTx ? "Processing..." : "Confirm & Sign"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="grid grid-cols-2 gap-2 border-t border-border-default px-6 py-4 sm:gap-3">
+                <button
+                  onClick={closeModal}
+                  disabled={isSubmittingTx}
+                  className="px-3 sm:px-4 py-2.5 border border-border-default text-text-primary text-sm font-medium rounded-md hover:bg-bg-elevated disabled:opacity-50 transition"
+                  aria-label={translateCopy("ui.cancel_resolution_4acad72")}
+                >
+                  {translateCopy("common.cancel")}
+                </button>
+                <button
+                  onClick={() => {
+                    const bps = modal.sellerGetsBps!;
+                    closeModal();
+                    void executeResolution(bps);
+                  }}
+                  disabled={isSubmittingTx}
+                  className="px-3 sm:px-4 py-2.5 bg-emerald-700 text-white text-sm font-medium rounded-md hover:bg-emerald-800 disabled:opacity-50 transition"
+                  aria-label={translateCopy("ui.confirm_and_sign_resolution_2d0dc86")}
+                >
+                  {isSubmittingTx ? "Processing..." : "Confirm & Sign"}
+                </button>
+              </div>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
     </div>
   );
 }

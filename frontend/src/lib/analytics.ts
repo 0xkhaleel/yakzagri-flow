@@ -59,6 +59,10 @@ export function scrubProperties(payload: AnalyticsPayload): AnalyticsPayload {
   }, {});
 }
 
+export function scrubPII(value: unknown): unknown {
+  return scrubValue(value);
+}
+
 function getAnalyticsProvider(): "plausible" | "custom" | "noop" {
   const provider = process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER;
   if (provider === "plausible") return "plausible";

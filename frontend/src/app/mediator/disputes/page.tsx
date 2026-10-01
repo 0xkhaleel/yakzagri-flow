@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonList } from "@/components/ui/SkeletonList";
 import { Tabs } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
+import { getStatusBadgeClasses } from "@/components/ui/StatusBadge";
 import { getMediatorAddresses, isMediatorAddress, formatDate, formatAddress } from "./helpers";
 
 type DisputeStatus = "OPEN" | "UNDER_REVIEW" | "RESOLVED" | "CLOSED";
@@ -22,13 +23,6 @@ const FILTERS: { label: string; value: DisputeStatus | "all" }[] = [
   { label: "Resolved", value: "RESOLVED" },
   { label: "Closed", value: "CLOSED" },
 ];
-
-const STATUS_STYLES: Record<string, string> = {
-  OPEN: "text-status-warning bg-status-warning/15",
-  UNDER_REVIEW: "text-status-info bg-status-info/15",
-  RESOLVED: "text-status-success bg-status-success/15",
-  CLOSED: "text-text-secondary bg-bg-elevated",
-};
 
 const PAGE_SIZE = 10;
 
@@ -91,7 +85,7 @@ export default function MediatorDisputesPage() {
     return (
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="mediator-disputes-page">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-text-primary mb-4">{translateCopy("ui.access_restricted_13a4143")}</h1>
+          <h2 className="text-3xl font-bold text-text-primary mb-4">{translateCopy("ui.access_restricted_13a4143")}</h2>
           <p className="text-text-secondary">
             {translateCopy("ui.this_page_is_only_accessible_to__b0ef294")}
           </p>
@@ -104,7 +98,7 @@ export default function MediatorDisputesPage() {
     return (
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="mediator-disputes-page">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-text-primary">{translateCopy("ui.mediator_disputes_b55890b")}</h1>
+          <h2 className="text-3xl font-bold text-text-primary">{translateCopy("ui.mediator_disputes_b55890b")}</h2>
         </div>
         <SkeletonList rows={PAGE_SIZE} />
       </div>
@@ -159,7 +153,7 @@ export default function MediatorDisputesPage() {
                       {translateCopy("ui.trade_b0811e4")}{" "}{dispute.tradeId}
                     </span>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[dispute.status]}`}
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClasses(dispute.status)}`}
                     >
                       {dispute.status.replace("_", " ")}
                     </span>

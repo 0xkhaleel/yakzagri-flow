@@ -80,7 +80,7 @@ export default function AdminStreamsPage() {
     return (
       <div className="px-6 py-8 max-w-6xl mx-auto" data-testid="admin-streams-page">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-text-primary">{translateCopy("ui.stream_admin_eeae618")}</h1>
+          <h2 className="text-3xl font-bold text-text-primary">{translateCopy("ui.stream_admin_eeae618")}</h2>
         </div>
         <SkeletonList rows={PAGE_SIZE} />
       </div>
