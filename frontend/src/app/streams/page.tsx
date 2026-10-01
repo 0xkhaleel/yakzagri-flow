@@ -7,10 +7,10 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { api, ApiError, type AdminStreamSummary } from "@/lib/api";
-import { Breadcrumb } from "@/components/ui";
+import { Breadcrumbs } from "@/components/ui";
 
 export default function StreamsPage() {
-  const { token, isAuthenticated, isWalletConnected, isLoading: authLoading, connectWallet, authenticate } = useAuth();
+  const { token, isAuthenticated, isLoading: authLoading } = useAuth();
   const { canAccessAdmin } = useAdmin();
   const [streams, setStreams] = useState<AdminStreamSummary[]>([]);
   const [page, setPage] = useState(1);
@@ -39,8 +39,11 @@ export default function StreamsPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (isAuthenticated && canAccessAdmin) void fetchStreams();
-    else setLoading(false);
+    if (isAuthenticated && canAccessAdmin) {
+      queueMicrotask(() => void fetchStreams());
+    } else {
+      queueMicrotask(() => setLoading(false));
+    }
   }, [authLoading, isAuthenticated, canAccessAdmin, fetchStreams]);
 
   const breadcrumbItems = [
@@ -52,9 +55,8 @@ export default function StreamsPage() {
     <section className="min-h-full bg-bg-primary px-6 py-8 lg:px-10">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} />
+        <Breadcrumbs items={breadcrumbItems} />
 
-        {/* Page header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-text-primary">{translateCopy("ui.vested_token_streams_dc596f5")}</h1>
@@ -65,6 +67,8 @@ export default function StreamsPage() {
         </div>
 
         {/* Coming soon placeholder */}
+        {!canAccessAdmin ? (
+          <>
         <div className="rounded-2xl border border-border-default bg-card p-8 text-center">
           <svg
             className="mx-auto h-12 w-12 text-text-muted"
@@ -109,11 +113,13 @@ export default function StreamsPage() {
               View Stream Ledger
             </Link>
           </div>
+        </div>
+          </>
         ) : (
           <>
             <div className="overflow-hidden rounded-lg border border-border-default bg-card">
               <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_auto] gap-4 border-b border-border-default px-5 py-3 text-xs font-semibold uppercase text-text-muted">
-                <span>Stream</span><span>Vesting progress</span><span>Status</span>
+                <span>{translateCopy("ui.stream_column")}</span><span>{translateCopy("ui.vesting_progress_column")}</span><span>{translateCopy("ui.status_column")}</span>
               </div>
               {streams.map((stream) => {
                 const total = Number(stream.totalVested);
@@ -127,10 +133,10 @@ export default function StreamsPage() {
                   >
                     <span className="min-w-0">
                       <span className="block truncate font-mono text-sm text-text-primary">{stream.streamId}</span>
-                      <span className="mt-1 block truncate text-xs text-text-muted">Recipient {stream.recipient}</span>
+                      <span className="mt-1 block truncate text-xs text-text-muted">{translateCopy("ui.stream_recipient", { recipient: stream.recipient })}</span>
                     </span>
                     <span>
-                      <span className="block text-sm text-text-primary">{progress}% claimed</span>
+                      <span className="block text-sm text-text-primary">{translateCopy("ui.stream_progress_claimed", { progress })}</span>
                       <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-bg-elevated">
                         <span className="block h-full bg-status-success" style={{ width: `${progress}%` }} />
                       </span>
@@ -142,9 +148,9 @@ export default function StreamsPage() {
             </div>
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-4 text-sm text-text-secondary">
-                <button onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1} className="rounded-md border border-border-default px-3 py-1.5 disabled:opacity-50">Previous</button>
-                <span>Page {page} of {totalPages}</span>
-                <button onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages} className="rounded-md border border-border-default px-3 py-1.5 disabled:opacity-50">Next</button>
+                <button onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1} className="rounded-md border border-border-default px-3 py-1.5 disabled:opacity-50">{translateCopy("ui.previous_50f9428")}</button>
+                <span>{translateCopy("ui.page_pagination_label", { page, totalPages })}</span>
+                <button onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages} className="rounded-md border border-border-default px-3 py-1.5 disabled:opacity-50">{translateCopy("ui.next_bc98198")}</button>
               </div>
             )}
           </>

@@ -32,4 +32,20 @@ describe("Settings preferences", () => {
       expect(saved.notifications.tradeUpdates).toBe(false);
     });
   });
+
+  it("only references rendered description and error nodes", async () => {
+    render(<SettingsPage />);
+
+    const network = await screen.findByRole("combobox", { name: "Network" });
+    fireEvent.change(network, { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save preferences" }));
+    await screen.findByText("Network selection is required");
+
+    const describedBy = network.getAttribute("aria-describedby")?.split(/\s+/) ?? [];
+    expect(describedBy).toHaveLength(2);
+    expect(describedBy.every((id) => document.getElementById(id) !== null)).toBe(true);
+    expect(
+      describedBy.some((id) => document.getElementById(id)?.textContent === "Network selection is required"),
+    ).toBe(true);
+  });
 });

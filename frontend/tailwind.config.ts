@@ -29,7 +29,7 @@ const config: Config = {
         emerald: "var(--emerald)",
         "emerald-muted": "var(--emerald-muted)",
         "accent-emerald": "var(--emerald)",
-        teal: "#14B8A6",
+        teal: "var(--teal)",
 
         "text-primary": "var(--text-primary)",
         "text-secondary": "var(--text-secondary)",
@@ -47,6 +47,23 @@ const config: Config = {
         "status-info": "var(--status-info)",
         "status-locked": "var(--status-locked)",
         "status-draft": "var(--status-draft)",
+
+        // Semantic status aliases used by the *State components. These map the
+        // short names (bg-danger, text-warning, ...) onto the same CSS variables
+        // as the status-* scale so one token drives both spellings.
+        danger: "var(--status-danger)",
+        warning: "var(--status-warning)",
+        success: "var(--status-success)",
+        info: "var(--status-info)",
+
+        // Semantic aliases for body copy and the muted surface fill.
+        content: "var(--text-primary)",
+        "surface-variant": "var(--surface-2)",
+
+        // Accent aliases used by the error boundaries and dev fixtures.
+        "accent-gold": "var(--gold)",
+        "accent-gold-hover": "var(--gold-hover)",
+        "accent-teal": "#14B8A6",
 
         // ── Border tokens — elevation-aware ───────────────────────────────
         "border-subtle": "var(--border-subtle)",
@@ -90,8 +107,8 @@ const config: Config = {
         // Legacy aliases
         card: "var(--shadow-elev-1)",
         "card-hover": "var(--shadow-elev-2)",
-        "glow-gold": "0 0 20px rgba(212,168,83,0.2)",
-        "glow-emerald": "0 0 20px rgba(52,211,153,0.15)",
+        "glow-gold": "var(--amana-shadow-glow-gold)",
+        "glow-emerald": "var(--amana-shadow-glow-emerald)",
         modal: "var(--shadow-elev-3)",
       },
       spacing: {
@@ -103,62 +120,56 @@ const config: Config = {
         6: "24px",
         8: "32px",
         10: "40px",
+        15: "60px",
+        20: "80px",
+        30: "120px",
+        36: "144px",
+        84: "336px",
+        104: "416px",
+        120: "480px",
+        176: "704px",
       },
       borderRadius: {
-        none: "0",
-        sm: "6px",
-        md: "8px",
-        lg: "12px",
-        xl: "16px",
-        "2xl": "24px",
-        full: "9999px",
+        none: "var(--amana-radius-none)",
+        sm: "var(--amana-radius-sm)",
+        md: "var(--amana-radius-md)",
+        lg: "var(--amana-radius-lg)",
+        xl: "var(--amana-radius-xl)",
+        "2xl": "var(--amana-radius-2xl)",
+        full: "var(--amana-radius-full)",
       },
       fontFamily: {
         sans: [
           "var(--font-geist-sans)",
-          "Geist",
-          "ui-sans-serif",
-          "system-ui",
-          "sans-serif",
+          "var(--amana-font-family-sans)",
         ],
-        manrope: ["var(--font-manrope)", "Manrope", "sans-serif"],
+        manrope: ["var(--font-manrope)", "var(--amana-font-family-manrope)"],
         mono: [
           "var(--font-geist-mono)",
-          "Geist Mono",
-          "ui-monospace",
-          "SFMono-Regular",
-          "Menlo",
-          "Monaco",
-          "Consolas",
-          "Liberation Mono",
-          "Courier New",
-          "monospace",
+          "var(--amana-font-family-mono)",
         ],
       },
       fontSize: {
-        xs: ["12px", { lineHeight: "1.5" }],
-        sm: ["14px", { lineHeight: "1.5" }],
-        base: ["16px", { lineHeight: "1.5" }],
-        lg: ["18px", { lineHeight: "1.6" }],
-        xl: ["20px", { lineHeight: "1.4" }],
-        "2xl": ["24px", { lineHeight: "1.3" }],
-        "3xl": ["30px", { lineHeight: "1.25" }],
-        "4xl": ["36px", { lineHeight: "1.2" }],
-        "5xl": ["48px", { lineHeight: "1.15" }],
-        display: ["60px", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
+        xs: ["var(--amana-font-size-xs)", { lineHeight: "var(--amana-line-height-normal)" }],
+        sm: ["var(--amana-font-size-sm)", { lineHeight: "var(--amana-line-height-normal)" }],
+        base: ["var(--amana-font-size-base)", { lineHeight: "var(--amana-line-height-normal)" }],
+        lg: ["var(--amana-font-size-lg)", { lineHeight: "var(--amana-line-height-large)" }],
+        xl: ["var(--amana-font-size-xl)", { lineHeight: "var(--amana-line-height-compact)" }],
+        "2xl": ["var(--amana-font-size-2xl)", { lineHeight: "var(--amana-line-height-subheading)" }],
+        "3xl": ["var(--amana-font-size-3xl)", { lineHeight: "var(--amana-line-height-heading)" }],
+        "4xl": ["var(--amana-font-size-4xl)", { lineHeight: "var(--amana-line-height-tight)" }],
+        "5xl": ["var(--amana-font-size-5xl)", { lineHeight: "var(--amana-line-height-hero)" }],
+        display: ["var(--amana-font-size-display)", { lineHeight: "var(--amana-line-height-display)", letterSpacing: "var(--amana-letter-spacing-tight)" }],
       },
       lineHeight: {
-        tight: "1.2",
-        normal: "1.5",
-        relaxed: "1.75",
+        tight: "var(--amana-line-height-tight)",
+        normal: "var(--amana-line-height-normal)",
+        relaxed: "var(--amana-line-height-relaxed)",
       },
       backgroundImage: {
-        "gradient-hero":
-          "linear-gradient(135deg, var(--surface-0) 0%, var(--surface-1) 50%, var(--surface-2) 100%)",
-        "gradient-gold-cta":
-          "linear-gradient(135deg, var(--gold) 0%, var(--gold-hover) 100%)",
-        "gradient-card-glow":
-          "linear-gradient(135deg, rgba(52,211,153,0.05) 0%, rgba(212,168,83,0.05) 100%)",
+        "gradient-hero": "var(--amana-gradient-hero)",
+        "gradient-gold-cta": "var(--amana-gradient-gold-cta)",
+        "gradient-card-glow": "var(--amana-gradient-card-glow)",
       },
       animation: {
         "slide-up": "slide-up 0.3s ease-out",

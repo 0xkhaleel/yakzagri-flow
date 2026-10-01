@@ -1,6 +1,7 @@
 import { getApiBaseUrl, getApiVersionPrefix } from "./env";
 import { trackApiFailure } from "@/lib/analytics";
 import { parseBackendError, BackendErrorResponse } from "../errorHandler";
+import { isTokenValid } from "../tokenValidity";
 import { z } from "zod";
 
 export type FetchOptions = RequestInit & {

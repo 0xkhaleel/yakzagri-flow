@@ -42,13 +42,14 @@ const ON_CHAIN_EVENT_DESCRIPTIONS: Record<string, string> = {
 };
 
 function isOnChainEvent(event: TransactionEvent): boolean {
-  return ON_CHAIN_EVENT_TYPES.has(event.type);
+  return ON_CHAIN_EVENT_TYPES.has(event.type ?? "");
 }
 
 function describeEvent(event: TransactionEvent): string {
-  const onChainDescription = ON_CHAIN_EVENT_DESCRIPTIONS[event.type];
+  const eventType = event.type ?? "";
+  const onChainDescription = ON_CHAIN_EVENT_DESCRIPTIONS[eventType];
   if (onChainDescription) return onChainDescription;
-  return event.description ?? event.title ?? event.type;
+  return event.description ?? event.title ?? eventType;
 }
 
 function resolveStatus(

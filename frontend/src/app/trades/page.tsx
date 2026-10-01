@@ -214,8 +214,8 @@ export default function TradesPage() {
 
       {/* Trade filters */}
       <div className="mb-6 space-y-3">
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Trade role filter">
-          <span className="mr-1 text-xs font-medium text-text-muted">Role</span>
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label={translateCopy("ui.trade_role_filter")}>
+          <span className="mr-1 text-xs font-medium text-text-muted">{translateCopy("ui.role")}</span>
           {ROLE_FILTERS.map((filter) => {
             const isActive = activeRole === filter.value;
             return (
@@ -231,8 +231,8 @@ export default function TradesPage() {
             );
           })}
         </div>
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Trade status filter">
-          <span className="mr-1 text-xs font-medium text-text-muted">Status</span>
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label={translateCopy("ui.trade_status_filter")}>
+          <span className="mr-1 text-xs font-medium text-text-muted">{translateCopy("ui.status")}</span>
           {FILTERS.map((filter) => {
             const isActive = activeFilter === filter.value;
 
@@ -287,26 +287,26 @@ export default function TradesPage() {
 
               {/* Heading */}
               <h3 className="text-xl font-semibold text-text-primary mb-3">
-                {trades.length === 0 ? "No trades yet" : "No trades match these filters"}
+                {trades.length === 0 ? translateCopy("ui.no_trades_yet_c6ce989") : translateCopy("ui.no_trades_match_filters")}
               </h3>
 
               {/* Description */}
               <p className="text-text-secondary text-sm mb-8 max-w-sm mx-auto leading-relaxed">
                 {trades.length === 0
-                  ? "Get started by creating your first trade to begin settling agricultural transactions securely on the blockchain."
-                  : "Try another role or status filter to see more trades."}
+                  ? translateCopy("ui.get_started_by_creating_your_fir_a82b980")
+                  : translateCopy("ui.try_another_trade_filter")}
               </p>
 
               {/* CTA Button */}
               {trades.length === 0 && (
                 <Link href="/trades/create">
-                  <Button variant="primary" size="lg">Create Your First Trade</Button>
+                  <Button variant="primary" size="lg">{translateCopy("ui.create_your_first_trade_4176121")}</Button>
                 </Link>
               )}
             </div>
           ) : (
             <div className="rounded-lg border border-border-default overflow-x-auto shadow-elev-1">
-              <table className="w-full min-w-[700px] text-sm">
+              <table className="w-full min-w-176 text-sm">
                 <caption className="sr-only">Trades matching the selected filters</caption>
                 <thead>
                   <tr className="border-b border-border-default bg-surface-1">
@@ -314,13 +314,13 @@ export default function TradesPage() {
                       ID
                     </th>
                     <th scope="col" className="text-left px-4 py-3 text-text-muted font-medium">
-                      Counterparty
+                      {translateCopy("ui.trade_counterparty")}
                     </th>
                     <th scope="col" className="text-left px-4 py-3 text-text-muted font-medium">
-                      Amount
+                      {translateCopy("ui.amount_43dc853")}
                     </th>
                     <th scope="col" className="text-left px-4 py-3 text-text-muted font-medium">
-                      Status
+                      {translateCopy("ui.status")}
                     </th>
                     <th scope="col" className="text-left px-4 py-3 text-text-muted font-medium">
                       Created

@@ -261,11 +261,17 @@ export default function TradeDetailPage() {
     }
   }, [token, tradeId]);
 
-  async function runSignedAction(label: string, action: () => Promise<{ unsignedXdr: string }>) {
+  async function runSignedAction(
+    label: string,
+    scopeKey: string,
+    action: (options: { idempotencyKey?: string }) => Promise<{ unsignedXdr: string }>,
+  ) {
     if (!token) {
       setActionError("Sign in with your wallet to perform this action.");
       return;
     }
+
+    const scopeKey = `trade:${tradeId}:asset-action`;
 
     setActionLoading(true);
     setActionError(null);
@@ -317,16 +323,14 @@ export default function TradeDetailPage() {
   function handleConfirmDelivery() {
     void runSignedAction(
       "Delivery confirmation",
-      (opts) => api.trades.confirmDelivery(token!, tradeId, opts),
-      `trade:${tradeId}:confirmDelivery`,
+      () => api.trades.confirmDelivery(token!, tradeId),
     );
   }
 
   function handleReleaseFunds() {
     void runSignedAction(
       "Funds release",
-      (opts) => api.trades.releaseFunds(token!, tradeId, opts),
-      `trade:${tradeId}:releaseFunds`,
+      () => api.trades.releaseFunds(token!, tradeId),
     );
   }
 
@@ -338,8 +342,8 @@ export default function TradeDetailPage() {
     }
     void runSignedAction(
       "Dispute",
-      (opts) => api.trades.initiateDispute(token!, tradeId, reason.trim(), "other", opts),
       `trade:${tradeId}:dispute`,
+      (opts) => api.trades.initiateDispute(token!, tradeId, reason.trim(), "other", opts),
     );
   }
 

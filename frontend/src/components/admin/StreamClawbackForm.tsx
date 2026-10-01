@@ -108,9 +108,9 @@ export function StreamClawbackForm({
 
       {previewResult && (
         <div role="status" className="rounded-md border border-border-default bg-bg-elevated p-3 text-sm">
-          <p className="font-medium text-text-primary">Read-only preview</p>
+          <p className="font-medium text-text-primary">{translateCopy("ui.read_only_preview")}</p>
           <p className="mt-1 text-text-secondary">
-            Projected remaining vested balance: {previewResult.postClawbackBalance}. No balance was changed.
+            {translateCopy("ui.projected_vested_balance", { balance: previewResult.postClawbackBalance })}
           </p>
         </div>
       )}

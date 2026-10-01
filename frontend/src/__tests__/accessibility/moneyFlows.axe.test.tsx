@@ -74,7 +74,7 @@ describe("Money-action flows — axe WCAG 2.1 AA", () => {
   });
 
   describe("TradeListItem — keyboard accessible", () => {
-    it("outer div has role=button, tabIndex=0, and aria-label", async () => {
+    it("trade title is keyboard accessible without nesting row actions", async () => {
       const { TradeListItem } = await import("@/components/trade/TradeListItem");
       const { container } = render(
         <TradeListItem
@@ -88,10 +88,9 @@ describe("Money-action flows — axe WCAG 2.1 AA", () => {
           onDeposit={() => {}}
         />
       );
-      const card = container.querySelector('[role="button"]') as HTMLElement;
-      expect(card).toBeTruthy();
-      expect(card.getAttribute("tabIndex")).toBe("0");
-      expect(card.getAttribute("aria-label")).toMatch(/View trade t-1/);
+      const viewButton = container.querySelector('button[aria-label*="View trade t-1"]') as HTMLElement;
+      expect(viewButton).toBeTruthy();
+      expect(viewButton.getAttribute("tabIndex")).not.toBe("-1");
       const depositBtn = container.querySelector('button[aria-label*="Deposit"]');
       expect(depositBtn).toBeTruthy();
       expect(await axe(container)).toHaveNoViolations();

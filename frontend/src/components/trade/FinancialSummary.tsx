@@ -6,6 +6,7 @@ import React from "react";
 import type { TradeDetail } from "@/types/trade";
 import { TradeAmountRow } from "./TradeAmountRow";
 import { formatNumber } from "@/lib/i18n/format";
+import { convertCngnToNgn } from "@/lib/exchangeRate";
 
 interface FinancialSummaryProps {
   trade: TradeDetail;

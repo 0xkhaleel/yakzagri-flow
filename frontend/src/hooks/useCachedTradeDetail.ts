@@ -16,7 +16,6 @@ import {
   cacheRead,
   cacheWrite,
   cacheInvalidate,
-  TTL_TRADE_DETAIL,
 } from "@/lib/offlineCache";
 import type { TradeResponse } from "@/lib/api/types";
 
@@ -38,7 +37,7 @@ export function useCachedTradeDetail(
   const { isOffline } = useOffline();
   const { token, isAuthenticated } = useAuth();
 
-  const initialRead = cacheRead<TradeResponse>(DOMAIN, tradeId, TTL_TRADE_DETAIL);
+  const initialRead = cacheRead<TradeResponse>(DOMAIN, tradeId);
   const [trade, setTrade] = useState<TradeResponse | null>(
     initialRead.entry?.data ?? null,
   );
@@ -58,7 +57,7 @@ export function useCachedTradeDetail(
 
     try {
       const fresh = await api.trades.get(token, tradeId);
-      cacheWrite(DOMAIN, tradeId, fresh, TTL_TRADE_DETAIL);
+      cacheWrite(DOMAIN, tradeId, fresh);
       setTrade(fresh);
       setIsStale(false);
       setCachedAt(Date.now());
@@ -78,7 +77,7 @@ export function useCachedTradeDetail(
 
   // Re-read cache when tradeId changes
   useEffect(() => {
-    const read = cacheRead<TradeResponse>(DOMAIN, tradeId, TTL_TRADE_DETAIL);
+    const read = cacheRead<TradeResponse>(DOMAIN, tradeId);
     if (read.entry) {
       setTrade(read.entry.data);
       setIsStale(read.isStale);
